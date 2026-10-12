@@ -56,9 +56,11 @@ touches identity, content, participation or survey data:
 
 ## Current state
 
-- **Stage:** Scaffolding only. No application code yet.
-- **Stack:** Not decided (CONTRIBUTING §12, Q3). Don't scaffold a framework until an ADR is
-  approved.
+- **Stage:** Planning. No application code yet. `docs/plan.md` and ADRs 0001–0004 are **Proposed**
+  and await the owner's approval. They are advisory until approved, and CONTRIBUTING.md wins on any
+  conflict.
+- **Stack:** Not decided (CONTRIBUTING §12, Q3). ADR 0001 proposes one. Don't scaffold a framework
+  until an ADR is approved.
 - **Commands:** None yet. Add build/test/lint/dev commands here once the stack exists.
 
 ## Repo map
@@ -67,7 +69,8 @@ touches identity, content, participation or survey data:
 CONTRIBUTING.md        Source of truth: purpose, scope, requirements, open questions
 CLAUDE.md              This file
 README.md              Short overview and status
-docs/research/         Raw research (advisory). source-prompt.pdf is the original spec
+docs/plan.md           Proposed phased build plan, owner decisions, session kickoff prompt
+docs/research/         Research (advisory). source-prompt.pdf is the original spec
 docs/decisions/        Architecture Decision Records (ADRs)
 ```
 
