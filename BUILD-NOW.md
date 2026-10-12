@@ -29,6 +29,12 @@ The completed service must follow `CONTRIBUTING.md`: exactly one Course AI Card 
 | 8. Classroom and course operations | Add presentation mode, notifications, grading settings/export, and audit events, one feature at a time. Decide their open questions when each feature starts. | Every added feature has its own demo, acceptance test, and privacy review. |
 | 9. Wider release | Add end-of-course survey, privacy-safe aggregates, administration, institutional integration, retention/deletion, monitoring, and deployment operations. Recheck policy/legal/institutional requirements before onboarding broader use. | Production acceptance criteria in `CONTRIBUTING.md` §10 pass, including security and accessibility review. |
 
+## After the front end
+
+The public preview in `public/` is the front-end reference: the open course shows its conversation and guidance together, and its sections appear in the sidebar only while that course is open. Finish feedback on that layout before backend work.
+
+The next build is stage 2, sign-in and course membership. It stays blocked until Q4–Q5 are decided (`CONTRIBUTING.md` §13). Real anonymous posting stays blocked until stage 5, after Q8–Q9. Do not start either while the front end is still being adjusted.
+
 ## The next seven Cursor sessions
 
 1. **Finish the look.** Review the flatter prototype on desktop and phone. Make one small visual change at a time; do not add features.
@@ -66,7 +72,7 @@ Copy this into a fresh Cursor Agent chat after Q3 is decided:
 
 ## Decisions that need the owner
 
-- Q3: production stack and hosting. ADRs 0001–0002 are proposals, not yet accepted.
+- Q3: production hosting, the database access library, and the UI component library. ADR 0007 accepts the local Next.js foundation. ADR 0002 and the rest of ADR 0001 are still proposals.
 - Q4–Q5: pilot authentication and course provisioning.
 - Q8–Q9: the reviewed privacy design for real anonymous posts and private participation.
 
