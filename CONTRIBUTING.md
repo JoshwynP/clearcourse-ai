@@ -477,6 +477,10 @@ The full list of audited events is Q14.
   clear status labels · explicit anonymity explanations · non-gamified private participation levels.
 - Avoid: AI-generated aesthetics · robots · surveillance motifs · leaderboards · streaks ·
   competitive badges · attention-maximizing patterns.
+- **Prototype visual direction (owner decision, 2026-10-12):** use a familiar chat-style layout
+  with white, light grey and one dark green accent, flat borders, compact spacing and plain text
+  labels. Keep it simple and somewhat old-web in feel; avoid glossy cards and decorative colour.
+  WhatsApp is an inspiration for familiarity, not a source of copied branding or assets.
 - Accessibility is required `[src p.1, p.16]`. The conformance target (e.g. WCAG 2.x AA) is Q15.
 
 ---
@@ -625,3 +629,4 @@ A change is done only when **all** of the following are true:
 |---|---|
 | 2026-10-11 | Initial version created from `docs/research/source-prompt.pdf` (pages 1–19 as spec, 20–31 as advisory). Stack undecided. |
 | 2026-10-12 | Owner chose an immediate fictional-data public prototype as the first milestone (Q2); ADR 0005 permits a static experience demo while Q3 remains open for the real application. |
+| 2026-10-12 | Owner clarified the prototype visual direction: simpler chat layout, neutral palette and one green accent (§8). |
