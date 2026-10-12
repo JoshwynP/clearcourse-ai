@@ -119,6 +119,12 @@ const courses = {
 };
 
 const state = { course: "sds", view: "signin", filter: "all", search: "", card: "course", expanded: null, role: null, editing: false };
+const privateParticipation = {
+  sds: { questions: 0, comments: 0, upvotes: 0 },
+  engl: { questions: 0, comments: 0, upvotes: 0 }
+};
+const sharedLevels = { sds: null, engl: null };
+const SHARE_NOTICE = "Your instructor will receive your name and participation level. Your instructor will not receive your questions, comments, upvotes, dates, or activity breakdown.";
 const root = document.querySelector("#view-root");
 const dialog = document.querySelector("#compose-dialog");
 const toast = document.querySelector("#toast");
@@ -134,6 +140,22 @@ function textOf(card, key) {
 }
 function assignmentLabel(item) { return textOf(item, "title") === NA ? "New assignment card" : item.title; }
 function showToast(message) { toast.textContent = message; toast.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 3200); }
+function participationLevel(counts) {
+  const posts = counts.questions + counts.comments;
+  if (posts >= 2 && counts.upvotes >= 3) return "Sustained Contributor";
+  if (posts >= 1 && counts.upvotes >= 1) return "Contributor";
+  return "No Record";
+}
+function recordParticipation(kind) {
+  if (state.role !== "student") return;
+  const counts = privateParticipation[state.course];
+  if (kind === "upvote") counts.upvotes += 1;
+  if (kind === "upvote-remove") counts.upvotes = Math.max(0, counts.upvotes - 1);
+  if (kind === "question") counts.questions += 1;
+  if (kind === "comment") counts.comments += 1;
+  const shared = sharedLevels[state.course];
+  if (shared) shared.level = participationLevel(counts);
+}
 function intro(eyebrow, title, subtitle, action = "") { return `<div class="page-intro"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p class="page-subtitle">${esc(subtitle)}</p></div>${action}</div>`; }
 
 function policyLink(label, href) {
@@ -227,7 +249,7 @@ function renderChrome() {
   const signedIn = Boolean(state.role);
   const course = current();
   const onHome = state.view === "home";
-  const section = { conversation: "Discussion board", cards: "AI cards", instructor: "Manage My Cards" }[state.view] || "Discussion board";
+  const section = { conversation: "Discussion board", cards: "AI cards", instructor: "Manage My Cards", participation: state.role === "professor" ? "Class participation" : "My participation" }[state.view] || "Discussion board";
   const slot = document.querySelector("#session-slot");
   if (slot) {
     slot.innerHTML = signedIn ? `<span class="session-label">${state.role === "professor" ? "Professor preview" : "Student preview"}</span><button type="button" class="text-link" data-action="sign-out">Leave preview</button>` : "";
@@ -240,6 +262,7 @@ function renderChrome() {
   const sections = [
     ["conversation", "Discussion board"],
     ["cards", "AI cards"],
+    ["participation", state.role === "professor" ? "Class participation" : "My participation"],
     ...(state.role === "professor" ? [["instructor", "Manage My Cards"]] : [])
   ];
   const brand = document.querySelector(".masthead .brand-link");
@@ -263,7 +286,8 @@ function render() {
     root.innerHTML = renderSignIn();
     return;
   }
-  root.innerHTML = state.view === "home" ? renderHome() : state.view === "cards" ? renderCards() : state.view === "instructor" ? renderStudio() : renderConversation();
+  const page = { home: renderHome, cards: renderCards, instructor: renderStudio, participation: renderParticipation, conversation: renderConversation }[state.view] || renderConversation;
+  root.innerHTML = page();
 }
 
 function renderConversation() {
@@ -272,7 +296,7 @@ function renderConversation() {
   const posts = course.questions.filter(post => (state.filter === "all" || post.tag === state.filter) && (!q || `${post.title} ${post.body}`.toLowerCase().includes(q)));
   const assignmentSelected = course.assignments.some(item => item.id === state.filter);
   const bonus = course.participationBonus
-    ? `<p class="preview-note anonymity-note">This example course includes an optional transparency-of-process bonus, available equally whether or not a student uses AI. This preview does not record participation or award a bonus.</p>`
+    ? `<p class="preview-note anonymity-note">This example course includes an optional transparency-of-process bonus, available equally whether or not a student uses AI. This preview does not award that bonus.</p>`
     : "";
   const assignmentOptions = course.assignments.map(item => `<option value="${esc(item.id)}"${state.filter === item.id ? " selected" : ""}>${esc(assignmentLabel(item))}</option>`).join("");
   return `<div class="page">${intro(course.term, course.code + " · " + course.name, "Questions and AI guidelines for this course.")}
@@ -282,6 +306,36 @@ function renderConversation() {
     <div class="post-list">${posts.length ? posts.map(renderPost).join("") : '<div class="empty">No questions match this view yet.</div>'}</div></section>
     <aside class="side-stack"><section class="panel panel-pad" aria-label="AI cards"><h2 class="section-title">AI cards</h2><button class="button cards-link" type="button" data-action="cards">See your course and assignment<br>AI cards</button></section>
     <section class="panel panel-pad" aria-label="Ask a question"><h2 class="section-title">Ask a question</h2><button class="button" type="button" data-action="compose">Ask a question</button><p class="preview-note anonymity-note">Names are not shown on these example questions. This preview does not provide real anonymous posting and does not accept real student information. Questions you add stay in this browser tab until you reload.</p>${bonus}</section></aside></div></div>`;
+}
+
+function renderParticipation() {
+  const course = current();
+  if (state.role === "professor") {
+    const shared = sharedLevels[state.course];
+    const rows = shared
+      ? `<table class="card-table"><caption class="sr-only">Students who shared a participation level</caption><tbody><tr><th scope="row">Student</th><td>${esc(shared.name)}</td></tr><tr><th scope="row">Participation level</th><td>${esc(shared.level)}</td></tr><tr><th scope="row">When shared</th><td>${esc(shared.when)}</td></tr></tbody></table>`
+      : `<p class="empty">No student has shared a participation level in this preview.</p>`;
+    return `<div class="page">${intro(course.code, "Class participation", "Levels shared by students in this course.")}
+      <section class="panel panel-pad"><h2 class="section-title">Shared levels</h2><p class="preview-note">This list includes only a student who chose to share. It shows the participation level, not the questions, comments, or upvotes behind it. Students who do not share do not appear. This preview is not sent to a real class, and nothing is saved when you reload.</p>${rows}</section></div>`;
+  }
+  const counts = privateParticipation[state.course];
+  const level = participationLevel(counts);
+  const shared = sharedLevels[state.course];
+  const shareControl = shared
+    ? `<p class="preview-note">You are sharing <strong>${esc(shared.level)}</strong> in this preview as Sample student. Stop sharing and your name leaves the professor’s list. The discussion board still does not show your name.</p><button class="button" type="button" data-action="stop-sharing">Stop sharing</button>`
+    : `<blockquote class="callout">${esc(SHARE_NOTICE)}</blockquote><button class="button primary" type="button" data-action="share-level">Share my level in this preview</button>`;
+  return `<div class="page">${intro(course.code, "My participation", "Your private record for this course.")}
+    <section class="panel panel-pad"><h2 class="section-title">This course</h2><p class="preview-note">Questions you ask, comments you add, and upvotes you give in this tab count. Example questions already on the board do not count. Views do not count. Your name is not added to a question, comment, or upvote.</p>
+    <table class="card-table"><caption class="sr-only">Private participation counts</caption><tbody>
+      <tr><th scope="row">Questions asked</th><td>${counts.questions}</td></tr>
+      <tr><th scope="row">Comments added</th><td>${counts.comments}</td></tr>
+      <tr><th scope="row">Upvotes given</th><td>${counts.upvotes}</td></tr>
+      <tr><th scope="row">Participation level</th><td>${esc(level)}</td></tr>
+    </tbody></table>
+    <h3 class="participation-heading">How a level is reached</h3>
+    <ul class="participation-levels"><li><strong>No Record.</strong> Fewer than one question or comment, or no upvote yet.</li><li><strong>Contributor.</strong> At least one question or comment, and at least one upvote.</li><li><strong>Sustained Contributor.</strong> At least two questions or comments, and at least three upvotes.</li></ul>
+    <p class="preview-note">These counts stay in this browser tab. This preview does not save them or send them to a real instructor.</p></section>
+    <section class="panel panel-pad participation-share"><h2 class="section-title">Share with your professor</h2><p class="preview-note">You can share the level only. The professor does not receive how many questions, comments, or upvotes you made, or which ones they were.</p>${shareControl}</section></div>`;
 }
 
 function renderPost(post) {
@@ -424,7 +478,16 @@ document.addEventListener("click", event => {
   const cardButton = event.target.closest("[data-card]");
   if (cardButton) { state.card = cardButton.dataset.card; state.view = "cards"; render(); return; }
   const voteButton = event.target.closest("[data-vote]");
-  if (voteButton) { const post = current().questions.find(item => item.id === Number(voteButton.dataset.vote)); if (post) { post.voted = !post.voted; post.votes += post.voted ? 1 : -1; render(); } return; }
+  if (voteButton) {
+    const post = current().questions.find(item => item.id === Number(voteButton.dataset.vote));
+    if (post) {
+      post.voted = !post.voted;
+      post.votes += post.voted ? 1 : -1;
+      recordParticipation(post.voted ? "upvote" : "upvote-remove");
+      render();
+    }
+    return;
+  }
   const actionButton = event.target.closest("[data-action]");
   const action = actionButton?.dataset.action;
   if (action === "enter") { state.role = actionButton.dataset.role; state.view = "home"; render(); return; }
@@ -450,6 +513,20 @@ document.addEventListener("click", event => {
     return;
   }
   if (action === "close-editor") { state.editing = false; render(); return; }
+  if (action === "share-level") {
+    if (state.role !== "student") return;
+    const counts = privateParticipation[state.course];
+    sharedLevels[state.course] = { name: "Sample student", level: participationLevel(counts), when: "Shared in this preview" };
+    render();
+    showToast("Level shared in this preview. Questions and comments stay unnamed.");
+    return;
+  }
+  if (action === "stop-sharing") {
+    sharedLevels[state.course] = null;
+    render();
+    showToast("Sharing stopped in this preview.");
+    return;
+  }
   if (action === "new-card") {
     const created = blankAssignment();
     current().assignments.push(created);
@@ -514,6 +591,7 @@ document.addEventListener("submit", event => {
     if (!title) return;
     const post = { id: Date.now(), tag: String(data.get("tag")), title, body: String(data.get("body") || "").trim(), votes: 0, replies: [], time: "Added in this demo", voted: false };
     current().questions.unshift(post);
+    recordParticipation("question");
     state.view = "conversation";
     state.filter = "all";
     state.search = "";
@@ -531,6 +609,7 @@ document.addEventListener("submit", event => {
     const value = String(new FormData(event.target).get("reply") || "").trim();
     if (!post || !value) return;
     post.replies.push({ role: "Demo participant", text: value });
+    recordParticipation("comment");
     state.expanded = post.id;
     render();
     showToast("Comment added to this demo session.");

@@ -12,7 +12,7 @@ python3 -m http.server 8000 --directory public
 
 Open [http://localhost:8000](http://localhost:8000). No install, account, or API key is needed. The public preview is prepared in `public/`; its live URL will be added after the hosting account is connected.
 
-Choose Professor or Student for this browser tab, then try switching courses, filtering the discussion board, opening assignment cards, adding a question or comment, upvoting, and managing a sample card. Nothing is saved when you reload. All course content is fictional. This preview does not authenticate University of Waterloo users.
+Choose Professor or Student for this browser tab, then try switching courses, filtering the discussion board, opening assignment cards, adding a question or comment, upvoting, checking My participation, and managing a sample card. Nothing is saved when you reload. All course content is fictional. This preview does not authenticate University of Waterloo users.
 
 ## What this is
 

@@ -184,6 +184,10 @@ a { color: var(--green); }
 .manage-copy strong { font-size: 13px; }
 .manage-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .manage-create { padding: 12px; border-top: 1px solid var(--line); }
+.participation-heading { margin: 16px 0 8px; font-size: 14px; }
+.participation-levels { margin: 0 0 12px; padding-left: 18px; font-size: 13px; line-height: 1.45; }
+.participation-levels li + li { margin-top: 6px; }
+.participation-share { margin-top: 16px; }
 .suggestion { margin: 14px 0; padding: 12px; border: 1px solid #a2a2a2; background: #fff; }
 .suggestion p { margin: 0 0 8px; font-size: 13px; line-height: 1.45; }
 .studio-form { max-width: 800px; padding: 22px; }
