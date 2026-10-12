@@ -85,7 +85,7 @@ Everything below is a **proposal for the owner**. No open question is closed, an
 | Q1 / Q7 / Q19 | Q1: minimal admin settings (A2) and an `institution` table holding the §4 configurables from day one. Q7: **no impersonation** (I0); optional synthetic "view as role" preview. Q19: externalise strings from day one (L1); English only for now | — |
 | Q10 / Q11 / Q12 | Defer: the wizard to M2 (manual editor in M1); ranked grading and the export format to M2. The owner must supply the wizard rule table and curated resources (Q10), ranked defaults (Q11) and the LEARN export format (Q12) | — |
 | **Q2 milestone 1** | The owner's stated goal (a public, sign-in-able, polished prototype) plus O2's candidate feature set, split in two. **M1a:** sign-in, courses/enrolment/roles, institution config, Course and Assignment AI Cards (manual editor, versions, visible overrides), transparency-bonus fields, audit, tests, deployment docs. **M1b:** anonymous board, moderation, presentation mode, search/filters, private participation counter and levels, in-app notifications. M1b content code starts only after ADR 0003 is accepted and the threat model exists (§6.3). Merge goes in M1b if feasible (PQ-08) | Later (M2): wizard, sharing, grading, survey, email notifications, level analytics |
-| Design system (§8) | From `research/design-D1-system-a11y.md`: **shadcn/ui copy-in source + Tailwind CSS v4 on React Aria Components primitives**, with **Base UI** as the fallback primitive base (choose after a short spike, because shadcn's base can't change after init, PQ-D1-12 → decision in plan). Heavily customised: our own three-layer CSS-custom-property tokens, calm palette, radii, typography and density; no gradients or sparkle icons (§8 "avoid AI-generated aesthetics"). Admin brand colours go through a server-side WCAG contrast guardrail (UW gold pairs accessibly only with black, per D1). Open-licence, self-hosted fonts. **No UW or D2L logos, fonts or BrightspaceUI components**; GOV.UK/USWDS used as pattern and content sources only. WCAG 2.2 AA, with AAA 2.4.13 and 1.4.6 as stretch goals for presentation mode. axe via Playwright in CI plus a manual NVDA/VoiceOver/zoom/forced-colours checklist; passing axe is never presented as conformance | Reflect in ADR 0001's UI layer and in `plan.md` |
+| Design system (§8) | From `research/design-D1-system-a11y.md`: **shadcn/ui copy-in source + Tailwind CSS v4 on React Aria Components primitives**, with **Base UI** as the fallback primitive base (choose after a short spike: shadcn's `style` can't change after init, and switching the primitive base later is costly; a Radix→Base UI migration path exists, but none to or from React Aria; new projects default to Base UI, so React Aria needs `--base aria` explicitly; PQ-D1-12 → decision in plan). Heavily customised: our own three-layer CSS-custom-property tokens, calm palette, radii, typography and density; no gradients or sparkle icons (§8 "avoid AI-generated aesthetics"). Admin brand colours go through a server-side WCAG contrast guardrail (UW gold pairs accessibly only with black, per D1). Open-licence, self-hosted fonts. **No UW or D2L logos, fonts or BrightspaceUI components**; GOV.UK/USWDS used as pattern and content sources only. WCAG 2.2 AA, with AAA 2.4.13 and 1.4.6 as stretch goals for presentation mode. axe via Playwright in CI plus a manual NVDA/VoiceOver/zoom/forced-colours checklist; passing axe is never presented as conformance | Reflect in ADR 0001's UI layer and in `plan.md` |
 | Testing (§9) | Take from `research/testing-T1-strategy.md` plus the privacy judge §6–§7 controls and tests (catalogue assertions in CI, canary scans of UI/API/exports/logs, identifier tests, merge property tests, authorization matrix) | — |
 
 ## 4. Canonical proposed new open questions (PQ-01 to PQ-58, plus PQ-59+ for design and testing)
@@ -280,3 +280,30 @@ CLAUDE.md). It must:
 
 Also give a short **session prompt template** for every later session: read CLAUDE.md/CONTRIBUTING, the cited §, the
 ADRs, the plan row; check §13/PQ dependencies; tests first for privacy; definition of done §15.
+
+
+## 6. Late corrections from the final fact-check (`factcheck/other-2.md`) — apply in every document
+
+1. **ADR 0004 / sign-in screen:** WCAG 2.2 SC 3.3.8 (Accessible Authentication, Minimum) means the 6-digit email code
+   field must accept pasting the whole code and must not block autofill. A split six-box input that fills one digit on
+   paste is the W3C failure example F109.
+   https://www.w3.org/WAI/WCAG22/Understanding/accessible-authentication-minimum.html (checked 2026-10-11)
+2. **shadcn base wording:** never say the base "can't change after init". Say: `style` can't change; changing the
+   primitive base later is costly; a Radix-to-Base UI migration path is documented, none to or from React Aria. Keep
+   the spike.
+3. **Node version:** pin one Node line in CI, locally and on the host. Vitest 5.0.3, dependency-cruiser 18.6.0 and
+   ESLint 10 need **Node 22.13+ on the 22 line, any 24.x, or ≥ 26** (not 23 or 25).
+4. **Lint:** eslint-plugin-jsx-a11y 6.10.2 doesn't support ESLint 10 (peer range stops at 9). Either stay on ESLint 9
+   with jsx-a11y, or use ESLint 10 plus Biome's a11y rules. The axe/Playwright gate is unaffected.
+5. **Q15 legal floor:** Ontario's WCAG 2.0 AA duty covers *public* websites and falls on the organization that
+   controls the site. Colleges and universities are designated public sector organizations. UW's accessibility
+   pages name no WCAG version. WCAG 2.2 became a Recommendation on 5 Oct 2023 (updated 12 Dec 2024). AAA criteria are
+   stretch goals only.
+6. **Q16 sources:** the IPC (Ontario) de-identification guideline is the closest fit (illustrative thresholds 10/15/20).
+   TBS binds federal institutions only; PTAC is US/FERPA guidance. N = 10 stays a placeholder.
+7. **CI retention:** GitHub keeps workflow artifacts *and logs* for 90 days by default; shorten retention for
+   canary-scanner output and traces (PQ-70). The Free artifact quota is 500 MB.
+8. **pgTAP** is not in the stock `postgres:18` image, so prefer plain SQL catalogue assertions. **StrykerJS on Vitest 5
+   is Unverified** (spike needed); Stryker never fails CI unless a threshold is set.
+9. **Trademarks:** D2L forbids its marks in product, app or domain names and any implied affiliation. UW logo
+   exceptions are given only in writing and "for official business" (PQ-07, PQ-59).
