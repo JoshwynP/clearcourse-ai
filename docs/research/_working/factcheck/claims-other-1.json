@@ -1,0 +1,358 @@
+{
+ "auth-A1-prototype-signin": [
+  {
+   "claim": "uwaterloo.ca is Entra tenant 723a5a87-f39a-4a22-9247-3fc240c01396 (region scope NA)",
+   "url": "https://login.microsoftonline.com/uwaterloo.ca/v2.0/.well-known/openid-configuration",
+   "status": "verified"
+  },
+  {
+   "claim": "UW domain is Federated to adfs.uwaterloo.ca",
+   "url": "https://login.microsoftonline.com/getuserrealm.srf?login=someone@uwaterloo.ca&xml=1",
+   "status": "verified"
+  },
+  {
+   "claim": "UW tenant's user-consent policy for sign-in-only third-party apps is not publicly documented",
+   "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/44816171143/Gnome+Online+Accounts",
+   "status": "unverified"
+  },
+  {
+   "claim": "By default all users may consent to permissions not needing admin consent; Microsoft recommends verified-publisher-only consent",
+   "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+   "status": "verified"
+  },
+  {
+   "claim": "The Microsoft-managed consent policy is the default for new tenants, and its exception list does not include basic sign-in scopes",
+   "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies",
+   "status": "verified"
+  },
+  {
+   "claim": "Publisher verification needs a verified Microsoft AI Cloud Partner Program account; risk-based step-up affects only permissions beyond basic sign-in",
+   "url": "https://learn.microsoft.com/en-us/entra/identity-platform/publisher-verification-overview",
+   "status": "verified"
+  },
+  {
+   "claim": "Partner Center verification requires a legally registered business",
+   "url": "https://learn.microsoft.com/en-us/partner-center/enroll/understand-the-verification-process",
+   "status": "verified"
+  },
+  {
+   "claim": "Entra oid is the same across apps in a tenant; sub is pairwise per app; email must not be used for authorization",
+   "url": "https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference",
+   "status": "verified"
+  },
+  {
+   "claim": "Entra logs every sign-in (who/how/what), immutable and readable by Reports Readers: a timing side channel for the threat model",
+   "url": "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins",
+   "status": "verified"
+  },
+  {
+   "claim": "UW M365 mailboxes are provided to employees, students, alumni and retirees",
+   "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/269156660/Microsoft+365+email",
+   "status": "verified"
+  },
+  {
+   "claim": "Safe Links scans URLs before delivery and detonates no-reputation URLs in the background",
+   "url": "https://learn.microsoft.com/en-us/defender-office-365/safe-links-about",
+   "status": "verified"
+  },
+  {
+   "claim": "Better Auth magic link is single-use, consumed on first attempt, verified via GET, token stored plain by default",
+   "url": "https://www.better-auth.com/docs/plugins/magic-link",
+   "status": "verified"
+  },
+  {
+   "claim": "Better Auth email OTP: 6 digits, 300 s, 3 attempts, stored plain by default, auto sign-up unless disabled",
+   "url": "https://www.better-auth.com/docs/plugins/email-otp",
+   "status": "verified"
+  },
+  {
+   "claim": "Better Auth v1.7.7 is Latest (30 Sep) and fixes a critical magic-link account takeover",
+   "url": "https://github.com/better-auth/better-auth/releases",
+   "status": "verified"
+  },
+  {
+   "claim": "10 Better Auth advisories 26 Jun-30 Sep 2026, 2 Critical, several High in @better-auth/sso",
+   "url": "https://github.com/better-auth/better-auth/security/advisories",
+   "status": "verified"
+  },
+  {
+   "claim": "Better Auth is MIT licensed with about 30.3k stars",
+   "url": "https://github.com/better-auth/better-auth",
+   "status": "verified"
+  },
+  {
+   "claim": "Better Auth stores sessions in the DB by default with 7-day expiry; the cookie cache delays revocation",
+   "url": "https://www.better-auth.com/docs/concepts/session-management",
+   "status": "verified"
+  },
+  {
+   "claim": "Better Auth implicit account linking by verified email is on by default; disableImplicitLinking exists",
+   "url": "https://www.better-auth.com/docs/concepts/users-accounts",
+   "status": "verified"
+  },
+  {
+   "claim": "Auth.js is now part of Better Auth; security patches and urgent issues only; new projects should use Better Auth",
+   "url": "https://www.better-auth.com/blog/authjs-joins-better-auth",
+   "status": "verified"
+  },
+  {
+   "claim": "Lucia was deprecated in March 2025",
+   "url": "https://lucia-auth.com/",
+   "status": "verified"
+  },
+  {
+   "claim": "WorkOS AuthKit free to 1M MAU but SSO is $125 per connection (billing period unclear) and custom domain $99/mo",
+   "url": "https://workos.com/pricing",
+   "status": "verified"
+  },
+  {
+   "claim": "Auth0 Free: 25,000 MAU and 1 enterprise connection",
+   "url": "https://auth0.com/pricing",
+   "status": "verified"
+  },
+  {
+   "claim": "Resend Free: 3,000 emails/month, capped at 100/day (cited only for OTP sizing; provider choice is Q6)",
+   "url": "https://resend.com/pricing",
+   "status": "verified"
+  },
+  {
+   "claim": "NIST SP 800-63B-4: email SHALL NOT be used for out-of-band authentication; AAL1 session at most 30 days, AAL2 at most 24 h / 1 h idle",
+   "url": "https://pages.nist.gov/800-63-4/sp800-63b.html",
+   "status": "verified"
+  },
+  {
+   "claim": "OIDC Core: iss+sub is the only guaranteed unique identifier; email MUST NOT be used as one",
+   "url": "https://openid.net/specs/openid-connect-core-1_0.html",
+   "status": "verified"
+  }
+ ],
+ "auth-A2-provisioning-lti": [
+  {
+   "claim": "LTI 1.3 Core is IMS Final (16 Apr 2019). `sub` must be stable and unique per issuer; the context claim is optional; context.id is unique per deployment_id",
+   "url": "https://www.imsglobal.org/spec/lti/v1p3/",
+   "status": "verified"
+  },
+  {
+   "claim": "TA sub-role URI is membership/Instructor#TeachingAssistant; platforms should also send the principal role",
+   "url": "https://www.imsglobal.org/spec/lti/v1p3/",
+   "status": "verified"
+  },
+  {
+   "claim": "Security Framework 1.0 requires third-party-initiated login, a nonce in the id_token, kid always set, and RS256 minimum",
+   "url": "https://www.imsglobal.org/spec/security/v1p0/",
+   "status": "verified"
+  },
+  {
+   "claim": "NRPS 2.0 requires only user_id and roles; 'LTI does not pass user information in its default configuration'",
+   "url": "https://www.imsglobal.org/spec/lti-nrps/v2p0",
+   "status": "verified"
+  },
+  {
+   "claim": "AGS 2.0: the platform MAY ignore scores that are not FullyGraded and 'has the final say' on final scores; the comment field is visible to students",
+   "url": "https://www.imsglobal.org/spec/lti-ags/v2p0",
+   "status": "verified"
+  },
+  {
+   "claim": "Dynamic Registration 1.0 is Candidate Final; a new registration is 'not activated yet' until an admin activates it",
+   "url": "https://www.imsglobal.org/spec/lti-dr/v1p0",
+   "status": "verified"
+  },
+  {
+   "claim": "Brightspace supports LTI 1.3 core, AGS v2.0, NRPS v2.0 and Deep Linking 2.0",
+   "url": "https://community.d2l.com/brightspace/kb/articles/23660-lti-advantage-v1-3",
+   "status": "verified"
+  },
+  {
+   "claim": "Registering a tool needs the org-level 'Manage LTI Tools' permission; Dynamic Registration is disabled by default; redirect URLs must match exactly; a domain can be in only one enabled registration",
+   "url": "https://community.d2l.com/brightspace/kb/articles/23662-tool-registration-deployment-and-links",
+   "status": "verified"
+  },
+  {
+   "claim": "The Brightspace deployment 'Anonymous' property was removed (LE API v1.92) and 'is always considered to be false' as of LMS 20.26.2 (re-checked this run). The KB article still mentions Anonymous",
+   "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+   "status": "conflicting"
+  },
+  {
+   "claim": "SendInstitutionRole is a registration property, not a deployment flag (correction made this run)",
+   "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+   "status": "verified"
+  },
+  {
+   "claim": "PreProvisioning is a 'Security setting to send classlist including users not known to tool'",
+   "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+   "status": "verified"
+  },
+  {
+   "claim": "UW's actual LEARN-to-IMS role mapping (for example for TAs)",
+   "url": "https://community.d2l.com/brightspace/kb/articles/23663-org-units-and-role-mapping",
+   "status": "unverified"
+  },
+  {
+   "claim": "LEARN is D2L-hosted; the LEARN team reviews third-party tools with the Privacy Officer and ISO before integration; the standard data set is USERID/role/username/email",
+   "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/44088164615/LEARN+Privacy+information+and+other+tools",
+   "status": "verified"
+  },
+  {
+   "claim": "UW IRA-PIA review 'typically takes 2–4 weeks'; FIPPA amended by Bill 194, effective 1 Jul 2025",
+   "url": "https://uwaterloo.ca/privacy/information-risk-assessment",
+   "status": "verified"
+  },
+  {
+   "claim": "UW LEO handles 'requests for integration with the LMS'; principles include 'sustainable' and 'scalable … broad campus use'; the CIO approves contracts",
+   "url": "https://uwaterloo.ca/educational-technology-hub/governance",
+   "status": "verified"
+  },
+  {
+   "claim": "UW guidance: without proper permission, instructors 'are not authorized to release student information' (page dated July 2017)",
+   "url": "https://uwaterloo.ca/information-systems-technology/about/policies-standards-and-guidelines/teaching-learning/cloud-based-educational-technologies",
+   "status": "verified"
+  },
+  {
+   "claim": "UW guidance: 'best to choose a tool that does not require students to identify themselves'; check whether an IRA is required first",
+   "url": "https://uwaterloo.ca/privacy/guidelines/online-educational-technologies",
+   "status": "verified"
+  },
+  {
+   "claim": "jose 6.2.12, MIT, zero dependencies, repo pushed 2026-10-01",
+   "url": "https://registry.npmjs.org/jose/latest",
+   "status": "verified"
+  },
+  {
+   "claim": "ltijs v7.0.0 (2026-09-09) is a 'full, from-scratch TypeScript rewrite' with MongoDB-only database backends and Node 24+; previous release was v5.9.5 (2024-05-01). Re-checked this run",
+   "url": "https://api.github.com/repos/Cvmcosta/ltijs/releases?per_page=5",
+   "status": "verified"
+  },
+  {
+   "claim": "The saLTIre Test Platform supports LTI 1.3, Deep Linking, a line-item service and Dynamic Registration with no account needed; NRPS support is not stated",
+   "url": "https://saltire.lti.app/",
+   "status": "verified"
+  },
+  {
+   "claim": "moodle-docker (GPL-3.0) exists and is maintained; Moodle registers LTI Advantage tools pending-then-activate",
+   "url": "https://docs.moodle.org/en/External_tool",
+   "status": "verified"
+  },
+  {
+   "claim": "1EdTech certification needs active membership; price not listed",
+   "url": "https://www.1edtech.org/certification/get-certified",
+   "status": "unverified"
+  },
+  {
+   "claim": "Brightspace grade import CSV needs OrgDefinedID or Username plus an End-of-Line Indicator",
+   "url": "https://community.d2l.com/brightspace/kb/articles/3537-import-grades-and-grade-items",
+   "status": "verified"
+  }
+ ],
+ "other-O1-email-notifications": [
+  {
+   "claim": "SES has no SES-specific free allowance. À la carte outbound costs $0.10 per 1,000. New AWS customers get up to $200 in Free Tier credits.",
+   "url": "https://aws.amazon.com/ses/pricing/",
+   "status": "verified"
+  },
+  {
+   "claim": "SES sandbox sends only to verified recipients, at most 200 messages per 24 hours and 1 per second, per Region. AWS Support gives an initial response to production-access requests within 24 hours.",
+   "url": "https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html",
+   "status": "verified"
+  },
+  {
+   "claim": "SES is available in ca-central-1 and ca-west-1. SMTP endpoints are not available in ca-west-1.",
+   "url": "https://docs.aws.amazon.com/general/latest/gr/ses.html",
+   "status": "verified"
+  },
+  {
+   "claim": "SES open and click tracking only happens when a configuration set with an event destination is set up. ses:no-track disables tracking per link.",
+   "url": "https://docs.aws.amazon.com/ses/latest/dg/faqs-metrics.html",
+   "status": "verified"
+  },
+  {
+   "claim": "SES does not retain message bodies (no official page states this either way).",
+   "url": "https://docs.aws.amazon.com/ses/latest/dg/data-protection.html",
+   "status": "unverified"
+  },
+  {
+   "claim": "Resend Free allows 3,000 emails/month, is limited to 100 per day, and has 30-day data retention. Pro costs $20/month for 50,000.",
+   "url": "https://resend.com/pricing",
+   "status": "verified"
+  },
+  {
+   "claim": "All Resend account data, including email metadata and logs, is stored in the United States. No Canadian region exists.",
+   "url": "https://resend.com/docs/dashboard/domains/regions.md",
+   "status": "verified"
+  },
+  {
+   "claim": "Resend turns off message content storage only via support, on Pro/Scale with conditions, as a $50/month add-on.",
+   "url": "https://resend.com/docs/knowledge-base/how-do-i-ensure-sensitive-data-isnt-stored-on-resend.md",
+   "status": "verified"
+  },
+  {
+   "claim": "Cloudflare Email Sending is in Beta and available on Workers Paid. It includes 3,000 emails/month, then $0.35 per 1,000.",
+   "url": "https://developers.cloudflare.com/email-service/platform/pricing/",
+   "status": "verified"
+  },
+  {
+   "claim": "Cloudflare Email preview keeps HTML, text, headers and raw source for about seven days and is on by default for new sending domains.",
+   "url": "https://developers.cloudflare.com/email-service/observability/logs/index.md",
+   "status": "verified"
+  },
+  {
+   "claim": "Postmark Free is 100 emails/month and Basic is $15/month. Postmark keeps content and metadata for 45 days and is hosted in the US with no EU plans.",
+   "url": "https://postmarkapp.com/eu-privacy",
+   "status": "verified"
+  },
+  {
+   "claim": "Mailgun Free is 100 emails/day with 1 custom domain and 1-day log retention. Basic is $15/month.",
+   "url": "https://www.mailgun.com/pricing/",
+   "status": "verified"
+  },
+  {
+   "claim": "SendGrid offers a free trial of 100 emails/day for 60 days; the page still mentions a 'free plan' elsewhere. Essentials starts at $19.95/month.",
+   "url": "https://www.twilio.com/en-us/products/email-api/pricing",
+   "status": "conflicting"
+  },
+  {
+   "claim": "MailerSend Free is 500 emails/month with 100 daily requests and requires approval and a card. Hobby is $7/month for 5,000.",
+   "url": "https://www.mailersend.com/pricing",
+   "status": "verified"
+  },
+  {
+   "claim": "Brevo free-plan limits, data location and DPA",
+   "url": "https://www.brevo.com/pricing/",
+   "status": "unverified"
+  },
+  {
+   "claim": "Exchange Online message trace shows sender, recipient and the first 256 characters of the subject for up to 90 days.",
+   "url": "https://learn.microsoft.com/en-us/exchange/monitoring/trace-an-email-message/message-trace-modern-eac",
+   "status": "verified"
+  },
+  {
+   "claim": "Safe Links click data (UrlClickEvents) stores the full clicked URL plus AccountUpn, timestamp and IP. Whether UW licenses Defender for Office 365 is unknown.",
+   "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-urlclickevents-table",
+   "status": "verified"
+  },
+  {
+   "claim": "From 2025-05-05, Outlook.com enforces SPF, DKIM and DMARC for domains sending more than 5,000 emails per day. Whether this covers Microsoft 365 tenants is not stated.",
+   "url": "https://substrate.office.com/ip-domain-management-snds/postmaster",
+   "status": "verified"
+  },
+  {
+   "claim": "Gmail bulk senders (more than 5,000/day) need SPF and DKIM, a DMARC record (p=none allowed) and alignment. One-click unsubscribe does not apply to transactional mail.",
+   "url": "https://support.google.com/a/answer/81126",
+   "status": "verified"
+  },
+  {
+   "claim": "DMARCbis is now RFC 9989 (Proposed Standard, May 2026), obsoleting RFC 7489 and RFC 9091.",
+   "url": "https://datatracker.ietf.org/doc/draft-ietf-dmarc-dmarcbis/",
+   "status": "verified"
+  },
+  {
+   "claim": "RFC 8058 one-click unsubscribe uses an HTTPS POST, so link scanners that GET the URL do not trigger it.",
+   "url": "https://www.rfc-editor.org/info/rfc8058",
+   "status": "verified"
+  },
+  {
+   "claim": "CASL s.6(6)(d) exempts factual account notifications from the consent requirement only; the form and unsubscribe requirements still apply. Whether ClearCourse emails are commercial electronic messages is not assessed.",
+   "url": "https://laws-lois.justice.gc.ca/eng/acts/E-1.6/page-1.html",
+   "status": "verified"
+  }
+ ]
+}

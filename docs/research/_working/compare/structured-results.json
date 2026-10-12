@@ -1,0 +1,2051 @@
+{
+ "stack-S0-framework-data-access": {
+  "file": "P:/code/_clearcourse-scratch/research/stack-S0-framework-data-access.md",
+  "recommendation": "PROPOSAL for the owner to approve through an ADR. Use Next.js 16.x App Router on the Node.js runtime only. Put all DB access in a separate server-only Data Access Layer (DAL) module per privacy domain, and expose privacy-relevant operations as explicit Route Handlers. React Router v8 is the close alternative if hosting is Cloudflare Workers or the owner prefers an explicit request/response model. For data access, use Drizzle ORM with one instance, pool, Postgres LOGIN role and secret per domain. Write all security DDL (roles, GRANTs, ENABLE+FORCE RLS, policies, SECURITY DEFINER functions) as hand-written SQL migrations alongside drizzle-kit generated ones, and assert it in CI against a Postgres 18 container. Validate with Zod 4. Kysely is the fallback; Prisma is not recommended for design A.",
+  "options": [
+   {
+    "name": "Next.js 16.4 App Router",
+    "verdict": "Recommended (proposal). Most mainstream (20.6% in Stack Overflow 2026), official DAL guidance, `server-only` build errors, best React a11y ecosystem, stable Adapter API. Watch for: Server Actions are hidden POST endpoints, a record of critical RSC CVEs (another patch due 2026-10-14), and unit tests can't cover async Server Components."
+   },
+   {
+    "name": "React Router v8 framework mode",
+    "verdict": "Close alternative. Every loader/action is an explicit, testable URL, and `.server` modules fail the build if they reach client code. Native Vercel/Cloudflare/Node support and the least lock-in, but much less mainstream (Remix 1.7%)."
+   },
+   {
+    "name": "SvelteKit 3",
+    "verdict": "Not recommended now. Released 2026-10-01 with breaking changes. Remote functions not yet stable. Server-only checks are disabled when TEST=true. Thinner a11y component ecosystem."
+   },
+   {
+    "name": "Django 6.1 (chosen over Rails/Laravel)",
+    "verdict": "Credible third. Best built-in support for per-alias DB credentials, refuses cross-database foreign keys, mature tests, allauth covers OIDC and SAML. Vercel now runs it as one function. Weaker polished interactive UI, contrib.admin is a §3 hazard, and Workers support is unverified."
+   },
+   {
+    "name": "Drizzle ORM (0.45.4 stable; v1 RC)",
+    "verdict": "Recommended. Declares RLS policies and roles; GRANTs and SECURITY DEFINER functions go in --custom SQL migrations. Its logger receives query params, so it must stay off in production. Re-check v1 status at ADR time."
+   },
+   {
+    "name": "Prisma 8",
+    "verdict": "Not recommended for design A. The schema can't express RLS, roles or grants, and the only documented RLS pattern is a per-query batch-transaction example 'not intended to be used in production'."
+   },
+   {
+    "name": "Kysely 0.29.6",
+    "verdict": "Best alternative: SQL-first, hand-written migrations with a DB-level lock, and Better Auth's built-in adapter. Still pre-1.0."
+   },
+   {
+    "name": "Raw postgres.js / node-postgres",
+    "verdict": "Use as the driver under Drizzle or Kysely, not on its own (weak result typing). postgres.js has a single maintainer."
+   },
+   {
+    "name": "Atlas migrations",
+    "verdict": "Policies, roles/permissions and functions require paid Atlas Pro, so not suitable for the privacy-critical DDL on a <$5/month budget."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "Next.js 16.4 released 2026-10-06; an out-of-band security update is scheduled for 2026-10-14 for two Critical and one High upstream vulnerabilities; CVE-2025-66478 (CVSS 10 RCE in RSC) was published 2025-12-03",
+    "url": "https://nextjs.org/blog",
+    "status": "verified"
+   },
+   {
+    "claim": "Next.js 16 replaced middleware.ts with proxy.ts, which runs on the Node.js runtime; minimum Node 20.9",
+    "url": "https://nextjs.org/blog/next-16",
+    "status": "verified"
+   },
+   {
+    "claim": "Next.js recommends a server-only Data Access Layer for new projects; Server Actions are reachable via direct POST and must re-check auth inside each one",
+    "url": "https://nextjs.org/docs/app/guides/data-security",
+    "status": "verified"
+   },
+   {
+    "claim": "Next.js Adapter API stable since 16.2; Vercel's adapter uses the same public contract",
+    "url": "https://nextjs.org/blog/nextjs-across-platforms",
+    "status": "verified"
+   },
+   {
+    "claim": "React Router docs latest is 8.4.0; v8 announced 2026-06-17; .server modules fail the build if they reach the client graph",
+    "url": "https://reactrouter.com/api/framework-conventions/server-modules",
+    "status": "verified"
+   },
+   {
+    "claim": "SvelteKit 3 announced 2026-10-01 ($lib to #lib, config moved to vite.config.ts); remote functions not yet stable",
+    "url": "https://svelte.dev/blog/sveltekit-3-is-here",
+    "status": "verified"
+   },
+   {
+    "claim": "Django multi-DB: each alias has its own USER/PASSWORD; routers; no FK/M2M across databases",
+    "url": "https://docs.djangoproject.com/en/stable/topics/db/multi-db/",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel deploys Django as a single Vercel Function on Fluid compute",
+    "url": "https://vercel.com/docs/frameworks/full-stack/django",
+    "status": "verified"
+   },
+   {
+    "claim": "Drizzle 0.45.4 is the latest stable release; v1.0.0-rc.4 is a pre-release",
+    "url": "https://github.com/drizzle-team/drizzle-orm/releases",
+    "status": "verified"
+   },
+   {
+    "claim": "Drizzle declares RLS policies (pgPolicy) and roles (pgRole, opt-in entities.roles); its RLS docs do not mention GRANT or SECURITY DEFINER",
+    "url": "https://orm.drizzle.team/docs/rls",
+    "status": "verified"
+   },
+   {
+    "claim": "Prisma's RLS client-extension example wraps every query in a batch transaction and 'is not intended to be used in production environments'",
+    "url": "https://github.com/prisma/prisma-client-extensions/tree/main/row-level-security",
+    "status": "verified"
+   },
+   {
+    "claim": "Atlas: RLS policies, roles/users/permissions and functions are available only to Atlas Pro users",
+    "url": "https://atlasgo.io/atlas-schema/hcl#row-level-security",
+    "status": "verified"
+   },
+   {
+    "claim": "PgBouncer transaction mode: SET/RESET and PREPARE 'Never'; protocol-level prepared statements need max_prepared_statements > 0",
+    "url": "https://www.pgbouncer.org/features.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase transaction mode does not support prepared statements; custom roles connect via the shared pooler as [ROLE].[PROJECT-REF]",
+    "url": "https://supabase.com/docs/guides/database/connecting-to-postgres",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon's RLS example runs set_config(..., true) inside a non-interactive sql.transaction(); the role must not have BYPASSRLS",
+    "url": "https://neon.com/docs/serverless/serverless-driver-configuration",
+    "status": "verified"
+   },
+   {
+    "claim": "Hyperdrive pools in transaction mode, supports SET inside a transaction, and RESETs connections when they return to the pool",
+    "url": "https://developers.cloudflare.com/hyperdrive/concepts/how-hyperdrive-works/",
+    "status": "verified"
+   },
+   {
+    "claim": "Table owners bypass RLS unless FORCE ROW LEVEL SECURITY; superusers and BYPASSRLS roles always bypass; referential-integrity checks bypass RLS (covert channel)",
+    "url": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html",
+    "status": "verified"
+   },
+   {
+    "claim": "SECURITY DEFINER functions should pin search_path with pg_temp last and REVOKE EXECUTE from PUBLIC in the same transaction; PUBLIC gets EXECUTE on functions by default",
+    "url": "https://www.postgresql.org/docs/current/sql-createfunction.html",
+    "status": "verified"
+   },
+   {
+    "claim": "uuidv7 embeds a millisecond UNIX timestamp that uuid_extract_timestamp can extract",
+    "url": "https://www.postgresql.org/docs/current/functions-uuid.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Sentry Next.js SDK by default collects the IP address, incoming request bodies on the server, query strings and console breadcrumbs",
+    "url": "https://docs.sentry.io/platforms/javascript/guides/nextjs/data-management/data-collected/",
+    "status": "verified"
+   },
+   {
+    "claim": "Auth.js is now maintained by the Better Auth team with security patches; new projects are strongly recommended to use Better Auth",
+    "url": "https://www.better-auth.com/blog/authjs-joins-better-auth",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth magic link: default storeToken is 'plain', 300 s expiry, single-use, rate limit 5 per 60 s",
+    "url": "https://www.better-auth.com/docs/plugins/magic-link",
+    "status": "verified"
+   },
+   {
+    "claim": "Stack Overflow 2026 usage: Next.js 20.6%, Django 11.3%, Laravel 7.6%, SvelteKit 5.6%, Rails 5.7%, Remix 1.7% (n=10,281)",
+    "url": "https://survey.stackoverflow.co/2026/technology/data",
+    "status": "verified"
+   },
+   {
+    "claim": "GitHub Free private repos get 2,000 Actions minutes/month; usage is blocked at the quota without a payment method",
+    "url": "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "status": "verified"
+   },
+   {
+    "claim": "OpenNext Cloudflare does not yet support Node Middleware, so whether it supports Next 16 proxy.ts is uncertain",
+    "url": "https://opennext.js.org/cloudflare",
+    "status": "unverified"
+   }
+  ],
+  "new_open_questions": [
+   "NQ-S0-1: Is Canadian data residency for app and DB required in production? It is not in CONTRIBUTING.",
+   "NQ-S0-2: Is any third-party error-reporting or analytics SaaS allowed, and if so which fields may it receive (§6.2)?",
+   "NQ-S0-3: If hosting is Cloudflare, does OpenNext support Next 16 proxy.ts (Node runtime)? If not, React Router becomes the default.",
+   "NQ-S0-4: Must secret isolation per privacy domain be enforced by the platform (separate deployments, design B), or is one deployment with separate DB roles acceptable for the prototype?",
+   "NQ-S0-5: Which LTI 1.3 library (and therefore which language) will Q5 provisioning use?",
+   "NQ-S0-6: Can preview or staging deployments ever hold real pilot data? (Proposal: never.)",
+   "NQ-S0-7: Drizzle v1 RC or 0.45.x stable at scaffolding time?",
+   "NQ-S0-8: Should uuidv7 and precise timestamps be banned in the anonymous domains to resist timing correlation (ties to Q9)?"
+  ],
+  "risks": [
+   "Next.js RSC / Server Actions add a large attack surface with a history of critical CVEs, so patching within days is mandatory (next update scheduled 2026-10-14).",
+   "Within a single deployment every server module can read every env var. DB-role separation is enforced by Postgres, but secret separation per code path is only by convention unless services are deployed separately.",
+   "A session-level SET (instead of SET LOCAL) behind a transaction-mode pooler could leak one request's context to another; needs a CI ban and integration tests.",
+   "Unverified gotcha: placeholder GUCs may read back as '' rather than NULL on reused connections; policies must use nullif() and be tested behind the pooler.",
+   "ORM query loggers (Drizzle receives params), framework error logs and Sentry defaults can put identity and anonymous text in the same log, breaching §3/§6.2.",
+   "Unique constraints or FKs used for upvote de-duplication can leak existence through RI checks that bypass RLS.",
+   "Vendor RLS helpers (Neon auth.user_id(), Supabase roles) would lock policies to one provider.",
+   "Drizzle v1 is still a release candidate and changes the migrations folder layout; whether drizzle-kit push would drop custom-SQL policies is unverified.",
+   "Claude's training data may lag the fresh releases (SvelteKit 3, React Router v8, Next 16.4, Prisma 8), so versioned docs must be consulted.",
+   "Per-domain pools multiply DB connections under serverless bursts (e.g. a 1,000-student class); free-tier pooler limits must be checked by the hosting branch."
+  ]
+ },
+ "privacy-A-db-enforced": {
+  "file": "P:/code/_clearcourse-scratch/research/privacy-A-db-enforced.md",
+  "recommendation": "Proposal for the owner to approve, not a decision. Use one Postgres database with a schema per §6.1 domain. Questions and comments carry no author column. Per-student counters are keyed by pid = HMAC(K_c, user_id) in locked schemas. De-duplication (upvote, follow, report, unclear) uses per-item tags HMAC(K_c, label‖user‖item), with merges de-duplicated by iterating the roster. The course key is stored wrapped: Supabase Vault (K2), or portably under an app-held key (K3). Every privacy-relevant action goes through whitelisted SECURITY DEFINER functions that resolve the caller from a session secret. The Supabase/Neon Data API stays off, and catalog-level tests run in CI. Start with synchronous crediting (Mode S) and keep the client-token deferred mode (Mode D) as a no-migration upgrade. Mode S's xmin side channel is an operator-level limitation to be documented. The operator and vendors stay inside the trust boundary.",
+  "options": [
+   {
+    "name": "(i) Keyed pseudonym pid = HMAC(K_c, user_id) with wrapped K_c",
+    "verdict": "Recommended. A logical DB dump cannot link counters or tags to students without the unwrap key. Destroying K_c crypto-shreds everything at once. Rotating the key costs one pass over the roster."
+   },
+   {
+    "name": "(ii) Random per-(student, course) pseudonym in a locked linkage table",
+    "verdict": "Viable, but the linkage table sits in clear in any dump unless it is also encrypted. Tags still need a key, so it doesn't remove the need for key custody."
+   },
+   {
+    "name": "(iii-a) One per-course pseudonym stored on upvote/follow rows",
+    "verdict": "Rejected. Merging is trivial, but one pid links all of a student's upvotes and follows and joins straight to the counters (cross-item profiling)."
+   },
+   {
+    "name": "(iii-b) Per-item tags HMAC(K_c, label||user||item)",
+    "verdict": "Recommended. Tags can't be linked across items without the key. Merges de-duplicate by testing each roster member inside the definer function, about 2N HMACs."
+   },
+   {
+    "name": "K1 raw course key in a locked table",
+    "verdict": "Rejected. Anyone with a dump gets the key, which recreates the §12 'reversible hash' problem."
+   },
+   {
+    "name": "K2 Supabase Vault / K3 KEK-wrapped key passed as a bind parameter / K4 KMS-held KEK for production",
+    "verdict": "K3 for portability, or K2 if the stack is Supabase. K4 is the production upgrade. Do not use pgsodium: Supabase marks it pending deprecation."
+   },
+   {
+    "name": "Mode S: synchronous crediting in the same transaction",
+    "verdict": "Prototype default. Simple, and it guarantees integrity. Weakness: the content row and counter row share xmin, so the operator, the DB vendor or anyone with a physical backup can attribute each student's latest action. Ordinary queries can't."
+   },
+   {
+    "name": "Mode D: deferred crediting via a client-held one-time credit token",
+    "verdict": "Upgrade path with no data migration. Closes the logical xmin link. Costs: credit appears late, and tokens can be lost (cleared storage, device switch)."
+   },
+   {
+    "name": "Variant A-prime: Supabase Data API with RLS and auth.uid()",
+    "verdict": "Not recommended. Gateway logs index the JWT subject and request path for every RPC, RLS becomes internet-facing, and it locks the design to Supabase."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "PostgreSQL grants EXECUTE on new functions to PUBLIC by default. SECURITY DEFINER functions should set search_path with pg_temp last, and privileges should be revoked and granted in the same transaction that creates the function. LEAKPROOF can only be set by a superuser.",
+    "url": "https://www.postgresql.org/docs/current/sql-createfunction.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Superusers and BYPASSRLS roles always bypass RLS. Table owners bypass it unless FORCE ROW LEVEL SECURITY is set. With RLS enabled and no matching policy, access is denied by default.",
+    "url": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html",
+    "status": "verified"
+   },
+   {
+    "claim": "xmin is the transaction ID of the inserting transaction for each row version, and ctid is the row's physical location. Both are system columns that any role with SELECT on the table can read.",
+    "url": "https://www.postgresql.org/docs/current/ddl-system-columns.html",
+    "status": "verified"
+   },
+   {
+    "claim": "track_commit_timestamp defaults to off and can only be set at server start.",
+    "url": "https://www.postgresql.org/docs/current/runtime-config-replication.html",
+    "status": "verified"
+   },
+   {
+    "claim": "By default, failing statements are logged (log_min_error_statement = ERROR) but their bind parameters are not (log_parameter_max_length_on_error = 0). If statement logging is turned on, bind parameters are logged in full (log_parameter_max_length = -1).",
+    "url": "https://www.postgresql.org/docs/current/runtime-config-logging.html",
+    "status": "verified"
+   },
+   {
+    "claim": "PG 18 offers gen_random_uuid()/uuidv4() and uuidv7(). uuid_extract_timestamp() recovers the timestamp from v1 and v7 UUIDs.",
+    "url": "https://www.postgresql.org/docs/current/functions-uuid.html",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 9562: UUIDv7 embeds a 48-bit Unix millisecond timestamp. UUIDs MUST NOT be used as security capabilities, and v4 is recommended for security-related contexts.",
+    "url": "https://www.rfc-editor.org/rfc/rfc9562.html",
+    "status": "verified"
+   },
+   {
+    "claim": "pgcrypto provides hmac() and gen_random_bytes() (at most 1024 bytes per call). Data and keys pass in clear between client and server, so TLS is needed and the DB administrator must be trusted.",
+    "url": "https://www.postgresql.org/docs/current/pgcrypto.html",
+    "status": "verified"
+   },
+   {
+    "claim": "On Supabase, postgres is the default table owner and has bypassrls. Views bypass RLS by default unless created with security_invoker (PG15+). SECURITY DEFINER functions should use search_path = '' and must not live in exposed schemas.",
+    "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+    "status": "verified"
+   },
+   {
+    "claim": "The Supabase Data API can be disabled entirely. On existing projects, tables in the public schema get default grants to anon, authenticated and service_role.",
+    "url": "https://supabase.com/docs/guides/api/hardening-data-api",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase's new default (tables not automatically exposed to the Data API) applies to new projects from 2026-05-30 and to all existing projects on 2026-10-30.",
+    "url": "https://github.com/orgs/supabase/discussions/45329",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase Vault encrypts secrets with authenticated encryption (AEAD) under a per-project root key that is never stored in the database. Restore-to-new-project and branching copy that key.",
+    "url": "https://supabase.com/docs/guides/database/vault",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase lists pgsodium as pending deprecation, does not recommend it, and says to use Vault instead.",
+    "url": "https://supabase.com/docs/guides/database/extensions/pgsodium",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase API Gateway logs can be filtered by JWT subject (user ID) and request pathname.",
+    "url": "https://supabase.com/docs/guides/telemetry/logs",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase Free: $0, 500 MB database, 2 active projects, paused after 1 week of inactivity, no backups or PITR, 1-day API/DB log retention, 1-hour auth audit logs. Pro starts at $25/month with daily backups kept 7 days.",
+    "url": "https://supabase.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon allows CREATE ROLE via SQL (500 roles per branch). Roles created in the Console, CLI or API join neon_superuser, which has BYPASSRLS (projects after 2023-08-15) and pg_read_all_data. Roles created via SQL do not join it.",
+    "url": "https://neon.com/docs/manage/roles",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon Free: $0, 1 GB per project, 100 CU-hours per project, scale-to-zero after 5 minutes, 6-hour restore window. The Launch plan offers up to 7 days of history.",
+    "url": "https://neon.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "The Neon Data API is opt-in per branch, and authorization relies entirely on Postgres GRANTs and RLS.",
+    "url": "https://neon.com/docs/data-api/get-started",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel runtime logs record request path, search params, user agent and time. Retention is 1 hour on Hobby and 1 day on Pro.",
+    "url": "https://vercel.com/docs/logs/runtime",
+    "status": "verified"
+   },
+   {
+    "claim": "In Supabase, track_commit_timestamp is a CLI-only setting, and supautils lets the postgres role change log_statement and log_min_duration_statement.",
+    "url": "https://supabase.com/docs/guides/platform/custom-postgres-config",
+    "status": "verified"
+   },
+   {
+    "claim": "Privacy Pass (RFC 9576, with RFC 9578 for issuance and RFC 9577 for the HTTP scheme) provides tokens that cannot be linked to their issuance. This is cited only as a cross-family alternative for survey de-duplication.",
+    "url": "https://www.rfc-editor.org/rfc/rfc9576.html",
+    "status": "verified"
+   },
+   {
+    "claim": "A pg_dump/COPY export follows physical row order, so rows written together line up across tables. Mitigating this with CLUSTER and fillfactor is a proposal.",
+    "url": "https://www.postgresql.org/docs/current/ddl-system-columns.html",
+    "status": "unverified"
+   }
+  ],
+  "new_open_questions": [
+   "NQ-A1: Who receives 'Answer posted': followers, the asker, or both? Notifying the asker requires storing an asker tag, which weakens the no-author-data property.",
+   "NQ-A2: May students view, edit or delete their own anonymous posts? Any of these needs a stored authorship capability.",
+   "NQ-A3: Can a student withdraw an upvote, and if so, does 'upvotes given' go down?",
+   "NQ-A4: May students upvote their own question? Blocking it requires author data.",
+   "NQ-A5: Does hiding or deleting content take away participation credit already earned? Family A can only do this by adding an encrypted author reference, a design fork to settle before the Q9 ADR.",
+   "NQ-A6: When questions are merged, does a student who upvoted both keep 2 'upvotes given'? What happens to the merged-away question's answers and 'Still unclear' marks, and who can see unclear counts?",
+   "NQ-A7: How are level aggregates protected from differencing against the shared-results list? Options: hide them once the sharing window opens, apply a complex suppression rule, add noise, or drop the aggregate.",
+   "NQ-A8: What timestamp precision is stored and shown for content? Finer precision makes timing correlation easier; coarser precision weakens the 'most recent' sort.",
+   "NQ-A9: Is the platform operator (the owner) inside the trust boundary for the prototype, and for production?",
+   "NQ-A10: Is delayed crediting (Mode D) acceptable from a UX standpoint, given that it closes the xmin side channel?",
+   "NQ-A11: May the moderation log or dashboards record or show staff identity next to content? Does 'identity-bearing' in §3 include staff?",
+   "NQ-A12: How should repeat anonymous abusers be handled? Options: moderation only, sanction without revealing identity, or the §6.4 exceptional process.",
+   "NQ-A13: Does asking a question automatically follow it?",
+   "NQ-A14: Must the exit survey prevent duplicate submissions?",
+   "NQ-A15: Is a shared level frozen when the student shares, or live until the instructor finalises?",
+   "NQ-A16: Which vendor logs are acceptable, and must we verify they contain no request bodies (e.g. Supabase gateway)?",
+   "NQ-A17: Can one person be both a TA and a student in the same course?",
+   "NQ-A18: Should presentation mode and analytics show live totals or snapshots? Live totals create a classroom-observation side channel."
+  ],
+  "risks": [
+   "Mode S: the content row and the counter row share xmin, so the operator, the DB vendor or anyone with a physical backup can attribute each student's most recent credited action. Ordinary queries cannot; this must be documented as a limitation.",
+   "The operator holds both the database and the unwrap key (KEK), so they can test every roster member against the upvote, follow and report tags until the course key is shredded. Backups keep the key until they expire (Supabase Pro: 7 days; Neon Free: 6 hours).",
+   "Comparing the level-distribution aggregate with the shared-results list can reveal non-sharers' levels unless aggregates are hidden or restricted (NQ-A7).",
+   "Supabase defaults: postgres has bypassrls and owns tables by default, and the Data API grant change reaches existing projects on 2026-10-30. Misconfiguration exposes schemas. Mitigate by disabling the Data API, using a custom owner role with FORCE RLS, and running a CI probe.",
+   "Neon: any role created in the Console joins neon_superuser (BYPASSRLS plus pg_read_all_data). The app must use roles created via SQL only.",
+   "Turning on statement logging (log_statement or log_min_duration_statement) logs bind parameters in full. That would put session tokens and post text together in DB logs.",
+   "With no author data stored, credit cannot be revoked, repeat abusers cannot be sanctioned, self-upvotes cannot be blocked, and posts cannot be edited. Each can only be added going forward, and each weakens the core property.",
+   "If the app server is fully compromised (all secrets, including cc_auth), the attacker can mint sessions and query the stored per-student state (upvotes, follows, counts) for every user, and can log future posts with their authors.",
+   "Business logic in PL/pgSQL plus strict grant discipline on every migration raises maintenance risk for a solo developer. The catalog-invariant CI tests are the main mitigation.",
+   "Several mitigations rely on Postgres behaviours I haven't verified: dump row order, HOT updates under fillfactor, CLUSTER's effect on xmin. Each needs an empirical test before anyone relies on it."
+  ]
+ },
+ "stack-H1H2-vercel": {
+  "file": "P:/code/_clearcourse-scratch/research/stack-H1H2-vercel.md",
+  "recommendation": "PROPOSAL for owner approval: for the prototype, use H2a. That is Next.js on Vercel with functions pinned to yul1 (Montréal), plus Supabase Free in ca-central-1 used only as managed Postgres (Data API disabled, one custom login role per data domain, in-app auth library). This keeps the Canadian option open, avoids Neon's compute-hours cliff and gives the best local dev. Switch to H1 (Vercel iad1 + Neon aws-us-east-1) if the privacy design needs 3 or more physically separate databases (design B) and US hosting is acceptable. Never use Supabase's client-side Data API for anonymous content. Either way, the owner must first confirm eligibility for Vercel Hobby's non-commercial clause or budget Vercel Pro at $20/month, which by itself breaks the $5 target.",
+  "options": [
+   {
+    "name": "H1: Vercel Hobby + Neon Free + in-app auth (Better Auth)",
+    "verdict": "About $1/mo (domain only) if under 100 CU-hours/project. Best fit for privacy design B: 100 free projects, each with its own credentials and quota. No Canadian Neon region, and the region can't be changed later. The free tier suspends compute until next month at the cap; my estimate is 89–134 CU-h at the assumed scale. The neon_superuser role has BYPASSRLS and read-all. Preview branches copy production data by default. Choose it when design B and US hosting are acceptable."
+   },
+   {
+    "name": "H1-NA: H1 with Neon Auth (managed Better Auth)",
+    "verdict": "Not recommended. The page mentions only email/password and Google OAuth (no SAML or OIDC for UW SSO), and it ties identity to the vendor."
+   },
+   {
+    "name": "H2a: Vercel + Supabase Free as plain Postgres, Data API disabled, in-app auth",
+    "verdict": "PROPOSED for the prototype. About $1/mo. Compute and database can both run in Canada (yul1 + ca-central-1). Free compute is always on with no meter. Over-quota handling starts with a grace period, though it is still an outage risk afterwards. Excellent local dev. Weaknesses: 500 MB database, only 2 free projects (design B limited), no backups on Free (do your own db dump), pauses after 1 week idle."
+   },
+   {
+    "name": "H2b: H2a but with Supabase Auth used server-side",
+    "verdict": "Workable but riskier for §6.1. auth.users sits in the same database as content, the dashboard runs as postgres, and auth_logs record email, user ID and IP. It gives a SAML path on Pro ($25 + $0.015 per SSO MAU after 50). Needs custom SMTP: the built-in email allows only 2 messages per hour, to team members only."
+   },
+   {
+    "name": "H2c: Supabase Auth + client-side Data API/PostgREST with RLS (PDF chat pattern)",
+    "verdict": "Not recommended for anonymous content, upvotes, participation or survey. RLS tends to need auth.uid() on content rows, and gateway logs record end-user IP, precise geolocation and path. The logs UI also lets you filter by JWT subject, so log lines can be tied to user IDs. Highest lock-in."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "Vercel Hobby is 'for personal, non-commercial use'; commercial use includes financial gain of anyone in production, 'including a paid employee or consultant writing the code'",
+    "url": "https://vercel.com/docs/limits/fair-use-guidelines",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel Hobby cannot buy extra usage; when a limit is exceeded you 'wait until 30 days have passed' to use the feature again",
+    "url": "https://vercel.com/docs/plans/hobby",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel Hobby includes 1M function invocations, 4 Active CPU-hours, 360 GB-hrs memory and 100 GB data transfer; runtime logs kept 1 hour; no drains",
+    "url": "https://vercel.com/docs/plans/hobby",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel has a Montréal compute region yul1 (ca-central-1); the default is iad1; Hobby runs functions in a single region",
+    "url": "https://vercel.com/docs/regions",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel runtime logs record path, search params, host and user agent; the 'logs from your browser' filter matches IP and user agent",
+    "url": "https://vercel.com/docs/logs/runtime",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel DPA applies 'for Customers who are on Enterprise and Pro plans'; primary processing is in the US",
+    "url": "https://vercel.com/legal/dpa",
+    "status": "verified"
+   },
+   {
+    "claim": "Vercel Functions now serve WebSockets natively (public beta on all plans)",
+    "url": "https://vercel.com/kb/guide/do-vercel-serverless-functions-support-websocket-connections",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon Free: 100 CU-hours/project/month, 1 GB/project, 100 projects, scale-to-zero after 5 min that cannot be disabled, 6 h history; at the compute cap, 'compute is suspended until the next billing period or until you upgrade'",
+    "url": "https://neon.com/docs/introduction/plans",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon has no Canadian region and a project's region cannot be changed",
+    "url": "https://neon.com/docs/introduction/regions",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon Launch: $0.106/CU-hour, $0.35/GB-month, no monthly minimum",
+    "url": "https://neon.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Roles created in the Neon Console get neon_superuser (BYPASSRLS, pg_read_all_data); roles created via SQL CREATE ROLE do not",
+    "url": "https://neon.com/docs/manage/roles",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon's pooler is PgBouncer in transaction mode, not configurable; SET/RESET are unsupported; pools are separate per user+database",
+    "url": "https://neon.com/docs/connect/connection-pooling",
+    "status": "verified"
+   },
+   {
+    "claim": "New Neon branches copy all parent data by default",
+    "url": "https://neon.com/docs/introduction/branching",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase Free: 500 MB database, 50,000 MAU, 2 active projects, paused after 1 week of inactivity, no backups, 1-day logs; SAML not included (the PDF chat's three claims are still accurate)",
+    "url": "https://supabase.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase Pro starts at $25/month and includes $10 of compute credits (one Micro); SAML: 50 SSO MAU included, then $0.015 each",
+    "url": "https://supabase.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase offers Canada (Central) ca-central-1",
+    "url": "https://supabase.com/docs/guides/platform/regions",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase Data API grants anon/authenticated access to new public tables by default (being changed to opt-in) and can be disabled entirely",
+    "url": "https://supabase.com/docs/guides/database/hardening-data-api",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase Auth stores users in the auth schema of the project's own Postgres database",
+    "url": "https://supabase.com/docs/guides/auth/architecture",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase gateway logs record path, query string, cf-connecting-ip, and city/latitude/longitude/postal code",
+    "url": "https://supabase.com/docs/guides/observability/log-field-reference",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase gateway logs can be associated with JWT subjects: the logs UI filter says so, but the field reference lists no JWT fields",
+    "url": "https://supabase.com/docs/guides/telemetry/logs",
+    "status": "conflicting"
+   },
+   {
+    "claim": "Supabase built-in SMTP sends only 2 messages per hour, to team members only; custom SMTP defaults to 30 per hour",
+    "url": "https://supabase.com/docs/guides/auth/auth-smtp",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase pgsodium will be deprecated; Vault does not depend on it",
+    "url": "https://supabase.com/docs/guides/database/extensions/pgsodium",
+    "status": "verified"
+   },
+   {
+    "claim": "Supabase paused-project restore window: text says 1 year, a screenshot caption says 90 days",
+    "url": "https://supabase.com/docs/guides/platform/upgrading",
+    "status": "conflicting"
+   },
+   {
+    "claim": "Auth.js is now part of Better Auth; Better Auth's SSO plugin supports OIDC and SAML 2.0",
+    "url": "https://www.better-auth.com/docs/plugins/sso",
+    "status": "verified"
+   },
+   {
+    "claim": "Porkbun .com costs $11.08/yr; .ca costs $11.12 to register and $11.60 to renew (currency not stated)",
+    "url": "https://porkbun.com/tld/ca",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "PQ-1: Is Canadian data residency required for production, and for a pilot with real UW users? (Neon has no CA region and its regions are immutable.)",
+   "PQ-2: Is anyone paid to build or run ClearCourse AI, or is commercialisation intended? (This decides Vercel Hobby eligibility.)",
+   "PQ-3: Must a DPA or institutional privacy review be in place before real student data is used? (The Vercel DPA, as written, covers only Pro and Enterprise.)",
+   "PQ-4: Do database backups and dumps count as 'exports' under §6.2/§3, since a full dump puts identity and content together? Where may they be stored, encrypted with which keys, and kept for how long? (Relates to Q17.)",
+   "PQ-5: How should hosting-platform request logs (IP, user agent, path, timestamp) be treated under §6.2, and what retention is acceptable? (These logs must go in the threat model, Q8.)",
+   "PQ-6: Must presentation mode and voting update live, or is periodic or manual refresh acceptable? (§7.8 is silent; the answer drives cost.)",
+   "PQ-7: What availability and latency does 'polished and credible' (§8) require? (This decides whether cold starts and pause-after-idle are acceptable.)",
+   "PQ-8: May AI coding agents access production data or logs, for example via MCP?",
+   "PQ-9: Must preview and staging environments use only synthetic data? (Neon branches copy production data by default.)",
+   "PQ-10: What is the expected pilot scale (courses, students, largest course)? A single 1,000-student course exceeds both free tiers."
+  ],
+  "risks": [
+   "Vercel Hobby's non-commercial clause: a university pilot, or a paid builder, may count as commercial. That would force Pro at $20/mo and break the $5 target. This is an interpretation I could not verify.",
+   "Neon Free compute-hours cliff: compute stays suspended until the next billing period. My estimate at the assumed scale is 89–134 CU-h/month against a cap of 100.",
+   "Supabase Free has no automated backups. A do-it-yourself dump is needed, and a full dump puts identity and content in one artifact.",
+   "Supabase Free pauses after 1 week of inactivity, which would take the site down between terms until the owner clicks restore.",
+   "The Supabase client-side Data API pattern (H2c) lets vendor logs and RLS design link users to content. This conflicts with §6.2.",
+   "Operator consoles see everything: Neon's neon_superuser has BYPASSRLS and read-all; the Supabase dashboard runs as postgres. Design A alone cannot stop the owner or an operator joining tables, so a key held outside the database, or design B, is needed.",
+   "Vercel request logs (IP, user agent, path, query string) can correlate sign-in and content-posting requests. This is a limitation of anonymity that must be documented.",
+   "Vercel env vars cannot be limited to individual functions, so credential separation inside one Vercel project relies on code discipline only. Real separation needs separate Vercel projects and signed internal APIs.",
+   "Magic-link sign-in on a free email tier is fragile: 100/day at Resend, and Supabase custom SMTP defaults to 30/hour. A class start could exceed these.",
+   "A 1,000-student course exceeds both free tiers: Vercel CPU and invocations, Supabase Realtime's 200 connections, and email caps.",
+   "Preview deployments with Neon branches would get copies of real student data, and Vercel-managed cleanup can lag for months.",
+   "Several facts are Unverified or conflicting: Supabase's definition of inactivity, its restore window, whether gateway logs carry JWT subjects, Vercel Pro's region count, and real cold-start latencies. A measured spike is recommended."
+  ]
+ },
+ "auth-A1-prototype-signin": {
+  "file": "P:/code/_clearcourse-scratch/research/auth-A1-prototype-signin.md",
+  "recommendation": "PROPOSAL for the owner to approve; nothing here is decided. If Q3 picks TypeScript, use Better Auth (MIT, v1.7.7 or later) with database sessions kept in the identity schema. The always-available sign-in is a 6-digit email one-time code limited to admin-configured domains (default proposal: uwaterloo.ca); avoid clickable magic links because mail scanners can use them up before the user clicks. Add 'Sign in with Microsoft', pinned to the UW tenant and keyed on (tid, oid), only if a free 1-2 hour spike (S1) shows ordinary UW users can consent without admin approval. Link accounts on (issuer, subject) only, never by email, and keep impersonation turned off. Note on the run itself: this branch did not hang. A complete first pass already existed (written 21:03), so this re-run only closed two remaining Unverified items instead of repeating the research.",
+  "options": [
+   {
+    "name": "Entra ID multi-tenant OIDC (Sign in with Microsoft), authority pinned to UW tenant 723a5a87-...",
+    "verdict": "Conditional yes. Strongest proof of UW affiliation (tenant membership, not role) and best path to production, because oid stays the same for any later UW-sanctioned app. UW's user-consent setting is not public. A solo developer cannot get publisher verification (it needs a legally registered business in the Microsoft AI Cloud Partner Program). Ship only if spike S1 passes; it is not safe as the only method."
+   },
+   {
+    "name": "Email one-time code (OTP), admin-configured domain allow-list",
+    "verdict": "Yes, as the baseline. Needs no UW cooperation. Proves current control of a UW mailbox, but not role or status: alumni and retirees also have UW mailboxes. Under NIST 800-63B-4 it is not an approved authenticator, so it suits the prototype but should not be what production calls secure sign-in."
+   },
+   {
+    "name": "Email magic link (clickable)",
+    "verdict": "No, unless redesigned with an interstitial page and a POST button. Microsoft Safe Links scans URLs before delivery, and Better Auth's single-use GET link would probably be used up by the scanner (inference)."
+   },
+   {
+    "name": "Passkeys / WebAuthn L3",
+    "verdict": "Later and optional. Phishing-resistant, but prove nothing about affiliation. Add them only while the user is already signed in another way."
+   },
+   {
+    "name": "Google / GitHub OAuth",
+    "verdict": "No. Neither proves UW affiliation (Google's hd claim exists only for Google Cloud organisations; GitHub's emails API makes no claim of affiliation), and both add a third party that learns who uses the app."
+   },
+   {
+    "name": "Self-hosted Keycloak stand-in",
+    "verdict": "Not for hosting: about 1.25 GB RAM plus a database, likely over the $5 target (inference), and it still proves nothing about UW. Yes as a local/CI test IdP for SAML/OIDC code paths."
+   },
+   {
+    "name": "Better Auth (library)",
+    "verdict": "Proposed if the stack is TypeScript. MIT licence, about 30.3k stars, and now steward of Auth.js. Downside: 10 security advisories between 26 Jun and 30 Sep 2026, 2 of them Critical, so pin the version, watch advisories and keep plugins to a minimum."
+   },
+   {
+    "name": "Auth.js / NextAuth",
+    "verdict": "Not for a new project. Now part of Better Auth and receives only security patches and urgent fixes."
+   },
+   {
+    "name": "Lucia",
+    "verdict": "No. Deprecated March 2025."
+   },
+   {
+    "name": "Clerk / Supabase Auth / WorkOS / Auth0 / Firebase",
+    "verdict": "No. Each moves identity outside our database, and production SSO costs $25-$125+/month (or is unclear for Firebase). Supabase free projects pause after a week of inactivity. Auth0 Free, with one enterprise connection, is the most interesting fallback."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "uwaterloo.ca is Entra tenant 723a5a87-f39a-4a22-9247-3fc240c01396 (region scope NA)",
+    "url": "https://login.microsoftonline.com/uwaterloo.ca/v2.0/.well-known/openid-configuration",
+    "status": "verified"
+   },
+   {
+    "claim": "UW domain is Federated to adfs.uwaterloo.ca",
+    "url": "https://login.microsoftonline.com/getuserrealm.srf?login=someone@uwaterloo.ca&xml=1",
+    "status": "verified"
+   },
+   {
+    "claim": "UW tenant's user-consent policy for sign-in-only third-party apps is not publicly documented",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/44816171143/Gnome+Online+Accounts",
+    "status": "unverified"
+   },
+   {
+    "claim": "By default all users may consent to permissions not needing admin consent; Microsoft recommends verified-publisher-only consent",
+    "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "status": "verified"
+   },
+   {
+    "claim": "The Microsoft-managed consent policy is the default for new tenants, and its exception list does not include basic sign-in scopes",
+    "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies",
+    "status": "verified"
+   },
+   {
+    "claim": "Publisher verification needs a verified Microsoft AI Cloud Partner Program account; risk-based step-up affects only permissions beyond basic sign-in",
+    "url": "https://learn.microsoft.com/en-us/entra/identity-platform/publisher-verification-overview",
+    "status": "verified"
+   },
+   {
+    "claim": "Partner Center verification requires a legally registered business",
+    "url": "https://learn.microsoft.com/en-us/partner-center/enroll/understand-the-verification-process",
+    "status": "verified"
+   },
+   {
+    "claim": "Entra oid is the same across apps in a tenant; sub is pairwise per app; email must not be used for authorization",
+    "url": "https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference",
+    "status": "verified"
+   },
+   {
+    "claim": "Entra logs every sign-in (who/how/what), immutable and readable by Reports Readers: a timing side channel for the threat model",
+    "url": "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins",
+    "status": "verified"
+   },
+   {
+    "claim": "UW M365 mailboxes are provided to employees, students, alumni and retirees",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/269156660/Microsoft+365+email",
+    "status": "verified"
+   },
+   {
+    "claim": "Safe Links scans URLs before delivery and detonates no-reputation URLs in the background",
+    "url": "https://learn.microsoft.com/en-us/defender-office-365/safe-links-about",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth magic link is single-use, consumed on first attempt, verified via GET, token stored plain by default",
+    "url": "https://www.better-auth.com/docs/plugins/magic-link",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth email OTP: 6 digits, 300 s, 3 attempts, stored plain by default, auto sign-up unless disabled",
+    "url": "https://www.better-auth.com/docs/plugins/email-otp",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth v1.7.7 is Latest (30 Sep) and fixes a critical magic-link account takeover",
+    "url": "https://github.com/better-auth/better-auth/releases",
+    "status": "verified"
+   },
+   {
+    "claim": "10 Better Auth advisories 26 Jun-30 Sep 2026, 2 Critical, several High in @better-auth/sso",
+    "url": "https://github.com/better-auth/better-auth/security/advisories",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth is MIT licensed with about 30.3k stars",
+    "url": "https://github.com/better-auth/better-auth",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth stores sessions in the DB by default with 7-day expiry; the cookie cache delays revocation",
+    "url": "https://www.better-auth.com/docs/concepts/session-management",
+    "status": "verified"
+   },
+   {
+    "claim": "Better Auth implicit account linking by verified email is on by default; disableImplicitLinking exists",
+    "url": "https://www.better-auth.com/docs/concepts/users-accounts",
+    "status": "verified"
+   },
+   {
+    "claim": "Auth.js is now part of Better Auth; security patches and urgent issues only; new projects should use Better Auth",
+    "url": "https://www.better-auth.com/blog/authjs-joins-better-auth",
+    "status": "verified"
+   },
+   {
+    "claim": "Lucia was deprecated in March 2025",
+    "url": "https://lucia-auth.com/",
+    "status": "verified"
+   },
+   {
+    "claim": "WorkOS AuthKit free to 1M MAU but SSO is $125 per connection (billing period unclear) and custom domain $99/mo",
+    "url": "https://workos.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Auth0 Free: 25,000 MAU and 1 enterprise connection",
+    "url": "https://auth0.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Resend Free: 3,000 emails/month, capped at 100/day (cited only for OTP sizing; provider choice is Q6)",
+    "url": "https://resend.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "NIST SP 800-63B-4: email SHALL NOT be used for out-of-band authentication; AAL1 session at most 30 days, AAL2 at most 24 h / 1 h idle",
+    "url": "https://pages.nist.gov/800-63-4/sp800-63b.html",
+    "status": "verified"
+   },
+   {
+    "claim": "OIDC Core: iss+sub is the only guaranteed unique identifier; email MUST NOT be used as one",
+    "url": "https://openid.net/specs/openid-connect-core-1_0.html",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "PQ-A1-1: May we test and use sign-in against UW's Entra tenant without asking UW first? It creates a service principal in UW's directory and appears in UW's sign-in logs. Should UW IST be told or asked first?",
+   "PQ-A1-2: Which email domains count as institutional (uwaterloo.ca only? subdomains?), and may alumni and retirees, who also hold UW mailboxes, sign in?",
+   "PQ-A1-3: In the prototype, who may become an Instructor and how is that verified (vetted list, unofficial sandbox courses, invite-only)? Is a join code acceptable proof of enrolment?",
+   "PQ-A1-4: Will prototype accounts and data carry over into production, or does production start fresh?",
+   "PQ-A1-5: What assurance does 'sign in securely' (§10) mean: session lifetime, idle timeout, and MFA or passkeys for Instructor/Admin (NIST AAL1 vs AAL2)?",
+   "PQ-A1-6: How precise should timestamps on anonymous content be, given that IdP and email-provider logs hold identity-linked sign-in times?",
+   "PQ-A1-7: What privacy notice, consent and data residency apply, and which processors are acceptable, for holding UW people's names and emails in a non-UW prototype? Needs legal/privacy review.",
+   "PQ-A1-8: Which source of the 'student name' shared with instructors under §7.10 is authoritative: self-entered for email OTP, or the directory name claim for Entra?",
+   "PQ-A1-9: Should the prototype collect any profile data (email claim, photo) beyond what sign-in strictly needs?",
+   "Q2 housekeeping: the owner's 'public prototype' first-milestone statement is not yet recorded in CONTRIBUTING §13/§16."
+  ],
+  "risks": [
+   "UW may require admin consent for third-party apps, or may later block the app; a solo developer cannot become a verified publisher, so Entra sign-in may be impossible without UW's cooperation (spike S1 decides).",
+   "Using UW's tenant without telling UW creates a service principal in UW's directory and identity-linked sign-in logs at UW, which raises relationship and ethics concerns.",
+   "Better Auth's security-advisory pace (10 in 3 months, 2 Critical, several in the SSO and magic-link code) demands prompt patching by a solo maintainer.",
+   "A Resend-class free-tier daily cap (100/day) could be exceeded by a single large class signing in on the same day; user counts are unknown.",
+   "Email OTP is weak: an @uwaterloo.ca address does not prove current enrolment or role, the identifier can be reassigned, and it is not an approved authenticator under NIST 800-63B-4.",
+   "Timing correlation between IdP or email logs and anonymous post timestamps is a limit on anonymity and must go into the Q8/Q9 threat model.",
+   "Better Auth defaults that need overriding: implicit email linking is on, OTP and tokens are stored plain, the cookie cache delays revocation, and the admin plugin includes impersonation (which conflicts with §5 and Q7).",
+   "Several Better Auth behaviours are still unverified (Microsoft provider tenant pinning and default scopes, SameSite and cookie-prefix defaults, whether session tokens are hashed at rest) pending spike S2.",
+   "Instructor role claims can't be verified from email domain alone, so without vetting anyone could set up a course that looks like a real UW course."
+  ]
+ },
+ "auth-A2-provisioning-lti": {
+  "file": "P:/code/_clearcourse-scratch/research/auth-A2-provisioning-lti.md",
+  "recommendation": "To the user's question: this branch is not hanging. Its notes were already finished at 21:32, with every required section and a 44-row verification log. This run re-checked the riskiest facts instead of repeating the research, and corrected one item. PROPOSAL for the owner to approve. Prototype: vetted instructors create courses manually, students self-enrol via a hashed, expiring, revocable join link or code, and TAs join by single-use invite links with no permissions until the instructor assigns them; no CSV or email roster import before a UW IRA-PIA. Production: LTI 1.3 launch that provisions people, courses and roles on first launch, plus Deep Linking and AGS (an instructor-clicked 'apply to LEARN gradebook'), with NRPS optional and status-only, built on the `jose` library with LTI state kept in the Postgres identity schema. Model data now with (issuer, sub) person keys, (deployment, context_id) course bindings and a per-membership source, so moving to LTI needs no migration.",
+  "options": [
+   {
+    "name": "P1 Manual course creation by a vetted instructor",
+    "verdict": "Yes. Every non-LTI option needs it (who counts as vetted is A1's question)"
+   },
+   {
+    "name": "P2/P3 Join code / join link (high-entropy, hashed, expiring, revocable)",
+    "verdict": "Yes, recommended for the prototype. Weak proof of enrolment; owner must accept for §5"
+   },
+   {
+    "name": "P4 Per-student email invitations",
+    "verdict": "No for the prototype. Instructor discloses student PII to an unvetted tool, against UW guidance"
+   },
+   {
+    "name": "P5 CSV roster import",
+    "verdict": "No before a UW IRA-PIA. Possibly a later admin-only fallback"
+   },
+   {
+    "name": "P6 UW-affiliation gate on join links",
+    "verdict": "Optional per course, if Q4/A1 gives a verifiable UW identity"
+   },
+   {
+    "name": "P7 Single-use TA invite link",
+    "verdict": "Yes. TA starts with no permissions until the instructor assigns them"
+   },
+   {
+    "name": "P8 Instructor approval queue",
+    "verdict": "Optional. Never show join times (deanonymization side channel)"
+   },
+   {
+    "name": "L1 LTI 1.3 core launch with JIT provisioning",
+    "verdict": "Yes, the core production path for §10"
+   },
+   {
+    "name": "L2 NRPS 2.0 roster",
+    "verdict": "Optional. Status sync and TA discovery only, minimal fields, PreProvisioning off"
+   },
+   {
+    "name": "L3 AGS 2.0 grade passback",
+    "verdict": "Yes. Cleanest 'authorized grade result' for §7.11/Q12. No comment field; FullyGraded"
+   },
+   {
+    "name": "L4 Deep Linking 2.0",
+    "verdict": "Yes. Custom params can target an Assignment Card"
+   },
+   {
+    "name": "L5 LTI Dynamic Registration 1.0",
+    "verdict": "Yes, offer it alongside a manual admin registration form (§4 admin-configurable)"
+   },
+   {
+    "name": "L6 Brightspace Valence REST API",
+    "verdict": "No. Proprietary, not portable to later institutions (§4)"
+   },
+   {
+    "name": "L7 SIS/OneRoster feed",
+    "verdict": "No. Far more PII than needed (not researched)"
+   },
+   {
+    "name": "Own LTI implementation on jose 6.x",
+    "verdict": "Recommended. MIT, zero deps, active; state stays in Postgres identity domain; needs conformance and negative tests"
+   },
+   {
+    "name": "ltijs v7",
+    "verdict": "Not now. A month-old rewrite, MongoDB-only backends, Node 24+; adds a second identity store"
+   },
+   {
+    "name": "Hosted LTI-as-a-service",
+    "verdict": "No. Adds a processor of identity claims, works against §6 minimization and complicates the IRA-PIA"
+   },
+   {
+    "name": "Test platforms: saLTIre + Moodle in Docker",
+    "verdict": "Yes. $0, no UW needed. 1EdTech certification only if wanted (membership cost Unverified)"
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "LTI 1.3 Core is IMS Final (16 Apr 2019). `sub` must be stable and unique per issuer; the context claim is optional; context.id is unique per deployment_id",
+    "url": "https://www.imsglobal.org/spec/lti/v1p3/",
+    "status": "verified"
+   },
+   {
+    "claim": "TA sub-role URI is membership/Instructor#TeachingAssistant; platforms should also send the principal role",
+    "url": "https://www.imsglobal.org/spec/lti/v1p3/",
+    "status": "verified"
+   },
+   {
+    "claim": "Security Framework 1.0 requires third-party-initiated login, a nonce in the id_token, kid always set, and RS256 minimum",
+    "url": "https://www.imsglobal.org/spec/security/v1p0/",
+    "status": "verified"
+   },
+   {
+    "claim": "NRPS 2.0 requires only user_id and roles; 'LTI does not pass user information in its default configuration'",
+    "url": "https://www.imsglobal.org/spec/lti-nrps/v2p0",
+    "status": "verified"
+   },
+   {
+    "claim": "AGS 2.0: the platform MAY ignore scores that are not FullyGraded and 'has the final say' on final scores; the comment field is visible to students",
+    "url": "https://www.imsglobal.org/spec/lti-ags/v2p0",
+    "status": "verified"
+   },
+   {
+    "claim": "Dynamic Registration 1.0 is Candidate Final; a new registration is 'not activated yet' until an admin activates it",
+    "url": "https://www.imsglobal.org/spec/lti-dr/v1p0",
+    "status": "verified"
+   },
+   {
+    "claim": "Brightspace supports LTI 1.3 core, AGS v2.0, NRPS v2.0 and Deep Linking 2.0",
+    "url": "https://community.d2l.com/brightspace/kb/articles/23660-lti-advantage-v1-3",
+    "status": "verified"
+   },
+   {
+    "claim": "Registering a tool needs the org-level 'Manage LTI Tools' permission; Dynamic Registration is disabled by default; redirect URLs must match exactly; a domain can be in only one enabled registration",
+    "url": "https://community.d2l.com/brightspace/kb/articles/23662-tool-registration-deployment-and-links",
+    "status": "verified"
+   },
+   {
+    "claim": "The Brightspace deployment 'Anonymous' property was removed (LE API v1.92) and 'is always considered to be false' as of LMS 20.26.2 (re-checked this run). The KB article still mentions Anonymous",
+    "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+    "status": "conflicting"
+   },
+   {
+    "claim": "SendInstitutionRole is a registration property, not a deployment flag (correction made this run)",
+    "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+    "status": "verified"
+   },
+   {
+    "claim": "PreProvisioning is a 'Security setting to send classlist including users not known to tool'",
+    "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+    "status": "verified"
+   },
+   {
+    "claim": "UW's actual LEARN-to-IMS role mapping (for example for TAs)",
+    "url": "https://community.d2l.com/brightspace/kb/articles/23663-org-units-and-role-mapping",
+    "status": "unverified"
+   },
+   {
+    "claim": "LEARN is D2L-hosted; the LEARN team reviews third-party tools with the Privacy Officer and ISO before integration; the standard data set is USERID/role/username/email",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/44088164615/LEARN+Privacy+information+and+other+tools",
+    "status": "verified"
+   },
+   {
+    "claim": "UW IRA-PIA review 'typically takes 2–4 weeks'; FIPPA amended by Bill 194, effective 1 Jul 2025",
+    "url": "https://uwaterloo.ca/privacy/information-risk-assessment",
+    "status": "verified"
+   },
+   {
+    "claim": "UW LEO handles 'requests for integration with the LMS'; principles include 'sustainable' and 'scalable … broad campus use'; the CIO approves contracts",
+    "url": "https://uwaterloo.ca/educational-technology-hub/governance",
+    "status": "verified"
+   },
+   {
+    "claim": "UW guidance: without proper permission, instructors 'are not authorized to release student information' (page dated July 2017)",
+    "url": "https://uwaterloo.ca/information-systems-technology/about/policies-standards-and-guidelines/teaching-learning/cloud-based-educational-technologies",
+    "status": "verified"
+   },
+   {
+    "claim": "UW guidance: 'best to choose a tool that does not require students to identify themselves'; check whether an IRA is required first",
+    "url": "https://uwaterloo.ca/privacy/guidelines/online-educational-technologies",
+    "status": "verified"
+   },
+   {
+    "claim": "jose 6.2.12, MIT, zero dependencies, repo pushed 2026-10-01",
+    "url": "https://registry.npmjs.org/jose/latest",
+    "status": "verified"
+   },
+   {
+    "claim": "ltijs v7.0.0 (2026-09-09) is a 'full, from-scratch TypeScript rewrite' with MongoDB-only database backends and Node 24+; previous release was v5.9.5 (2024-05-01). Re-checked this run",
+    "url": "https://api.github.com/repos/Cvmcosta/ltijs/releases?per_page=5",
+    "status": "verified"
+   },
+   {
+    "claim": "The saLTIre Test Platform supports LTI 1.3, Deep Linking, a line-item service and Dynamic Registration with no account needed; NRPS support is not stated",
+    "url": "https://saltire.lti.app/",
+    "status": "verified"
+   },
+   {
+    "claim": "moodle-docker (GPL-3.0) exists and is maintained; Moodle registers LTI Advantage tools pending-then-activate",
+    "url": "https://docs.moodle.org/en/External_tool",
+    "status": "verified"
+   },
+   {
+    "claim": "1EdTech certification needs active membership; price not listed",
+    "url": "https://www.1edtech.org/certification/get-certified",
+    "status": "unverified"
+   },
+   {
+    "claim": "Brightspace grade import CSV needs OrgDefinedID or Username plus an End-of-Line Indicator",
+    "url": "https://community.d2l.com/brightspace/kb/articles/3537-import-grades-and-grade-items",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "PQ-A2-1: How do LTI roles map to ClearCourse roles (ContentDeveloper, Mentor, context Administrator, someone who is both Learner and Instructor), and how does UW map LEARN roles in IMS Configuration?",
+   "PQ-A2-2: Does a TA arriving by LTI or invite start with no permissions until the instructor assigns them?",
+   "PQ-A2-3: In the prototype, may instructors upload rosters or enter student emails before a UW IRA-PIA, or is self-enrolment the only route?",
+   "PQ-A2-4: Who is the UW sponsor/Information Steward for an eventual LEARN integration and IRA-PIA, and when should that start?",
+   "PQ-A2-5: May grade passback or export carry an institutional identifier (LTI sub; OrgDefinedId/Username for a LEARN CSV) beyond §7.10's name/level/date? Where does 'student name' come from if UW does not send names?",
+   "PQ-A2-6: Should ClearCourse ever render inside a LEARN iframe, or always open in a new window?",
+   "PQ-A2-7: What timestamp precision should anonymous content and membership records store and show, given join-time and LMS visit-log correlation?",
+   "PQ-A2-8: What is one ClearCourse course in LTI terms (cross-listed/multi-section courses, LEARN course copy each term)?",
+   "PQ-A2-9: When a prototype user later arrives by LTI, are accounts linked (explicit dual proof) or started fresh? Does prototype data carry over?",
+   "PQ-A2-10: In production, can courses also be created manually or by join link? Are join links disabled once a course is LTI-bound?",
+   "PQ-A2-11: Should NRPS be used at all, given it pulls non-users' data? If so, which fields?",
+   "PQ-A2-12: Is 1EdTech certification wanted or required (membership cost unknown)?"
+  ],
+  "risks": [
+   "Deal-breaker for production §10: only a UW Brightspace admin can register the tool, and UW governance (LEO, IRA-PIA, CIO contract approval, 'sustainable'/'scalable' criteria) suggests a solo-run tool needs a UW sponsor. LTI with LEARN cannot be part of a self-serve public prototype.",
+   "Join links and codes give weak proof of enrolment for §5; links can be forwarded. The owner must accept this for the prototype.",
+   "A home-built LTI tool side on jose is security-critical code. It needs the spec's MUST checks, negative tests, conformance runs on saLTIre/Moodle, and possibly certification.",
+   "Brightspace content reports may log per-user LTI-link visits (Unverified). An instructor could then correlate a LEARN launch with a new anonymous post, an anonymity limitation ClearCourse cannot control; it must go in the Q8 threat model.",
+   "UW's standard tool data set lists USERID/role/username/email but not names. §7.10 needs a 'student name', so UW deployment settings may not supply it.",
+   "D2L documentation conflicts on the deployment Anonymous setting (API reference says always false; KB still mentions it). Design assumes sub is always sent.",
+   "Brightspace allows a domain in only one enabled registration and needs exact redirect URLs, so staging and production need distinct domains and host preview URLs cannot be used.",
+   "Third-party cookie blocking in Safari and Firefox breaks iframe launches unless the tool uses a new window, CHIPS or LTI postMessage storage (Brightspace postMessage support Unverified).",
+   "ltijs v7 has a one-month track record and Mongo-only backends. Choosing it would add a second identity-bearing store and cost."
+  ]
+ },
+ "other-O1-email-notifications": {
+  "file": "P:/code/_clearcourse-scratch/research/other-O1-email-notifications.md",
+  "recommendation": "Proposal for the owner to approve, not a decision: use Amazon SES in ca-central-1 on à la carte pricing ($0.10 per 1,000) for both the prototype and production. Put it behind a small provider-neutral Mailer interface, with open and click tracking off and no stored bodies. Resend Free is the fallback for development and demos. Every email should be content-free and type-free and link only to a generic /notifications page. Activity-linked notifications (answer posted, followed question updated, question merged, participation level reached) should go out by email only in fixed-schedule digests, never at action time. All eight §7.13 types stay in-app. Q13 is left to the owner as options only.",
+  "options": [
+   {
+    "name": "Amazon SES (ca-central-1, à la carte)",
+    "verdict": "Proposed for prototype and production. Cheapest option ($0.10/1k), Canadian region available, tracking off unless configured, no documented body store. More setup: production-access review, DNS, bounce handling. Initial production quota and whether the AWS free plan allows production sending are Unverified."
+   },
+   {
+    "name": "Resend",
+    "verdict": "Fallback for dev and demos only. Free tier is 3,000/month with a 100/day cap, which breaks email sign-in codes. All data is stored in the US and bodies are kept 30 days. Turning content storage off needs Pro plus a $50/month add-on, which is over budget."
+   },
+   {
+    "name": "Cloudflare Email Service (Email Sending)",
+    "verdict": "Conditional. Worth it only if hosting is already on Workers Paid ($5/month minimum; 3,000/month included, then $0.35/1k). It is in Beta with an unspecified new-account daily quota, and Email preview (raw source kept about 7 days) is on by default. Not proposed for the sign-in path."
+   },
+   {
+    "name": "Postmark",
+    "verdict": "Not proposed. Free tier is 100/month; Basic is $15/month. Data is held in the US and content is kept 45 days by default."
+   },
+   {
+    "name": "Mailgun",
+    "verdict": "Possible fallback. Free tier is 100/day with 1-day log retention, which is good for privacy. The daily cap breaks sign-in codes, Basic is $15/month, and regions are US or EU only."
+   },
+   {
+    "name": "Twilio SendGrid",
+    "verdict": "Not proposed. No permanent free plan was found (only a 60-day trial at 100/day; the page wording is inconsistent). Plans start at $19.95/month and Email Activity data is stored in the US."
+   },
+   {
+    "name": "MailerSend",
+    "verdict": "Not proposed. Free tier is 500/month and needs approval plus a card. Hobby is $7/month. Data is hosted in the EU."
+   },
+   {
+    "name": "Brevo",
+    "verdict": "Not assessed. Pricing, GDPR and help pages could not be read (client-rendered or 403), so every Brevo fact is Unverified."
+   },
+   {
+    "name": "UW-provided sending path",
+    "verdict": "Not researched. Ask UW IST (NQ-O8); it may be the best production option for deliverability and data location."
+   },
+   {
+    "name": "Notification design N2/N3 (content-free fixed-schedule digests) plus in-app",
+    "verdict": "Proposed. It breaks the timing correlation that remains even with content-free per-event emails. Choosing between N2 (personal digest) and N3 (course-wide digest) is an owner decision."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "SES has no SES-specific free allowance. À la carte outbound costs $0.10 per 1,000. New AWS customers get up to $200 in Free Tier credits.",
+    "url": "https://aws.amazon.com/ses/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "SES sandbox sends only to verified recipients, at most 200 messages per 24 hours and 1 per second, per Region. AWS Support gives an initial response to production-access requests within 24 hours.",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html",
+    "status": "verified"
+   },
+   {
+    "claim": "SES is available in ca-central-1 and ca-west-1. SMTP endpoints are not available in ca-west-1.",
+    "url": "https://docs.aws.amazon.com/general/latest/gr/ses.html",
+    "status": "verified"
+   },
+   {
+    "claim": "SES open and click tracking only happens when a configuration set with an event destination is set up. ses:no-track disables tracking per link.",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/faqs-metrics.html",
+    "status": "verified"
+   },
+   {
+    "claim": "SES does not retain message bodies (no official page states this either way).",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/data-protection.html",
+    "status": "unverified"
+   },
+   {
+    "claim": "Resend Free allows 3,000 emails/month, is limited to 100 per day, and has 30-day data retention. Pro costs $20/month for 50,000.",
+    "url": "https://resend.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "All Resend account data, including email metadata and logs, is stored in the United States. No Canadian region exists.",
+    "url": "https://resend.com/docs/dashboard/domains/regions.md",
+    "status": "verified"
+   },
+   {
+    "claim": "Resend turns off message content storage only via support, on Pro/Scale with conditions, as a $50/month add-on.",
+    "url": "https://resend.com/docs/knowledge-base/how-do-i-ensure-sensitive-data-isnt-stored-on-resend.md",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloudflare Email Sending is in Beta and available on Workers Paid. It includes 3,000 emails/month, then $0.35 per 1,000.",
+    "url": "https://developers.cloudflare.com/email-service/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloudflare Email preview keeps HTML, text, headers and raw source for about seven days and is on by default for new sending domains.",
+    "url": "https://developers.cloudflare.com/email-service/observability/logs/index.md",
+    "status": "verified"
+   },
+   {
+    "claim": "Postmark Free is 100 emails/month and Basic is $15/month. Postmark keeps content and metadata for 45 days and is hosted in the US with no EU plans.",
+    "url": "https://postmarkapp.com/eu-privacy",
+    "status": "verified"
+   },
+   {
+    "claim": "Mailgun Free is 100 emails/day with 1 custom domain and 1-day log retention. Basic is $15/month.",
+    "url": "https://www.mailgun.com/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "SendGrid offers a free trial of 100 emails/day for 60 days; the page still mentions a 'free plan' elsewhere. Essentials starts at $19.95/month.",
+    "url": "https://www.twilio.com/en-us/products/email-api/pricing",
+    "status": "conflicting"
+   },
+   {
+    "claim": "MailerSend Free is 500 emails/month with 100 daily requests and requires approval and a card. Hobby is $7/month for 5,000.",
+    "url": "https://www.mailersend.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Brevo free-plan limits, data location and DPA",
+    "url": "https://www.brevo.com/pricing/",
+    "status": "unverified"
+   },
+   {
+    "claim": "Exchange Online message trace shows sender, recipient and the first 256 characters of the subject for up to 90 days.",
+    "url": "https://learn.microsoft.com/en-us/exchange/monitoring/trace-an-email-message/message-trace-modern-eac",
+    "status": "verified"
+   },
+   {
+    "claim": "Safe Links click data (UrlClickEvents) stores the full clicked URL plus AccountUpn, timestamp and IP. Whether UW licenses Defender for Office 365 is unknown.",
+    "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-urlclickevents-table",
+    "status": "verified"
+   },
+   {
+    "claim": "From 2025-05-05, Outlook.com enforces SPF, DKIM and DMARC for domains sending more than 5,000 emails per day. Whether this covers Microsoft 365 tenants is not stated.",
+    "url": "https://substrate.office.com/ip-domain-management-snds/postmaster",
+    "status": "verified"
+   },
+   {
+    "claim": "Gmail bulk senders (more than 5,000/day) need SPF and DKIM, a DMARC record (p=none allowed) and alignment. One-click unsubscribe does not apply to transactional mail.",
+    "url": "https://support.google.com/a/answer/81126",
+    "status": "verified"
+   },
+   {
+    "claim": "DMARCbis is now RFC 9989 (Proposed Standard, May 2026), obsoleting RFC 7489 and RFC 9091.",
+    "url": "https://datatracker.ietf.org/doc/draft-ietf-dmarc-dmarcbis/",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 8058 one-click unsubscribe uses an HTTPS POST, so link scanners that GET the URL do not trigger it.",
+    "url": "https://www.rfc-editor.org/info/rfc8058",
+    "status": "verified"
+   },
+   {
+    "claim": "CASL s.6(6)(d) exempts factual account notifications from the consent requirement only; the form and unsubscribe requirements still apply. Whether ClearCourse emails are commercial electronic messages is not assessed.",
+    "url": "https://laws-lois.justice.gc.ca/eng/acts/E-1.6/page-1.html",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "NQ-O1: Does §7.13 require an email channel for all eight types, or may activity-linked types be in-app only, or email only as a digest?",
+   "NQ-O2: What is the default on/off state per notification and per channel?",
+   "NQ-O3: Which events count as 'Followed question updated'?",
+   "NQ-O4: Does 'essential' (Q13) apply per channel (in-app vs email) or to both?",
+   "NQ-O5: Which card edits trigger 'card changed' (only published rule changes per §7.6, or any edit)? Who counts as 'affected students'?",
+   "NQ-O6: Owner-approved copy for every email template. May an email name the institution or course code?",
+   "NQ-O7: Is US storage of email metadata acceptable for the prototype? Does UW require Canadian residency or a privacy review for an email processor in production?",
+   "NQ-O8: Would UW IST provide a sanctioned sending path (relay, tenant mailbox, allow-listing)?",
+   "NQ-O9: Does CASL apply to ClearCourse notifications, and must essential ones carry an unsubscribe mechanism?",
+   "NQ-O10: What is the maximum acceptable provider log and body retention (part of Q17)?",
+   "NQ-O11: Should activity-linked digests be held until at least k recipients in a course share a window? If so, what k?",
+   "NQ-O12: Digest design (personal N2 vs course-wide N3), cadence and send time.",
+   "NQ-O13: If sign-in uses email codes, is a second, fallback email provider wanted?"
+  ],
+  "risks": [
+   "If sign-in uses email codes or magic links, email becomes critical infrastructure. Free-tier daily caps (Resend, Mailgun and MailerSend at about 100/day; SES sandbox 200/day) could lock a class out at class start.",
+   "Even content-free per-event emails leak through timing: an email sent seconds after a post links a named student to anonymous content in provider logs and UW message trace.",
+   "Day-level digest recipient sets can still narrow who follows or authored a question in small classes.",
+   "Deep links or typed subjects would put identity plus content ID into Safe Links click logs (full URL plus UPN) and Exchange message trace (90 days).",
+   "Several providers keep message bodies by default (Resend 30 days, Postmark 45 days, Cloudflare preview about 7 days). A live sign-in code could be read from the provider dashboard.",
+   "SES production access may be delayed or refused. The initial quota and free-plan eligibility are Unverified.",
+   "Brevo could not be assessed at all; its pages were unreadable.",
+   "Whether UW uses Defender for Office 365 / Safe Links is Unverified. Single-use magic links could be consumed by URL scanners.",
+   "CASL applicability is a legal question and could conflict with notifications that cannot be disabled."
+  ]
+ },
+ "stack-H3H4-cloudflare-container": {
+  "file": "P:/code/_clearcourse-scratch/research/stack-H3H4-cloudflare-container.md",
+  "recommendation": "Status for the user: this branch did not hang. It finished, and the 764-line notes file was written one section at a time. PROPOSAL, not a decision: prefer H4-CR, one portable Docker container on Google Cloud Run plus Neon Free Postgres (or Supabase Free in ca-central-1 for a Canadian variant). It costs about $1–1.50/month, keeps all three privacy designs (A/B/C) open, and keeps every production path open. If the owner prefers Cloudflare, choose H3b (Workers + Hyperdrive + Postgres) on Workers Paid at about $6/month, using React Router rather than Next.js. Choose H3a (D1) only if design B is adopted and Cloudflare is accepted as the permanent home.",
+  "options": [
+   {
+    "name": "H3a Cloudflare Workers + D1 (one DB per privacy domain, service bindings)",
+    "verdict": "About $1/month on Free and never sleeps. Physically separate stores with per-Worker bindings and secrets make design B easy. But it has no roles, schemas or RLS (design A impossible), no Canadian location, high lock-in, and Next.js only via vinext (beta) or OpenNext (community). Free has a 10 ms CPU limit and no outbound email. Choose only with design B and Cloudflare as the long-term home."
+   },
+   {
+    "name": "H3b Cloudflare Workers + Hyperdrive + Neon Postgres",
+    "verdict": "Keeps Postgres, so design A is possible and the data is portable. Hyperdrive is free (100k queries/day, 10 configs). It is still Workers-specific compute and has no Canadian residency (neither Cloudflare nor Neon). Budget about $6/month (Paid + domain) because SSR CPU under the 10 ms Free limit is unmeasured. Best Cloudflare variant."
+   },
+   {
+    "name": "H4-CR Google Cloud Run + Neon (or Supabase ca-central-1)",
+    "verdict": "Recommended. Real non-expiring free tier (2M requests, 180k vCPU-s, 360k GB-s). Montreal and Toronto regions. Full Postgres plus per-service isolation, the best local testing against a real DB, and the lowest lock-in. Downsides: cold starts at min-instances 0, GCP complexity, automatic overage billing, and a custom domain in a Canadian region needs Firebase Hosting or a load balancer."
+   },
+   {
+    "name": "H4-RE Render",
+    "verdict": "Not suitable. Free web service sleeps after 15 min with about 1 min wake. Free Postgres expires after 30 days and is deleted after a 14-day grace period, with no backups. Free tier says not for production. No Canadian region. Paid prices could not be verified."
+   },
+   {
+    "name": "H4-RW Railway",
+    "verdict": "Not suitable for under $5. Free plan ($1 credit) allows 0 custom domains. Hobby is a $5 minimum and likely $5–10 with Postgres [estimate]. No Canadian region."
+   },
+   {
+    "name": "H4-FL Fly.io",
+    "verdict": "No free tier for new orgs. Has a Toronto (yyz) region. Smallest machine $2.19/month (256 MB). Managed Postgres from $38/month. Only a paid fallback."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "Workers Paid is a $5/month minimum (not flat) with 10M requests and 30M CPU-ms included; D1 is available on both Free and Paid, so the chat's claim that Paid is needed for D1 is wrong",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "D1 Paid includes 25B rows read, 50M rows written and 5 GB storage; Free gives 5M rows read/day, 100k written/day, 5 GB total",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers Free: 100,000 requests/day (Error 1027 hard stop) and 10 ms CPU per request",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "status": "verified"
+   },
+   {
+    "claim": "Worker size: Cloudflare says 64 MiB uncompressed with no compressed limit; the OpenNext page says 3 MiB Free / 10 MiB Paid compressed",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "status": "conflicting"
+   },
+   {
+    "claim": "D1: 10 DBs and 500 MB/DB on Free; 50,000 DBs and 10 GB/DB on Paid; single-threaded per DB; Time Travel 7/30 days",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/",
+    "status": "verified"
+   },
+   {
+    "claim": "Hyperdrive is included on Workers Free with 100,000 queries/day, and 10 configs per account on Free",
+    "url": "https://developers.cloudflare.com/hyperdrive/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "D1 has no Canada location hint or jurisdiction (only eu/fedramp/us); Data Localization Suite is an Enterprise-only paid add-on",
+    "url": "https://developers.cloudflare.com/d1/configuration/data-location/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers Logs is on by default; invocation logs can be disabled per Worker; retention is 3 days Free / 7 days Paid; exact fields (IP, headers) are not documented",
+    "url": "https://developers.cloudflare.com/workers/observability/logs/workers-logs/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers secrets are per-Worker and hidden after being set",
+    "url": "https://developers.cloudflare.com/workers/configuration/secrets/",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloudflare recommends vinext (beta) as the default for Next.js on Workers, with OpenNext (community-maintained) as the fallback",
+    "url": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloudflare Registrar supports both .com and .ca (CIRA) at cost, but no dollar price is published on the pages checked",
+    "url": "https://www.cloudflare.com/tld-policies/",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloudflare Email Sending is beta and Paid-only: 3,000/month included, then $0.35 per 1,000",
+    "url": "https://developers.cloudflare.com/email-service/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "Google Cloud Free Tier for Cloud Run: 2M requests, 360k GB-s and 180k vCPU-s per month; billing account required; overage billed automatically; Cloud SQL has only a 30-day trial",
+    "url": "https://docs.cloud.google.com/free/docs/free-cloud-features",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloud Run offers Montreal and Toronto, both Tier 2",
+    "url": "https://docs.cloud.google.com/run/docs/locations",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloud Run domain mapping is Preview, not for production, and not available in Canadian regions; a load balancer or Firebase Hosting is required there",
+    "url": "https://docs.cloud.google.com/run/docs/mapping-custom-domains",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloud Run request logs are created automatically and cannot be disabled in Cloud Run, but Cloud Logging exclusion filters work; _Default retention is 30 days (configurable 1–3650)",
+    "url": "https://docs.cloud.google.com/logging/quotas",
+    "status": "verified"
+   },
+   {
+    "claim": "Cloud Run idle min-instance price and Tier 2 rates (pricing page could not be read)",
+    "url": "https://cloud.google.com/run/pricing",
+    "status": "unverified"
+   },
+   {
+    "claim": "Render Free: 15-min spin-down with about 1-min spin-up; free Postgres expires after 30 days, then deleted after a 14-day grace; no backups; 'Do not use them for production'",
+    "url": "https://render.com/docs/free",
+    "status": "verified"
+   },
+   {
+    "claim": "Render paid '$7 web service and $6 database' (pricing page is dynamic)",
+    "url": "https://render.com/pricing",
+    "status": "unverified"
+   },
+   {
+    "claim": "Railway Hobby is $5/month including $5 usage, Pro $20 including $20; a Free plan ($1 credit) exists with 0 custom domains",
+    "url": "https://railway.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Fly.io: no free tier for new orgs; shared-cpu-1x 256 MB $2.19/month; Managed Postgres from $38/month",
+    "url": "https://docs.fly.io/about/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Fly.io has a Toronto (yyz) region supporting Managed Postgres; Render and Railway have no Canadian region",
+    "url": "https://docs.fly.io/reference/regions",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon Free gives 100 CU-h per project and has no Canadian region (verified by sibling H1H2 branch, not re-fetched here)",
+    "url": "https://neon.com/docs/introduction/plans",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "PQ-H1: Must production processing and data stay in Canada, or on institution-hosted infrastructure? Does UW require a privacy or security review before a pilot with real students?",
+   "PQ-H2: Is the hosting-account operator a trusted party in the threat model, or must the identity-to-content mapping be unrecoverable even with full DB and log access (§6.4)?",
+   "PQ-H3: Are IP addresses and request metadata identity-bearing for §6.2? How long may platform logs keep them (relates to Q14/Q17)?",
+   "PQ-H4: At a free-tier limit, does the owner prefer a hard stop (outage, no bill: Cloudflare) or automatic billing (GCP)? What monthly ceiling is acceptable?",
+   "PQ-H5: Must presentation mode and voting update live (push/WebSockets), or is periodic refresh acceptable? §7.8 does not specify update latency.",
+   "PQ-H6: What availability and cold-start latency counts as 'credible' for the prototype? No target exists in CONTRIBUTING."
+  ],
+  "risks": [
+   "The 10 ms CPU limit on Workers Free is unmeasured for React SSR. If it is exceeded, H3 needs Workers Paid, which puts it about $1 over the <$5 target once the domain is included.",
+   "Cloud Run overage is billed automatically, with no hard cap on the pages read. Polling bursts from a 1,000-student course, or min-instances=1, can create a bill. Idle and Tier 2 rates are Unverified.",
+   "Platform logs on both stacks are on by default. Cloudflare does not document its invocation-log fields, so whether IP, headers or cookies sit next to request paths must be inspected before launch (§6.2, §9).",
+   "H3a (D1) forecloses design A (no roles, RLS or schemas). Moving to an institution-hosted or Canadian deployment would mean rewriting the data layer.",
+   "Neon has no Canadian region. The Canadian variant relies on Supabase Free used as plain Postgres (pausing and limits are in the sibling note) plus Firebase Hosting for the custom domain. The Firebase quota and load-balancer pricing are Unverified.",
+   "The Next.js path on Workers is beta (vinext) or community-maintained (OpenNext, Windows not guaranteed), and the owner develops on Windows.",
+   "Hyperdrive's 10-minute idle pool may keep Neon awake and burn CU-hours (Unverified). Hyperdrive query caching must be checked so it never serves private data.",
+   "Vendor free tiers change: Cloudflare Workers Logs moves to Observability pricing on 2026-12-01, and Fly removed free allowances in October 2024.",
+   "Some facts (Neon, Porkbun, Supabase) are taken from the sibling H1H2 note's same-day verification and were not re-fetched here."
+  ]
+ },
+ "privacy-B-separated-services": {
+  "file": "P:/code/_clearcourse-scratch/research/privacy-B-separated-services.md",
+  "recommendation": "PROPOSAL for the owner, not a decision. Use Family B's principles whatever platform is chosen: never store the author, use per-item keyed HMAC tags for upvotes, follows and reports, credit participation through stateless signed receipts with delayed, batched, idempotent processing, and send emails with no content. Build the full version (about 8 databases and 8–9 Workers, roughly 29–39 sessions) only if the owner wants protection against the operator and host as well (PNQ-B13). Otherwise use \"B-lite\" (4 Workers, the five domain databases still separate) or Family A with these principles added. On Cloudflare it fits the Free plan's 10-database limit for one environment only, but the 10 ms CPU limit per invocation is a risk, and Workers Paid at $5/month meets the \"<$5/month\" target without beating it.",
+  "options": [
+   {
+    "name": "B-full on Cloudflare (Workers + one D1 per store + service bindings + Queues + Worker secrets)",
+    "verdict": "Strongest structural separation; 8 DBs fits the Free 10-DB cap for a single environment only; Free 10 ms CPU is a risk for merge roster scans; Paid is $5/month (at, not under, target); D1 has no Canada location; Time Travel (always on, 7/30 days) delays crypto-shredding."
+   },
+   {
+    "name": "B-full on separate Neon projects + separate Workers (Hyperdrive) or separate serverless projects",
+    "verdict": "Postgres everywhere (more portable, RLS can be layered per project); Free allows 100 projects, 1 GB each, 100 CU-h each, 6 h history; scale-to-zero on 8 projects means several cold starts per request (unverified latency); no Canada region."
+   },
+   {
+    "name": "B with one app process and separate modules/connection strings (b3)",
+    "verdict": "Still prevents SQL joins across projects but one process holds all credentials; weak on 'restricted service roles'; not recommended except as a stepping stone."
+   },
+   {
+    "name": "B-lite (Gateway+Identity+Shared, Vault=Linkage+Participation, Board, Survey)",
+    "verdict": "Five domain stores stay separate, ~25% less work (guess); weaker least-privilege; reasonable prototype compromise if operator-level protection is not a goal."
+   },
+   {
+    "name": "Exit-survey duplicate prevention S1–S4",
+    "verdict": "S2 (identity-side 'submitted' flag + delayed shuffled batch inserts with no reference) proposed; S4 blind tokens belongs to family C."
+   },
+   {
+    "name": "Differencing protection DF1–DF4 for level histogram vs shared list",
+    "verdict": "Owner decision tied to Q16/Q18; DF1 (suppress during sharing) or DF2 (cell and non-sharer residual both >= k) are the practical choices."
+   },
+   {
+    "name": "Retention R0–R3 (crypto-shred per-course key etc.)",
+    "verdict": "Options only for Q17; R1 effective only after D1 Time Travel / Neon history windows and any vendor-internal backups expire."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "D1 Free plan: 10 databases per account, 500 MB per DB, 5 GB per account, Time Travel 7 days, 50 queries per Worker invocation; Paid: 50,000 DBs, 10 GB/DB, 30 days",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers Paid has a minimum charge of $5/month; Free is 100,000 requests/day and 10 ms CPU per invocation",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "On Standard pricing, calls through service bindings do not incur additional request fees",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "Queues are available on Workers Free with 10,000 operations/day and fixed 24 h retention; a message typically costs 3 operations",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/",
+    "status": "verified"
+   },
+   {
+    "claim": "Queues messages can be delayed up to 24 hours via delaySeconds; batch size max 100, batch timeout max 60 s",
+    "url": "https://developers.cloudflare.com/queues/configuration/batching-retries/",
+    "status": "verified"
+   },
+   {
+    "claim": "Queues provide at-least-once delivery; duplicates possible; use a unique id as idempotency key",
+    "url": "https://developers.cloudflare.com/queues/reference/delivery-guarantees/",
+    "status": "verified"
+   },
+   {
+    "claim": "Service bindings let a Worker call another without a public URL; RPC recommended; declaring the binding grants permission to call public methods; max 32 Worker invocations per request",
+    "url": "https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/",
+    "status": "verified"
+   },
+   {
+    "claim": "Worker secrets are encrypted, not visible after set, and changing them creates a new Worker version",
+    "url": "https://developers.cloudflare.com/workers/configuration/secrets/",
+    "status": "verified"
+   },
+   {
+    "claim": "Rollback docs do not state whether rolling back restores an older secret value",
+    "url": "https://developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/",
+    "status": "unverified"
+   },
+   {
+    "claim": "D1 Time Travel is always on, restores to any minute within 30 days (Paid) / 7 days (Free), restore is destructive in place",
+    "url": "https://developers.cloudflare.com/d1/reference/time-travel/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers Logs is enabled by default for new Workers; invocation logs include request method/URL and console output; invocation_logs can be set false",
+    "url": "https://developers.cloudflare.com/workers/observability/logs/workers-logs/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers Free limits: 100 Workers/account, 5 Cron Triggers, 64 env vars/secrets per Worker; over 100k req/day gives error 1027 with fail open/closed per route",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "status": "verified"
+   },
+   {
+    "claim": "Workers Web Crypto supports HMAC, SHA-256, AES-GCM, HKDF, Ed25519; crypto.randomUUID() returns version 4",
+    "url": "https://developers.cloudflare.com/workers/runtime-apis/web-crypto/",
+    "status": "verified"
+   },
+   {
+    "claim": "D1 batch() statements are SQL transactions; failure rolls back the whole sequence",
+    "url": "https://developers.cloudflare.com/d1/worker-api/d1-database/",
+    "status": "verified"
+   },
+   {
+    "claim": "Rate Limiting binding: any string key, 10 or 60 s periods, per-location, eventually consistent; Free-plan availability not stated",
+    "url": "https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/",
+    "status": "unverified"
+   },
+   {
+    "claim": "SQLite assigns new rowid one larger than the largest existing (insertion-order leak); WITHOUT ROWID tables are the exception",
+    "url": "https://www.sqlite.org/autoinc.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon Free: 100 projects, 1 GB/project (20 GB total), 100 CU-hours/project, scale-to-zero after 5 min (cannot disable), 6 h history; Launch up to 7 days history",
+    "url": "https://neon.com/pricing",
+    "status": "verified"
+   },
+   {
+    "claim": "Neon has no Canada region and a project's region cannot be changed",
+    "url": "https://neon.com/docs/introduction/regions",
+    "status": "verified"
+   },
+   {
+    "claim": "D1 location hints/jurisdictions include no Canada option",
+    "url": "https://developers.cloudflare.com/d1/configuration/data-location/",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 9562 §8: do not assume UUIDs are hard to guess; use UUIDv4 for security contexts; UUIDv7 embeds a 48-bit Unix ms timestamp",
+    "url": "https://www.rfc-editor.org/rfc/rfc9562.html",
+    "status": "verified"
+   },
+   {
+    "claim": "PostgreSQL 18: track_commit_timestamp defaults to off and is set at server start",
+    "url": "https://www.postgresql.org/docs/current/runtime-config-replication.html",
+    "status": "verified"
+   },
+   {
+    "claim": "D1 supports WITHOUT ROWID tables and rejects ATTACH across databases",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/",
+    "status": "unverified"
+   }
+  ],
+  "new_open_questions": [
+   "PNQ-B1: Is a deliberate delay in participation counts and 'level reached' acceptable, how long, and what explanatory copy should students see?",
+   "PNQ-B2: Can students remove an upvote, and does that remove credit? After a merge, does a student who upvoted both questions keep 2 'upvotes given' or 1?",
+   "PNQ-B3: On merge, are answers on the merged-away question kept, and when is preserving a comment 'not reasonable' (§7.7)?",
+   "PNQ-B4: Is 'Still unclear' one mark per student per answer, and who sees the count?",
+   "PNQ-B5: For threshold locking (§7.9), does participation 'begin' at the first qualifying action or at policy publication?",
+   "PNQ-B6: What timestamp precision may the board show for student posts (coarser is more private)?",
+   "PNQ-B7: Who receives 'Answer posted' and 'Question merged'? Does an author auto-follow their own question (weakens authorship protection against the key holder)?",
+   "PNQ-B8: Should moderators be able to throttle 'the author of this post' without learning identity (requires an escrowed author handle)?",
+   "PNQ-B9: Must the exit survey prevent duplicate submissions, and which mechanism (S1–S4) is acceptable?",
+   "PNQ-B10: How often may level-count aggregates refresh, and which differencing protection applies once sharing opens?",
+   "PNQ-B11: Does hiding/deleting content remove the participation credit it earned? (Family B has no author link to do so.)",
+   "PNQ-B12: Does production require Canadian data residency? Neither D1 nor Neon offers a Canadian location.",
+   "PNQ-B13: Is protection against the platform operator and hosting vendors a goal, or only the spec's named actors?"
+  ],
+  "risks": [
+   "The Gateway necessarily sees identity and content together in memory; a compromised Gateway or a malicious deploy deanonymizes all future activity (not protected; document as limitation).",
+   "The operator holding K_root plus the roster can recompute tags and learn who upvoted/followed/reported what (not authorship, which is never stored).",
+   "Timing correlation in small or quiet courses: batches with one student's events, D1 Time Travel / Neon history snapshot diffs, and email/sign-in times can link activity; mitigations are delays and k-thresholds whose values are owner decisions.",
+   "Workers Free 10 ms CPU per invocation may not fit merge roster scans, inbox compute-on-read or signing (spike S-B2 needed); Paid is $5/month, at not under the target.",
+   "Workers Logs is on by default for new Workers; configuration drift (logging, extra bindings) is the main privacy failure mode and requires CI binding-matrix and observability tests.",
+   "No author link means credit cannot be removed for deleted posts and authors cannot be throttled without adding an escrow, which weakens anonymity.",
+   "Crypto-shredding is not immediate: D1 Time Travel (7/30 days, always on), Neon history (6 h/7 days) and unknown vendor-internal backups keep deleted keys recoverable for a while.",
+   "Solo-developer maintenance burden: 8 migration streams, distributed partial failures, eventual-consistency UX, and debugging with request logs deliberately disabled.",
+   "Free plan's 10-database cap leaves no room for a staging copy of 8 stores.",
+   "Status note for the user's question: this branch did not hang this time. The earlier attempt timed out while generating one huge file; this run wrote the notes in small sections and finished (796 lines)."
+  ]
+ },
+ "factcheck-stack": {
+  "files": [
+   "P:/code/_clearcourse-scratch/factcheck/stack.md"
+  ],
+  "summary": "The research is not hung: this fact-check step finished, and the report is written to P:/code/_clearcourse-scratch/factcheck/stack.md. On 2026-10-11 I made about 85 WebFetch calls against official pages to check claims in the three stack notes. Most claims match the live pages. None of the problems below changes a recommendation or the <$5/month cost comparisons; those figures check out.\n\nRefuted or outdated:\n1. S0 states the Cloudflare Worker size limit as \"3 MiB Free / 10 MiB Paid\". Cloudflare's own limits page says 64 MiB uncompressed on both plans and \"There is no compressed size limit\". The 3/10 MiB figure is stale OpenNext documentation. H3H4 flags this conflict correctly; S0 does not.\n2. S0 says \"Cloudflare today goes through @opennextjs/cloudflare\". This is outdated. Cloudflare now recommends vinext (beta) by default, and lists proxy.ts as Supported under vinext. NQ-S0-3 should be reframed.\n3. H3H4 says Cloudflare Email Sending is \"Paid-only\". Too strong: sending to verified addresses is free on all plans. Only sending to arbitrary recipients needs Workers Paid, which magic links still require.\n4. H1H2 gives the Porkbun .ca renewal as $11.60. The page shows $11.61, plus a sale price right now. Porkbun never names the currency.\n\nCould not be verified (the cited page doesn't say it or won't load):\n- React Router v8's announcement date.\n- That Cloudflare's Data Localization Suite is Enterprise-only.\n- Cloud Run Tier 2 rates and Render's paid prices (both pricing pages are dynamic and returned no figures).\n- That Cloudflare Registrar sells \"at cost\".\n\nCorrect claim, wrong URL (the notes should cite these pages instead):\n- Hyperdrive's 10-config limit is on the Hyperdrive limits page.\n- Cloud Run request logs are covered on /run/docs/logging.\n- Render and Railway regions are on their own regions pages.\n- Email Sending's beta label is on the /email-service/ page.\n- Porkbun .com pricing is on /tld/com.\n\nNuances to add:\n- Next.js middleware.ts is deprecated, not removed.\n- Prisma 8 is on prisma@latest, but GitHub still tags every 8.0.0 build as a release candidate.\n- Sentry now describes its defaults through the dataCollection option. Everything, including the IP address, is collected by default.\n- Fly's $2.19 machine price applies only in the iad and ewr regions.\n- The H3 cost table needs a caveat: Workers Logs pricing changes on 2026-12-01.\n\nThree new open questions are proposed for the owner. None are in CONTRIBUTING section 13:\n- PQ-FC-1: Is the budget in USD or CAD, and does it include tax? The $5 USD Workers Paid minimum alone already meets the target.\n- PQ-FC-2: Vercel deploys Routing Middleware to all regions. Does a Next.js proxy.ts run outside yul1, and does that matter for data residency (section 6)?\n- PQ-FC-3: Vercel's DPA covers only Pro and Enterprise, and Firebase Hosting isn't under Google Cloud's ToS. Is a signed DPA needed before real UW users sign in?\n\nThe notes files were not edited.",
+  "results": [
+   {
+    "claim": "S0: Next.js 16.4 released 2026-10-06; OOB security update 2026-10-14 (2 Critical, 1 High); CVE-2025-66478 CVSS 10 published 2025-12-03",
+    "status": "confirmed",
+    "url": "https://nextjs.org/blog"
+   },
+   {
+    "claim": "S0: Next.js 16 replaced middleware.ts with proxy.ts (Node.js runtime); min Node 20.9",
+    "status": "confirmed",
+    "url": "https://nextjs.org/blog/next-16",
+    "correction": "Nuance: middleware.ts is deprecated but still available for Edge runtime, not removed."
+   },
+   {
+    "claim": "S0: Next.js recommends server-only DAL for new projects; Server Actions reachable via direct POST, re-check auth in each",
+    "status": "confirmed",
+    "url": "https://nextjs.org/docs/app/guides/data-security"
+   },
+   {
+    "claim": "S0: Adapter API stable since 16.2; Vercel adapter uses same public contract",
+    "status": "confirmed",
+    "url": "https://nextjs.org/blog/nextjs-across-platforms"
+   },
+   {
+    "claim": "S0: React Router docs latest 8.4.0; .server modules fail the build in client graph",
+    "status": "confirmed",
+    "url": "https://reactrouter.com/api/framework-conventions/server-modules"
+   },
+   {
+    "claim": "S0: React Router v8 announced 2026-06-17",
+    "status": "unverifiable",
+    "url": "https://reactrouter.com/api/framework-conventions/server-modules",
+    "correction": "Cited page gives no announcement date."
+   },
+   {
+    "claim": "S0: SvelteKit 3 announced 2026-10-01; $lib->#lib; config in vite.config.ts; remote functions not stable",
+    "status": "confirmed",
+    "url": "https://svelte.dev/blog/sveltekit-3-is-here"
+   },
+   {
+    "claim": "S0: Django multi-DB per-alias USER/PASSWORD; routers; no cross-DB FK/M2M",
+    "status": "confirmed",
+    "url": "https://docs.djangoproject.com/en/stable/topics/db/multi-db/",
+    "correction": "Per-alias credentials shown by examples only (Django 6.1 docs)."
+   },
+   {
+    "claim": "S0: Vercel deploys Django as a single Vercel Function on Fluid compute",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/frameworks/full-stack/django"
+   },
+   {
+    "claim": "S0: Drizzle 0.45.4 latest stable; v1.0.0-rc.4 pre-release",
+    "status": "confirmed",
+    "url": "https://github.com/drizzle-team/drizzle-orm/releases"
+   },
+   {
+    "claim": "S0: Drizzle pgPolicy/pgRole, opt-in entities.roles; no GRANT/SECURITY DEFINER in RLS docs",
+    "status": "confirmed",
+    "url": "https://orm.drizzle.team/docs/rls"
+   },
+   {
+    "claim": "S0: Prisma RLS extension wraps every query in batch transaction; not for production",
+    "status": "confirmed",
+    "url": "https://github.com/prisma/prisma-client-extensions/tree/main/row-level-security"
+   },
+   {
+    "claim": "S0: Atlas RLS policies, roles/permissions, functions are Atlas Pro only",
+    "status": "confirmed",
+    "url": "https://atlasgo.io/atlas-schema/hcl#row-level-security",
+    "correction": "Nuance: table-level row_security option has no Pro label."
+   },
+   {
+    "claim": "S0: PgBouncer transaction mode SET/RESET and PREPARE 'Never'; protocol prepared statements need max_prepared_statements>0",
+    "status": "confirmed",
+    "url": "https://www.pgbouncer.org/features.html"
+   },
+   {
+    "claim": "S0: Supabase transaction mode no prepared statements; custom roles as [ROLE].[PROJECT-REF]",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/database/connecting-to-postgres"
+   },
+   {
+    "claim": "S0: Neon RLS example set_config(...,true) in sql.transaction(); role must not have BYPASSRLS",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/serverless/serverless-driver-configuration"
+   },
+   {
+    "claim": "S0: Hyperdrive transaction mode, SET in transaction, RESET on return",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/hyperdrive/concepts/how-hyperdrive-works/"
+   },
+   {
+    "claim": "S0: Postgres RLS owner bypass unless FORCE; superuser/BYPASSRLS bypass; RI checks covert channel",
+    "status": "confirmed",
+    "url": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+   },
+   {
+    "claim": "S0: SECURITY DEFINER search_path with pg_temp last; revoke PUBLIC in same transaction; PUBLIC EXECUTE default",
+    "status": "confirmed",
+    "url": "https://www.postgresql.org/docs/current/sql-createfunction.html"
+   },
+   {
+    "claim": "S0: uuidv7 ms UNIX timestamp, extractable via uuid_extract_timestamp",
+    "status": "confirmed",
+    "url": "https://www.postgresql.org/docs/current/functions-uuid.html"
+   },
+   {
+    "claim": "S0: Sentry Next.js SDK collects IP, server request bodies, query strings, console breadcrumbs by default",
+    "status": "confirmed",
+    "url": "https://docs.sentry.io/platforms/javascript/guides/nextjs/data-management/data-collected/",
+    "correction": "Defaults now described via dataCollection option, not sendDefaultPii."
+   },
+   {
+    "claim": "S0: Auth.js maintained by Better Auth team with security patches; new projects should use Better Auth",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/blog/authjs-joins-better-auth"
+   },
+   {
+    "claim": "S0: Better Auth magic link storeToken plain, 300 s, single-use, 5 per 60 s",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/docs/plugins/magic-link"
+   },
+   {
+    "claim": "S0: Stack Overflow 2026 usage figures (n=10,281)",
+    "status": "confirmed",
+    "url": "https://survey.stackoverflow.co/2026/technology/data"
+   },
+   {
+    "claim": "S0: GitHub Free 2,000 Actions min/month private; blocked at quota without payment method",
+    "status": "confirmed",
+    "url": "https://docs.github.com/en/billing/concepts/product-billing/github-actions"
+   },
+   {
+    "claim": "S0: OpenNext Cloudflare does not support Node Middleware; proxy.ts support uncertain",
+    "status": "confirmed",
+    "url": "https://opennext.js.org/cloudflare",
+    "correction": "Uncertainty correctly stated; but Cloudflare's vinext docs list proxy.ts as supported."
+   },
+   {
+    "claim": "S0 (no flag): Worker size limit 3 MiB Free / 10 MiB Paid",
+    "status": "refuted",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "correction": "64 MiB uncompressed on Free and Paid; no compressed size limit."
+   },
+   {
+    "claim": "S0: Cloudflare today goes through @opennextjs/cloudflare",
+    "status": "outdated",
+    "url": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/",
+    "correction": "Cloudflare recommends vinext (beta) as default; OpenNext is the path for apps that cannot migrate."
+   },
+   {
+    "claim": "S0: Prisma 8 on prisma@latest since 2026-08-28",
+    "status": "confirmed",
+    "url": "https://www.prisma.io/changelog",
+    "correction": "Conflicting signal: GitHub releases show only v8.0.0-rc.* pre-releases (rc.17 on 08 Oct)."
+   },
+   {
+    "claim": "S0: Kysely 0.29.6 Latest; 0.30 beta",
+    "status": "confirmed",
+    "url": "https://github.com/kysely-org/kysely/releases"
+   },
+   {
+    "claim": "S0: postgres.js v3.4.9 Latest",
+    "status": "confirmed",
+    "url": "https://github.com/porsager/postgres/releases"
+   },
+   {
+    "claim": "H1H2: Vercel Hobby personal non-commercial; commercial incl. paid employee/consultant writing code",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/limits/fair-use-guidelines"
+   },
+   {
+    "claim": "H1H2: Hobby cannot buy extra usage; wait 30 days when exceeded",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/plans/hobby",
+    "correction": "Page says 'In most cases'; Web Analytics resumes after 7 days."
+   },
+   {
+    "claim": "H1H2: Hobby 1M invocations, 4 CPU-hrs, 360 GB-hrs, 100 GB transfer; logs 1 h; no drains",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/plans/hobby"
+   },
+   {
+    "claim": "H1H2: Vercel yul1 (ca-central-1); default iad1",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/regions"
+   },
+   {
+    "claim": "H1H2: Hobby runs functions in a single region",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/functions/configuring-functions/region",
+    "correction": "Not on /docs/regions; stated on configuring-region page. Routing Middleware deploys to all regions regardless."
+   },
+   {
+    "claim": "H1H2: Vercel runtime logs record path, search params, host, UA; browser filter matches IP+UA",
+    "status": "confirmed",
+    "url": "https://vercel.com/docs/logs/runtime"
+   },
+   {
+    "claim": "H1H2: Vercel DPA applies to Enterprise and Pro; primary processing US",
+    "status": "confirmed",
+    "url": "https://vercel.com/legal/dpa"
+   },
+   {
+    "claim": "H1H2: Vercel Functions WebSockets public beta on all plans",
+    "status": "confirmed",
+    "url": "https://vercel.com/kb/guide/do-vercel-serverless-functions-support-websocket-connections"
+   },
+   {
+    "claim": "H1H2: Neon Free 100 CU-h, 1 GB/project, 100 projects, scale-to-zero 5 min, 6 h history; compute suspended at cap",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/introduction/plans"
+   },
+   {
+    "claim": "H1H2: Neon no Canadian region; region cannot be changed",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/introduction/regions"
+   },
+   {
+    "claim": "H1H2: Neon Launch $0.106/CU-h, $0.35/GB-month, no minimum",
+    "status": "confirmed",
+    "url": "https://neon.com/pricing"
+   },
+   {
+    "claim": "H1H2: Console roles get neon_superuser (BYPASSRLS, pg_read_all_data); SQL roles do not",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/manage/roles"
+   },
+   {
+    "claim": "H1H2: Neon PgBouncer transaction mode, not configurable, SET/RESET unsupported, pools per user+db",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/connect/connection-pooling"
+   },
+   {
+    "claim": "H1H2: New Neon branches copy all parent data by default",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/introduction/branching"
+   },
+   {
+    "claim": "H1H2: Supabase Free 500 MB, 50k MAU, 2 projects, 1-week pause, no backups, 1-day logs, no SAML",
+    "status": "confirmed",
+    "url": "https://supabase.com/pricing"
+   },
+   {
+    "claim": "H1H2: Supabase Pro $25 incl. $10 compute; SAML 50 MAU then $0.015",
+    "status": "confirmed",
+    "url": "https://supabase.com/pricing"
+   },
+   {
+    "claim": "H1H2: Supabase Canada (Central) ca-central-1",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/platform/regions"
+   },
+   {
+    "claim": "H1H2: Supabase Data API default grants (moving to opt-in), can be disabled",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/database/hardening-data-api",
+    "correction": "No timeline given for the opt-in change."
+   },
+   {
+    "claim": "H1H2: Supabase Auth stores users in auth schema of project DB",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/auth/architecture"
+   },
+   {
+    "claim": "H1H2: Supabase gateway logs record path, query, cf-connecting-ip, city/lat/long/postal",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/observability/log-field-reference"
+   },
+   {
+    "claim": "H1H2: Supabase JWT-subject log association conflict (UI filter vs field reference)",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/telemetry/logs",
+    "correction": "Conflict is real; assume logs can be linked to user IDs."
+   },
+   {
+    "claim": "H1H2: Supabase built-in SMTP 2/hour team-only; custom SMTP 30/hour",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/auth/auth-smtp"
+   },
+   {
+    "claim": "H1H2: pgsodium deprecated; Vault independent",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/database/extensions/pgsodium"
+   },
+   {
+    "claim": "H1H2: Supabase restore window conflict (1 year text vs 90 days caption)",
+    "status": "confirmed",
+    "url": "https://supabase.com/docs/guides/platform/upgrading"
+   },
+   {
+    "claim": "H1H2: Better Auth SSO supports OIDC and SAML 2.0",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/docs/plugins/sso"
+   },
+   {
+    "claim": "H1H2: Auth.js is now part of Better Auth (cited to SSO page)",
+    "status": "unverifiable",
+    "url": "https://www.better-auth.com/docs/plugins/sso",
+    "correction": "SSO page silent; blog says 'maintained and overseen by Better Auth team'."
+   },
+   {
+    "claim": "H1H2: Porkbun .ca $11.12 register, $11.60 renew",
+    "status": "refuted",
+    "url": "https://porkbun.com/tld/ca",
+    "correction": "Regular renew $11.61 (register $11.12, transfer $11.44); current sale $8.66/$9.15/$8.98; currency unstated."
+   },
+   {
+    "claim": "H1H2: Porkbun .com $11.08/yr",
+    "status": "confirmed",
+    "url": "https://porkbun.com/tld/com",
+    "correction": "Found on /tld/com, not the cited .ca page."
+   },
+   {
+    "claim": "H1H2: Neon egress 5 GB/project; Neon Auth 60,000 MAU",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/introduction/plans"
+   },
+   {
+    "claim": "H1H2: Supabase 5 GB egress, 200 realtime, Pro 500 then $10/1000, PITR $100, extra Micro $10",
+    "status": "confirmed",
+    "url": "https://supabase.com/pricing"
+   },
+   {
+    "claim": "H1H2: Resend Free 3,000/month, 100/day; Pro $20 for 50,000",
+    "status": "confirmed",
+    "url": "https://resend.com/pricing"
+   },
+   {
+    "claim": "H3H4: Workers Paid $5 minimum, 10M requests, 30M CPU-ms; D1 on Free and Paid",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/"
+   },
+   {
+    "claim": "H3H4: D1 Paid 25B read/50M written/5 GB; Free 5M/day, 100k/day, 5 GB",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/platform/pricing/"
+   },
+   {
+    "claim": "H3H4: Workers Free 100k req/day (Error 1027), 10 ms CPU",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/"
+   },
+   {
+    "claim": "H3H4: Worker size conflict 64 MiB uncompressed vs OpenNext 3/10 MiB compressed",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/platform/limits/",
+    "correction": "Conflict real; Cloudflare's 64 MiB uncompressed is authoritative."
+   },
+   {
+    "claim": "H3H4: D1 10 DBs/500 MB Free, 50,000/10 GB Paid, single-threaded, Time Travel 7/30 days",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/d1/platform/limits/"
+   },
+   {
+    "claim": "H3H4: Hyperdrive on Free 100k queries/day",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/hyperdrive/platform/pricing/"
+   },
+   {
+    "claim": "H3H4: Hyperdrive 10 configs on Free",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/hyperdrive/platform/limits/",
+    "correction": "Not on cited pricing page; limits page: Free 10, Paid 25."
+   },
+   {
+    "claim": "H3H4: D1 no Canada hint/jurisdiction",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/d1/configuration/data-location/"
+   },
+   {
+    "claim": "H3H4: Data Localization Suite is Enterprise-only add-on",
+    "status": "unverifiable",
+    "url": "https://developers.cloudflare.com/d1/configuration/data-location/",
+    "correction": "Cited page never mentions DLS or Enterprise."
+   },
+   {
+    "claim": "H3H4: Workers Logs on by default, disable per Worker, 3/7 days retention, fields undocumented",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/observability/logs/workers-logs/"
+   },
+   {
+    "claim": "H3H4: Workers secrets per-Worker and hidden after set",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/configuration/secrets/"
+   },
+   {
+    "claim": "H3H4: Cloudflare recommends vinext (beta) default; OpenNext fallback",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/",
+    "correction": "Page does not call OpenNext community-maintained."
+   },
+   {
+    "claim": "H3H4: Cloudflare Registrar supports .com and .ca at cost; no price published",
+    "status": "confirmed",
+    "url": "https://www.cloudflare.com/tld-policies/",
+    "correction": "TLDs and no-price confirmed; 'at cost' not stated on this page."
+   },
+   {
+    "claim": "H3H4: Cloudflare Email Sending beta, Paid-only, 3,000/month then $0.35/1,000",
+    "status": "refuted",
+    "url": "https://developers.cloudflare.com/email-service/platform/pricing/",
+    "correction": "Sending to verified destination addresses is free on all plans; only arbitrary recipients need Paid. Beta label is on https://developers.cloudflare.com/email-service/."
+   },
+   {
+    "claim": "H3H4: GCP Free Tier Cloud Run 2M req, 360k GB-s, 180k vCPU-s; billing account; overage billed; Cloud SQL 30-day trial",
+    "status": "confirmed",
+    "url": "https://docs.cloud.google.com/free/docs/free-cloud-features"
+   },
+   {
+    "claim": "H3H4: Cloud Run Montreal and Toronto both Tier 2",
+    "status": "confirmed",
+    "url": "https://docs.cloud.google.com/run/docs/locations"
+   },
+   {
+    "claim": "H3H4: Cloud Run domain mapping Preview, not production, not in Canadian regions",
+    "status": "confirmed",
+    "url": "https://docs.cloud.google.com/run/docs/mapping-custom-domains"
+   },
+   {
+    "claim": "H3H4: Cloud Run request logs automatic, not disableable, exclusion filters; _Default 30 days (1-3650)",
+    "status": "confirmed",
+    "url": "https://docs.cloud.google.com/run/docs/logging",
+    "correction": "Request-log facts are on /run/docs/logging; retention facts on /logging/quotas."
+   },
+   {
+    "claim": "H3H4: Cloud Run idle min-instance and Tier 2 rates",
+    "status": "unverifiable",
+    "url": "https://cloud.google.com/run/pricing"
+   },
+   {
+    "claim": "H3H4: Render Free spin-down, 30-day Postgres expiry + 14-day grace, no backups, not for production",
+    "status": "confirmed",
+    "url": "https://render.com/docs/free"
+   },
+   {
+    "claim": "H3H4: Render paid $7 web + $6 database",
+    "status": "unverifiable",
+    "url": "https://render.com/pricing"
+   },
+   {
+    "claim": "H3H4: Railway Hobby $5 incl. $5, Pro $20 incl. $20, Free $1 credit 0 custom domains",
+    "status": "confirmed",
+    "url": "https://railway.com/pricing"
+   },
+   {
+    "claim": "H3H4: Fly.io no free tier; shared-cpu-1x 256 MB $2.19; MPG from $38",
+    "status": "confirmed",
+    "url": "https://docs.fly.io/about/pricing",
+    "correction": "$2.19 applies in iad/ewr only; other regions cost more."
+   },
+   {
+    "claim": "H3H4: Fly yyz supports MPG; Render and Railway no Canadian region",
+    "status": "confirmed",
+    "url": "https://docs.fly.io/reference/regions",
+    "correction": "Render/Railway part verified on render.com/docs/regions and docs.railway.com/reference/deployment-regions."
+   },
+   {
+    "claim": "H3H4: Durable Objects Free 100k req/day, 13,000 GB-s/day, SQLite only",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/durable-objects/platform/pricing/"
+   },
+   {
+    "claim": "H3H4: Artifact Registry 0.5 GB; Secret Manager 6 versions, 10,000 ops free",
+    "status": "confirmed",
+    "url": "https://docs.cloud.google.com/free/docs/free-cloud-features"
+   },
+   {
+    "claim": "H3H4: Neon Free 100 CU-h/project, no Canadian region",
+    "status": "confirmed",
+    "url": "https://neon.com/docs/introduction/plans"
+   }
+  ]
+ },
+ "judge-stack": {
+  "file": "P:/code/_clearcourse-scratch/compare/stack-hosting.md",
+  "recommendation": "This is a proposal for the owner to approve through an ADR. It closes no open question. Recommended prototype stack: TypeScript with Next.js 16.x App Router on the Node.js runtime only, following S0's privacy-domain DAL rules, with no proxy.ts and pinned to a release that includes the 2026-10-14 out-of-band security fix. Drizzle ORM with one instance, pool, LOGIN role and secret per privacy domain. Migrations use drizzle-kit generate plus hand-written SQL for every role, grant, FORCE RLS policy and SECURITY DEFINER function. They are applied only from GitHub Actions, and CI checks them with catalogue assertions. Database: Supabase Free in ca-central-1, used only as plain Postgres (Data API disabled, default grants revoked, no Supabase Auth, SDK or Vault). Host: Vercel Hobby with functions pinned to yul1, but only if the owner confirms that Hobby's \"non-commercial personal use\" rule fits and that no DPA is needed for the prototype (PQ-J2/PQ-J3). Pre-agreed fallback (H4-CA): the same app as a container on Cloud Run northamerica-northeast1 with the same Supabase database. Auth input to Q4: Better Auth with database sessions and email one-time codes. Email integration point: a content-free mailer port inside the identity domain, using Amazon SES ca-central-1 on an AWS Paid-plan account, because Free-plan accounts close after 6 months. Domain: Porkbun .ca if eligible, else .com. CI: GitHub Actions on a personal repo, running a Postgres service container, migrations, catalogue assertions, Vitest, Playwright plus axe, and a docker build. Estimated prototype cost is about USD 1.12–1.17 (about CAD 1.60–1.67) per month. A pilot costs about USD 27–47 and lean production about USD 52–62 (USD 152–162 with PITR). Scores out of 100: H2 78.5, H4 77.5, H3b 70.5, H1 70.0, H3a 62.0. H4 is the most robust: it wins if Vercel Hobby can't be used, if a DPA is required, or if the owner wants operator-proof privacy.",
+  "ranking": [
+   {
+    "option": "H2 (H2a): Next.js on Vercel Hobby yul1 + Supabase Free ca-central-1 used as plain Postgres",
+    "rank": 1,
+    "rationale": "Weighted 78.5/100. About USD 1.17/month. The only free managed Postgres in the inputs with a Canadian region. Full support for family A; lowest lock-in when used as plain Postgres; most mainstream DX. Weaknesses: Vercel Hobby's non-commercial clause and missing DPA, up to 30-day lockout at caps, Supabase Free pauses after a week idle and has no backups, family B is weak at $0 (2 projects)."
+   },
+   {
+    "option": "H4 (H4-CR / H4-CA): Next.js standalone container on Google Cloud Run + Supabase or Neon Postgres",
+    "rank": 2,
+    "rationale": "Weighted 77.5; never below 75.5 in any sensitivity scenario. Supports families A and B fully, has the lowest lock-in, and offers Canadian compute and DB. The GCP terms show no non-commercial clause. Costs: cold starts, GCP/IAM complexity, possible automatic overage billing (alerts-only budgets don't cap; spend-cap eligibility for Cloud Run Unverified), and a custom domain in Canada needs Firebase Hosting or a load balancer at an Unverified price. Wins scenarios S1 (Hobby ineligible or DPA needed) and S3 (operator-proof B-full)."
+   },
+   {
+    "option": "H3b: Cloudflare Workers (React Router v8) + Hyperdrive + Postgres",
+    "rank": 3,
+    "rationale": "Weighted 70.5. Keeps Postgres for family A, with platform-enforced per-Worker secrets for B. The Cloudflare DPA is part of the self-serve agreement, and limits are hard daily stops with no surprise bills. But Next.js is only beta (vinext) or community (OpenNext) here. The Free 10 ms CPU limit is unmeasured, so Paid at USD 5.97 (above target) is likely. No Canadian compute; Neon has no Canadian region."
+   },
+   {
+    "option": "H1: Next.js on Vercel Hobby + Neon Free (aws-us-east-1)",
+    "rank": 4,
+    "rationale": "Weighted 70.0. Strongest $0 support for family B (100 projects). Its weaknesses: no Canadian Neon region (and the region can't be changed); a CU-hour cliff estimated at 89–134 CU-h against a 100 cap, with compute suspended for the rest of the month; console roles with BYPASSRLS; branches copy production data. Shares H2's Vercel Hobby ToS and DPA problems."
+   },
+   {
+    "option": "H3a: Cloudflare Workers + D1 (one DB per domain)",
+    "rank": 5,
+    "rationale": "Weighted 62.0. Cheapest physical separation and never sleeps. But SQLite has no roles, schemas or RLS, so family A is impossible. Lock-in is high (SQLite dialect, bindings), there is no Canadian location, and moving to institution hosting would mean a rewrite."
+   }
+  ],
+  "must_haves": [
+   "Owner answers PQ-J2 (commercial status vs Vercel Hobby 'non-commercial personal use') and PQ-J3 (DPA before real users) before the ADR; if either fails, use H4-CA",
+   "Next.js on the Node runtime only; no proxy.ts on Vercel (Routing Middleware runs globally); authorization checked inside every DAL function and Server Action, not only in middleware",
+   "One Postgres LOGIN role and secret per privacy domain; runtime roles never own tables; ENABLE+FORCE RLS; REVOKE ALL FROM PUBLIC on SECURITY DEFINER functions; no cross-domain foreign keys; CI catalogue assertions as part of the §9 negative tests",
+   "Security DDL in hand-written SQL migrations applied only from CI with a non-runtime owner URL; never drizzle-kit push to shared databases",
+   "Supabase used only as plain Postgres: Data API disabled, default privileges revoked, no Supabase Auth, SDK or Vault (portable K3 key wrapping); H2c browser Data API rejected for all anonymous/vote/participation/survey paths",
+   "Anonymous-content IDs via gen_random_uuid() (never serial, never uuidv7); no identity or content in URLs or query strings; field-allow-listing logger; Drizzle logger off in production; no SaaS error reporting or analytics in the prototype",
+   "Content-free, type-free email from a mailer port inside the identity domain only; SES on an AWS Paid-plan account with production access granted before launch",
+   "Preview deployments only against a separate synthetic-data Supabase project; nightly per-domain encrypted dumps (Supabase Free has no backups)",
+   "CI also builds the standalone Docker image so the H4-CA fallback stays one deploy away; CI Postgres pinned to Supabase's major version",
+   "Dependabot and fast patching (Next.js 2026-10-14 security update; Better Auth's 10 advisories in Jun–Sep 2026)"
+  ],
+  "risks": [
+   "Vercel Hobby may be judged commercial, or a DPA may be required (Vercel DPA covers Pro/Enterprise only). That forces Vercel Pro at USD 20/month, which breaks the budget, or a move to H4-CA",
+   "Vercel Hobby caps (4 Active CPU-hours, 1M invocations) cause a lockout of up to 30 days if presentation mode polls from student devices",
+   "Supabase Free pauses after 1 week of inactivity and has no backups. Whether scheduled pings count as activity is Unverified",
+   "Vercel runtime logs keep path, query string, user agent and IP for 1 hour on Hobby and cannot be switched off. IP plus timestamp correlation must be documented as a limitation of anonymity",
+   "Email sign-in can fail because of the SES sandbox, AWS Free-plan auto-closure after 6 months, or a free-tier daily cap (Resend 100/day)",
+   "H4-CA fallback costs are Unverified: Firebase Hosting or load-balancer routing in Canadian regions, min-instance price, and Cloud Run spend-cap eligibility. Cold starts may also hurt credibility",
+   "GitHub-hosted runner IPv6 and the Supabase Postgres major version are Unverified. They could block CI migrations or give false-green RLS tests",
+   "No free option gives end-to-end Canadian residency: vendor metadata, edge TLS termination and support access stay outside Canada",
+   "A 1,000-student course with live updates is outside every free tier",
+   "Unvetted PDF advice is partly outdated or wrong: App Runner is closed to new customers, D1 is on Free, $5 is a minimum, the unkeyed hash is reversible, and JWT sessions can't be revoked"
+  ],
+  "open_questions": [
+   "PQ-J1: Is the <$5/month target USD or CAD, and does it include tax?",
+   "PQ-J2: Is anyone paid to build or run ClearCourse AI, or is commercialisation intended? (Vercel Hobby eligibility)",
+   "PQ-J3: Must a DPA or institutional privacy review cover every processor before real UW users sign in?",
+   "PQ-J4: Must processing and stored data (DB, logs, backups, email metadata) stay in Canada or on institution-hosted infrastructure, for the prototype and/or production?",
+   "PQ-J5: Is the hosting-account operator trusted, or must the identity–content mapping be unrecoverable even with full DB and log access?",
+   "PQ-J6: Are IP addresses and request metadata identity-bearing under §6.2, and what platform-log retention is acceptable?",
+   "PQ-J7: At a free-tier limit, does the owner prefer a hard stop or automatic billing, and what monthly ceiling is acceptable?",
+   "PQ-J8: Must presentation mode and voting update live (push), or is periodic refresh acceptable?",
+   "PQ-J9: What availability or latency counts as 'credible' for the prototype?",
+   "PQ-J10: Must preview and staging use only synthetic data?",
+   "PQ-J11: Do backups and dumps count as 'exports' under §6.2/§3?",
+   "PQ-J12: May AI coding agents access production data or logs?",
+   "PQ-J13: Is any third-party error-reporting or analytics SaaS allowed?",
+   "PQ-J14: Must per-domain secret isolation be platform-enforced (separate deployments) in the prototype?",
+   "PQ-J15: Expected pilot scale (courses, students, largest course)?",
+   "PQ-J16: Is the owner eligible for .ca (CIRA Canadian Presence Requirements), and has the name been checked for conflicts?",
+   "PQ-J17: Will the owner hold an AWS Paid-plan account for SES?",
+   "PQ-J18: Is Next.js proxy.ts (run by Vercel in all regions) acceptable, or must all code run in the chosen region?",
+   "Existing §13 questions this depends on: Q2 (milestone scope; owner statement not yet recorded), Q3, Q4, Q6, Q8, Q9, Q14, Q15, Q17"
+  ]
+ }
+}
