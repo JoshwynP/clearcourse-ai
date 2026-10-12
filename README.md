@@ -5,7 +5,9 @@ an anonymous upvotable question board, optional process-transparency bonuses, a 
 presentation mode and privacy-preserving participation verification. The initial target is the
 University of Waterloo.
 
-**Status:** Scaffolding only. The tech stack is not yet decided.
+**Status:** Planning. Research, four Proposed ADRs and a build plan
+([docs/plan.md](docs/plan.md)) are waiting for the owner's approval. No application code yet, and
+the tech stack is not yet decided.
 
 - **Source of truth:** [CONTRIBUTING.md](CONTRIBUTING.md): purpose, scope, requirements and open
   questions

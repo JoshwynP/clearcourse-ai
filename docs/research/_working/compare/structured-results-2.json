@@ -1,0 +1,1278 @@
+{
+ "design:privacy-C-cryptographic": {
+  "file": "P:/code/_clearcourse-scratch/research/privacy-C-cryptographic.md",
+  "recommendation": "Proposal for the owner: do not make Family C the core privacy mechanism for the prototype or the production default. Adopt hybrid H1 instead: server-derived per-course pseudonyms (Family A or B) inside an identity-free, pseudonym-keyed data model behind a PseudonymSource interface, so that client-held, blind-signed pseudonyms (C1) can be switched in at a term boundary with no schema change. Take one Family C technique now, blind-signed one-time exit-survey tokens (RFC 9474 / Privacy Pass), along with two separate cookie-less origins, day-coarsened timestamps, and crypto-shredding of K_c (subject to Q17). Exact merge de-duplication (§7.7) requires a per-course linkable pseudonym, so per-question nullifier designs (Semaphore-style) cannot meet the spec.",
+  "options": [
+   {
+    "name": "C1: blind-signed per-course pseudonym (client-held secret, RFC 9474)",
+    "verdict": "Buildable but not recommended as the default. It meets merges, one upvote per student, counters, rate limiting, pseudonymous bans, and stored-data unlinkability, even against the DB console, dumps and backups. It conflicts with targeted e-mail (§7.13) and the §6.4 exceptional process. It allows undetectable level-token transfer (§7.11) and Sybil pseudonyms through device-loss re-issuance. Its guarantee against the operator holds only if the operator is passive, because the server ships the JS. It could later be an institution-configurable strong-anonymity mode."
+   },
+   {
+    "name": "C2: per-question nullifiers (Semaphore v4)",
+    "verdict": "Rejected. Nullifiers are unlinkable across questions, so after a merge the true upvote total is known only to lie between max(a,b) and a+b. That violates 'without double-counting a student' (§7.7). It also brings ZK artifacts and an Ethereum-oriented ecosystem."
+   },
+   {
+    "name": "C3: BBS anonymous credentials with client-held counters",
+    "verdict": "Not feasible. It is theoretically the strongest option and fixes level-token transfer. But the blind BBS and per-verifier-linkability drafts are only at -03 (Active RG Documents), core BBS is draft-12 and not an RFC, and I found no mainstream TS implementation of the blind or pseudonym extensions."
+   },
+   {
+    "name": "H1 hybrid: server HMAC pseudonym now, C1-ready data model, blind-token survey",
+    "verdict": "Recommended proposal. It keeps the §6.4 option open (K_c under k-of-n custody), supports targeted e-mail through the narrow API, keeps grade integrity, needs no recovery UX, and allows a later upgrade with no schema change."
+   },
+   {
+    "name": "Blind-signed exit-survey tokens (any family)",
+    "verdict": "Recommended. It is low effort and gives duplicate prevention with no identity linkage at all, plus no stored timestamp, IP or user agent (§7.12)."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "RFC 9474 (RSA Blind Signatures) is Informational, IRTF CFRG, October 2023; it defines 4 variants, with the Randomized variants RECOMMENDED; it provides blindness and one-more unforgeability; it has no public-metadata support",
+    "url": "https://www.rfc-editor.org/rfc/rfc9474.html",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 9576 says that in the shared Origin/Attester/Issuer model, unlinkability depends on separating issuance and redemption in time or space, and that metadata bits partition the anonymity set",
+    "url": "https://www.rfc-editor.org/rfc/rfc9576.html",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 9578 is Proposed Standard (June 2024) and defines token types 0x0001 VOPRF(P-384) (privately verifiable) and 0x0002 Blind RSA 2048 (publicly verifiable)",
+    "url": "https://www.rfc-editor.org/rfc/rfc9578.html",
+    "status": "verified"
+   },
+   {
+    "claim": "The Privacy Pass rate-limit-tokens draft (-06) and the key-consistency drafts have expired; batched-tokens draft-08 is with the IESG; RFC 9577 is Proposed Standard",
+    "url": "https://datatracker.ietf.org/wg/privacypass/documents/",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 9497 OPRF/VOPRF/POPRF is Informational, IRTF, December 2023, and its output is deterministic per key and input",
+    "url": "https://www.rfc-editor.org/rfc/rfc9497.html",
+    "status": "verified"
+   },
+   {
+    "claim": "draft-irtf-cfrg-bbs-signatures-12 (2026-09-28) is an Active RG Document with intended status Informational; it has not been published as an RFC",
+    "url": "https://datatracker.ietf.org/doc/draft-irtf-cfrg-bbs-signatures/",
+    "status": "verified"
+   },
+   {
+    "claim": "The blind BBS draft (-03, 2026-06-26) and the BBS per-verifier-linkability draft (-03, 2026-06-29) are Active RG Documents",
+    "url": "https://datatracker.ietf.org/doc/search?name=bbs&sort=&rfcs=on&activedrafts=on&olddrafts=on",
+    "status": "verified"
+   },
+   {
+    "claim": "RFC 9458 (Oblivious HTTP) requires that the relay not be operated by the same entity as the gateway",
+    "url": "https://www.rfc-editor.org/rfc/rfc9458.html",
+    "status": "verified"
+   },
+   {
+    "claim": "MDN browser-compat-data lists WebAuthn PRF in get() as Chrome 116 and Firefox 139, but Safari false (webkit bug 259934); in create() it lists Safari 18",
+    "url": "https://raw.githubusercontent.com/mdn/browser-compat-data/main/api/CredentialsContainer.json",
+    "status": "conflicting"
+   },
+   {
+    "claim": "WebKit says Safari 18.0 adds support for the WebAuthn prf extension, without specifying create() vs get()",
+    "url": "https://webkit.org/blog/15865/webkit-features-in-safari-18-0/",
+    "status": "conflicting"
+   },
+   {
+    "claim": "@cloudflare/blindrsa-ts 0.4.6, Apache-2.0, has a single runtime dependency (sjcl 1.0.9) and implements RFC 9474 plus the partially-blind draft-02; partially-blind verification does not work in browsers",
+    "url": "https://github.com/cloudflare/blindrsa-ts",
+    "status": "verified"
+   },
+   {
+    "claim": "@cloudflare/voprf-ts is 1.0.0 (BSD-3-Clause); @cloudflare/privacypass-ts is 0.9.0 (Apache-2.0) and claims RFC 9578 compliance",
+    "url": "https://registry.npmjs.org/@cloudflare/privacypass-ts/latest",
+    "status": "verified"
+   },
+   {
+    "claim": "Semaphore v4 nullifiers are derived from the scope plus the user's private key, giving one valid proof per scope; v4.0.0 was audited by PSE and the trusted setup completed on 13 July 2024",
+    "url": "https://docs.semaphore.pse.dev/guides/proofs",
+    "status": "verified"
+   },
+   {
+    "claim": "@semaphore-protocol/core latest is 4.14.3 (MIT)",
+    "url": "https://registry.npmjs.org/@semaphore-protocol/core/latest",
+    "status": "verified"
+   },
+   {
+    "claim": "Semaphore proof-generation timings and artifact sizes are published only as images",
+    "url": "https://docs.semaphore.pse.dev/benchmarks",
+    "status": "unverified"
+   },
+   {
+    "claim": "@digitalbazaar/bbs-signatures 3.1.0 (BSD-3-Clause); which draft revision it implements is not stated",
+    "url": "https://registry.npmjs.org/@digitalbazaar/bbs-signatures/latest",
+    "status": "verified"
+   },
+   {
+    "claim": "Windows Hello support for the WebAuthn PRF extension",
+    "url": "https://passkeys.dev/device-support/",
+    "status": "unverified"
+   },
+   {
+    "claim": "Analysis, not a sourced fact: with per-question nullifiers the merged upvote total is only known to lie in [max(a,b), a+b], so exact §7.7 de-duplication needs a per-course linkable pseudonym",
+    "url": "P:/code/clearcourse-ai/CONTRIBUTING.md",
+    "status": "verified"
+   },
+   {
+    "claim": "The spec requires protection against ordinary queries, instructors, TAs, admins, logs, exports and predictable IDs (§6.2, §9), not against the operator or vendors",
+    "url": "P:/code/clearcourse-ai/CONTRIBUTING.md",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "NQ-C1: Is in-app-only delivery, or a content-free uniform daily digest, acceptable for per-question notifications and 'Participation level reached'? Or must each §7.13 event have a targeted e-mail, which requires a server-side event-to-recipient mapping?",
+   "NQ-C2: Must anonymity hold against the platform operator and vendors (beyond §6.2)? Does UW require the §6.4 exceptional deanonymization process? The two answers pull in opposite directions.",
+   "NQ-C3: Can a student who lost their key material get a new pseudonym mid-term? This risks bounded double upvotes. Alternatively, is losing participation credit acceptable?",
+   "NQ-C4: Can participation continue after level tokens or sharing open (depends on Q18)?",
+   "NQ-C5: Is the undetectable risk of a student transferring a verified-level token to another student acceptable for grading (§7.11)?",
+   "NQ-C6: On a merge, does a student who upvoted both duplicates keep 2 'upvotes given'?",
+   "NQ-C7: Which threshold version determines a student's level: the version at their first participation, the originally published version, or the most favourable version?",
+   "NQ-C8: Is 'Still unclear' limited to one per student per answer, and is its count visible to staff?",
+   "NQ-C9: Which differencing protection applies to level aggregates once named shares exist?",
+   "NQ-C10: Does hiding or deleting content remove its participation credit?",
+   "NQ-C11: Is a separate board origin (subdomain) acceptable UX, given the 'explicit anonymity explanations' requirement (§8)?"
+  ],
+  "risks": [
+   "The user's relayed request was a status question ('what is the privacy agents doing?'), not a request for new work. This run completed the Family C notes in small incremental edits; the file is about 65 KB, a little above the 30-50 KB target.",
+   "In a web app the server ships the JavaScript that holds the client secret, so 'even the server cannot link' fails against an active or compromised operator or anyone with deploy-key access.",
+   "Host-vendor request logs (IP and timing across the identity and board origins) allow statistical linkage that no cryptographic design here removes. OHTTP needs a non-colluding third-party relay, whose cost and availability are unverified.",
+   "Under C1, level tokens can be transferred between colluding students without detection, which is a grade-integrity regression compared with Families A and B.",
+   "Device-loss re-issuance creates unlinkable Sybil pseudonyms that break exact one-upvote-per-student. Forbidding re-issuance causes credit loss and support load.",
+   "WebAuthn PRF support data conflicts for Safari get() (MDN BCD vs WebKit), so PRF-derived secrets are unreliable across UW devices until tested on real hardware.",
+   "The TypeScript libraries (blindrsa-ts 0.4.6, privacypass-ts 0.9.0) are pre-1.0 with no audit statement on their repo pages.",
+   "Family C makes the §6.4 exceptional process impossible after the fact. If UW policy requires that process, adopting C1 would force a redesign, which is a corner for production."
+  ]
+ },
+ "factcheck:auth-email": {
+  "files": [
+   "P:/code/_clearcourse-scratch/factcheck/other-1.md"
+  ],
+  "summary": "I fact-checked auth-A1, auth-A2 and other-O1 (the 70 claims in claims-other-1.json plus the budget-relevant rows of each Verification log). The report is at P:/code/_clearcourse-scratch/factcheck/other-1.md and was written in chunks; the notes files were not touched. I did not check on any privacy agent: this run covered only the sign-in, LTI and email notes.\n\nNone of the claims was refuted outright. Every price and free-tier limit matched the live pages: Resend, SES, Cloudflare, Postmark, Mailgun, SendGrid, MailerSend, WorkOS, Auth0, Clerk, Supabase and Firebase.\n\nFindings that matter for the recommendations and the <$5/month budget:\n1. O1 leaves something out. New AWS accounts on the Free account plan close automatically after 6 months, or sooner if credits run out, unless upgraded. The credits are $100 at sign-up plus up to $100 earned. A public prototype should use the Paid account plan.\n2. O1 understates something. New SES accounts start on the Essentials plan ($0.16 per 1,000) from 2026-07-21. The SES pricing page states this outright, but O1 calls it an inference. The \"à la carte\" proposal means cancelling that default plan; at prototype volume the difference is cents.\n3. A1 overstates the NIST session limits. The AAL1 30-day and AAL2 24 h / 1 h idle limits are SHOULD in the standard, not SHALL. Only the ban on email for out-of-band authentication is a SHALL NOT.\n4. A2's wording on `kid` is too broad. The Security Framework requires `kid` in key sets, not in every JWT header. A2's body applies it correctly to the tool's JWKS.\n5. A1's advisory count needs two corrections. The count of 10 between 26 Jun and 30 Sep is right across all 4 pages, but one of the two Critical advisories is in @better-auth/scim, not sso. Another 9 advisories, including a Critical SSRF in @better-auth/sso, were published on 31 May 2026.\n6. Smaller additions:\n   - Cloudflare Email preview also stores attachments, which O1 does not mention.\n   - The Brightspace LTI article says \"D2L does not yet support all aspects of the standard\".\n   - The Brightspace knowledge-base page still mentions the Anonymous deployment setting. That confirms the author's \"conflicting\" flag; the API docs say the setting is now always false.\n   - D2L \"Dynamic Registration disabled by default\" means the new registration starts disabled, not that the feature is off.\n7. Some claims-file URLs do not back the claim: Postmark prices (they are on /pricing, not eu-privacy), moodle-docker (licence and activity come from the GitHub API, not the Moodle docs page), and the jose push date (GitHub API, not npm). The 1EdTech membership requirement is stated on its page, although the author marked it unverified.\n\nStill unverifiable:\n- Whether SES keeps message bodies.\n- UW's Entra consent setting.\n- UW's LEARN role mapping.\n- Brevo's limits (page did not load).\n- Whether SES production sending is allowed on the AWS Free plan.\n- Claims with no URL: hosted Keycloak costing more than $5/month, and a magic link being used up by a link scanner.",
+  "results": [
+   {
+    "claim": "A1: uwaterloo.ca is Entra tenant 723a5a87-f39a-4a22-9247-3fc240c01396, region scope NA",
+    "status": "confirmed",
+    "url": "https://login.microsoftonline.com/uwaterloo.ca/v2.0/.well-known/openid-configuration"
+   },
+   {
+    "claim": "A1: UW domain federated to adfs.uwaterloo.ca",
+    "status": "confirmed",
+    "url": "https://login.microsoftonline.com/getuserrealm.srf?login=someone@uwaterloo.ca&xml=1"
+   },
+   {
+    "claim": "A1: UW tenant user-consent policy not publicly documented",
+    "status": "unverifiable",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/44816171143/Gnome+Online+Accounts"
+   },
+   {
+    "claim": "A1: Users may consent by default to non-admin permissions; Microsoft recommends verified-publisher-only",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
+   },
+   {
+    "claim": "A1: Microsoft-managed consent policy default for new tenants; exceptions exclude basic sign-in scopes",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies"
+   },
+   {
+    "claim": "A1: Publisher verification needs verified AI Cloud Partner Program account; step-up only beyond basic sign-in",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/entra/identity-platform/publisher-verification-overview",
+    "correction": "Step-up applies only if risk-based step-up is enabled, to multitenant apps registered after 8 Nov 2020"
+   },
+   {
+    "claim": "A1: Partner Center verification requires a legally registered business",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/partner-center/enroll/understand-the-verification-process"
+   },
+   {
+    "claim": "A1: oid same across apps; sub pairwise; email not for authorization",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference"
+   },
+   {
+    "claim": "A1: Entra logs every sign-in, immutable, readable by Reports Reader",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins"
+   },
+   {
+    "claim": "A1: UW M365 mailboxes for employees, students, alumni, retirees",
+    "status": "confirmed",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/269156660/Microsoft+365+email"
+   },
+   {
+    "claim": "A1/O1: Safe Links scans before delivery, detonates no-reputation URLs; Track user clicks recommended",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/defender-office-365/safe-links-about"
+   },
+   {
+    "claim": "A1: Better Auth magic link single-use, GET verify, plain token by default",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/docs/plugins/magic-link"
+   },
+   {
+    "claim": "A1: Better Auth email OTP 6 digits, 300 s, 3 attempts, plain storage, auto sign-up",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/docs/plugins/email-otp"
+   },
+   {
+    "claim": "A1: Better Auth v1.7.7 Latest (30 Sep) fixes critical magic-link takeover",
+    "status": "confirmed",
+    "url": "https://github.com/better-auth/better-auth/releases"
+   },
+   {
+    "claim": "A1: 10 Better Auth advisories 26 Jun-30 Sep 2026, 2 Critical, several High in sso",
+    "status": "confirmed",
+    "url": "https://github.com/better-auth/better-auth/security/advisories",
+    "correction": "Count correct across all 4 pages; second Critical is in @better-auth/scim not sso; 9 more (1 Critical SSRF in sso) on 31 May 2026"
+   },
+   {
+    "claim": "A1: Better Auth MIT, ~30.3k stars",
+    "status": "confirmed",
+    "url": "https://github.com/better-auth/better-auth"
+   },
+   {
+    "claim": "A1: Better Auth DB sessions, 7-day expiry, cookie cache delays revocation",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/docs/concepts/session-management",
+    "correction": "Expiry slides (updateAge 1 day)"
+   },
+   {
+    "claim": "A1: Better Auth implicit linking on by default; disableImplicitLinking exists",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/docs/concepts/users-accounts"
+   },
+   {
+    "claim": "A1: Auth.js part of Better Auth; patches/urgent only; new projects use Better Auth",
+    "status": "confirmed",
+    "url": "https://www.better-auth.com/blog/authjs-joins-better-auth"
+   },
+   {
+    "claim": "A1: Lucia deprecated March 2025",
+    "status": "confirmed",
+    "url": "https://lucia-auth.com/"
+   },
+   {
+    "claim": "A1: WorkOS AuthKit free to 1M MAU; SSO $125/connection (period unclear); custom domain $99/mo",
+    "status": "confirmed",
+    "url": "https://workos.com/pricing"
+   },
+   {
+    "claim": "A1: Auth0 Free 25,000 MAU, 1 enterprise connection",
+    "status": "confirmed",
+    "url": "https://auth0.com/pricing"
+   },
+   {
+    "claim": "A1/O1: Resend Free 3,000/mo, 100/day, 30-day retention; Pro $20/50k",
+    "status": "confirmed",
+    "url": "https://resend.com/pricing"
+   },
+   {
+    "claim": "A1: NIST 800-63B-4 email SHALL NOT for OOB; AAL1 30 d, AAL2 24 h/1 h idle",
+    "status": "confirmed",
+    "url": "https://pages.nist.gov/800-63-4/sp800-63b.html",
+    "correction": "Timeouts are SHOULD, not SHALL; AAL1 idle timeout optional"
+   },
+   {
+    "claim": "A1: OIDC Core iss+sub only guaranteed unique id; email MUST NOT be identifier",
+    "status": "confirmed",
+    "url": "https://openid.net/specs/openid-connect-core-1_0.html"
+   },
+   {
+    "claim": "A2: LTI 1.3 Core Final 16 Apr 2019; sub stable per iss; context optional; context.id unique per deployment",
+    "status": "confirmed",
+    "url": "https://www.imsglobal.org/spec/lti/v1p3/"
+   },
+   {
+    "claim": "A2: TA sub-role URI; also send principal role",
+    "status": "confirmed",
+    "url": "https://www.imsglobal.org/spec/lti/v1p3/",
+    "correction": "Principal role is best practice, not MUST"
+   },
+   {
+    "claim": "A2: Security Framework: 3rd-party login, nonce, kid always set, RS256 minimum",
+    "status": "confirmed",
+    "url": "https://www.imsglobal.org/spec/security/v1p0/",
+    "correction": "kid MUST in key sets only; not mandated in every JWT header; RS256 minimum is for RSA keys"
+   },
+   {
+    "claim": "A2: NRPS 2.0 only user_id + roles required; LTI passes no user info by default",
+    "status": "confirmed",
+    "url": "https://www.imsglobal.org/spec/lti-nrps/v2p0"
+   },
+   {
+    "claim": "A2: AGS 2.0 MAY ignore non-FullyGraded; platform has final say; comment visible to students",
+    "status": "confirmed",
+    "url": "https://www.imsglobal.org/spec/lti-ags/v2p0"
+   },
+   {
+    "claim": "A2: Dynamic Registration Candidate Final; registration not activated until admin activates",
+    "status": "confirmed",
+    "url": "https://www.imsglobal.org/spec/lti-dr/v1p0"
+   },
+   {
+    "claim": "A2: Brightspace supports LTI 1.3, AGS 2.0, NRPS 2.0, DL 2.0",
+    "status": "confirmed",
+    "url": "https://community.d2l.com/api/v2/articles/23660",
+    "correction": "Article adds D2L does not yet support all aspects of the standard"
+   },
+   {
+    "claim": "A2: Brightspace Manage LTI Tools; DR disabled by default; exact redirect URLs; one registration per domain",
+    "status": "confirmed",
+    "url": "https://community.d2l.com/api/v2/articles/23662",
+    "correction": "It is the resulting registration that is disabled by default, not the DR feature"
+   },
+   {
+    "claim": "A2: Anonymous deployment property removed v1.92, always false LMS 20.26.2; KB still mentions it",
+    "status": "confirmed",
+    "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html",
+    "correction": "Genuine source conflict: KB 23662 still references Anonymous; API docs authoritative"
+   },
+   {
+    "claim": "A2: SendInstitutionRole is a registration property",
+    "status": "confirmed",
+    "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html"
+   },
+   {
+    "claim": "A2: PreProvisioning description",
+    "status": "confirmed",
+    "url": "https://docs.valence.desire2learn.com/res/ltiadvantage.html"
+   },
+   {
+    "claim": "A2: UW LEARN-to-IMS role mapping",
+    "status": "unverifiable",
+    "url": "https://community.d2l.com/api/v2/articles/23663"
+   },
+   {
+    "claim": "A2: LEARN D2L-hosted; reviewed with Privacy Officer and ISO; standard data set",
+    "status": "confirmed",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/44088164615/LEARN+Privacy+information+and+other+tools"
+   },
+   {
+    "claim": "A2: UW IRA-PIA 2-4 weeks; Bill 194 effective 1 Jul 2025",
+    "status": "confirmed",
+    "url": "https://uwaterloo.ca/privacy/information-risk-assessment"
+   },
+   {
+    "claim": "A2: UW LEO handles LMS integration requests; principles; CIO approves contracts",
+    "status": "confirmed",
+    "url": "https://uwaterloo.ca/educational-technology-hub/governance",
+    "correction": "LEO assists investigation and recommends; it does not decide"
+   },
+   {
+    "claim": "A2: Instructors not authorized to release student info (July 2017 page)",
+    "status": "confirmed",
+    "url": "https://uwaterloo.ca/information-systems-technology/about/policies-standards-and-guidelines/teaching-learning/cloud-based-educational-technologies"
+   },
+   {
+    "claim": "A2: UW best to choose tool not requiring student identification; check IRA first",
+    "status": "confirmed",
+    "url": "https://uwaterloo.ca/privacy/guidelines/online-educational-technologies"
+   },
+   {
+    "claim": "A2: jose 6.2.12 MIT zero deps pushed 2026-10-01",
+    "status": "confirmed",
+    "url": "https://api.github.com/repos/panva/jose"
+   },
+   {
+    "claim": "A2: ltijs v7.0.0 TS rewrite, Mongo-only, Node 24+; prior v5.9.5",
+    "status": "confirmed",
+    "url": "https://api.github.com/repos/Cvmcosta/ltijs/releases?per_page=5"
+   },
+   {
+    "claim": "A2: saLTIre supports LTI 1.3, DL, line items, DR, no account; NRPS not stated",
+    "status": "confirmed",
+    "url": "https://saltire.lti.app/",
+    "correction": "Deep Linking shown only for the Test Tool side, not the Test Platform"
+   },
+   {
+    "claim": "A2: moodle-docker GPL-3.0 maintained; Moodle pending-then-activate",
+    "status": "confirmed",
+    "url": "https://api.github.com/repos/moodlehq/moodle-docker"
+   },
+   {
+    "claim": "A2: 1EdTech certification needs membership; price not listed",
+    "status": "confirmed",
+    "url": "https://www.1edtech.org/certification/get-certified"
+   },
+   {
+    "claim": "A2: Brightspace grade import needs OrgDefinedID/Username + End-of-Line Indicator",
+    "status": "confirmed",
+    "url": "https://community.d2l.com/api/v2/articles/3537"
+   },
+   {
+    "claim": "O1: SES no SES-specific free allowance; $0.10/1,000; up to $200 credits",
+    "status": "confirmed",
+    "url": "https://aws.amazon.com/ses/pricing/",
+    "correction": "New accounts default to Essentials $0.16/1,000 from 2026-07-21; credits are $100 + up to $100 earned"
+   },
+   {
+    "claim": "O1: AWS Free account plan suitability for a public prototype (implicit)",
+    "status": "unverifiable",
+    "url": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html",
+    "correction": "Free account plan auto-closes after 6 months or when credits run out unless upgraded; omitted from O1"
+   },
+   {
+    "claim": "O1: SES sandbox limits; 24 h initial response",
+    "status": "confirmed",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html"
+   },
+   {
+    "claim": "O1: SES in ca-central-1 and ca-west-1; no SMTP in ca-west-1",
+    "status": "confirmed",
+    "url": "https://docs.aws.amazon.com/general/latest/gr/ses.html"
+   },
+   {
+    "claim": "O1: SES tracking only with configuration set; ses:no-track",
+    "status": "confirmed",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/faqs-metrics.html"
+   },
+   {
+    "claim": "O1: SES does not retain message bodies",
+    "status": "unverifiable",
+    "url": "https://docs.aws.amazon.com/ses/latest/dg/data-protection.html"
+   },
+   {
+    "claim": "O1: Resend all data in US; no Canada region",
+    "status": "confirmed",
+    "url": "https://resend.com/docs/dashboard/domains/regions.md"
+   },
+   {
+    "claim": "O1: Resend content-storage opt-out via support, Pro/Scale, conditions, $50/mo",
+    "status": "confirmed",
+    "url": "https://resend.com/docs/knowledge-base/how-do-i-ensure-sensitive-data-isnt-stored-on-resend.md"
+   },
+   {
+    "claim": "O1: Cloudflare Email Sending Beta, Workers Paid, 3,000/mo then $0.35/1,000",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/email-service/platform/pricing/"
+   },
+   {
+    "claim": "O1: Cloudflare Email preview keeps HTML/text/headers/raw ~7 days, on by default",
+    "status": "confirmed",
+    "url": "https://developers.cloudflare.com/email-service/observability/logs/index.md",
+    "correction": "Attachments are also stored"
+   },
+   {
+    "claim": "O1: Postmark Free 100/mo, Basic $15; 45-day retention; US; no EU plans",
+    "status": "confirmed",
+    "url": "https://postmarkapp.com/pricing",
+    "correction": "Prices are on /pricing, not the cited eu-privacy page"
+   },
+   {
+    "claim": "O1: Mailgun Free 100/day, 1 domain, 1-day logs; Basic $15",
+    "status": "confirmed",
+    "url": "https://www.mailgun.com/pricing/"
+   },
+   {
+    "claim": "O1: SendGrid 60-day trial 100/day; free plan wording; Essentials $19.95",
+    "status": "confirmed",
+    "url": "https://www.twilio.com/en-us/products/email-api/pricing",
+    "correction": "Free plan wording refers to the same 60-day trial"
+   },
+   {
+    "claim": "O1: MailerSend Free 500/mo, 100 daily requests, approval + card; Hobby $7",
+    "status": "confirmed",
+    "url": "https://www.mailersend.com/pricing"
+   },
+   {
+    "claim": "O1: Brevo free-plan limits, location, DPA",
+    "status": "unverifiable",
+    "url": "https://www.brevo.com/pricing/"
+   },
+   {
+    "claim": "O1: Exchange message trace sender/recipient/256-char subject, 90 days",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/exchange/monitoring/trace-an-email-message/message-trace-modern-eac"
+   },
+   {
+    "claim": "O1: UrlClickEvents stores full URL, AccountUpn, timestamp, IP",
+    "status": "confirmed",
+    "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-urlclickevents-table"
+   },
+   {
+    "claim": "O1: Outlook.com SPF/DKIM/DMARC from 2025-05-05 for >5,000/day; M365 coverage not stated",
+    "status": "confirmed",
+    "url": "https://substrate.office.com/ip-domain-management-snds/postmaster"
+   },
+   {
+    "claim": "O1: Gmail bulk sender requirements; one-click not for transactional",
+    "status": "confirmed",
+    "url": "https://support.google.com/a/answer/14229414"
+   },
+   {
+    "claim": "O1: DMARCbis = RFC 9989 Proposed Standard May 2026, obsoletes 7489 and 9091",
+    "status": "confirmed",
+    "url": "https://datatracker.ietf.org/doc/draft-ietf-dmarc-dmarcbis/"
+   },
+   {
+    "claim": "O1: RFC 8058 POST so GET scanners do not trigger",
+    "status": "confirmed",
+    "url": "https://www.rfc-editor.org/info/rfc8058",
+    "correction": "RFC does not forbid GET unsubscribe; safety depends on sender's GET handler being non-destructive"
+   },
+   {
+    "claim": "O1: CASL 6(6)(d) exempts consent only; form/unsubscribe still apply",
+    "status": "confirmed",
+    "url": "https://laws-lois.justice.gc.ca/eng/acts/E-1.6/page-1.html"
+   },
+   {
+    "claim": "A1 log: Clerk Hobby 50k MRU; Pro $25; SSO extra $75/mo",
+    "status": "confirmed",
+    "url": "https://clerk.com/pricing"
+   },
+   {
+    "claim": "A1 log: Supabase Free 50k MAU, paused after 1 week, no SAML; Pro $25",
+    "status": "confirmed",
+    "url": "https://supabase.com/pricing"
+   },
+   {
+    "claim": "A1 log: WebAuthn L3 W3C Recommendation 25 Aug 2026",
+    "status": "confirmed",
+    "url": "https://www.w3.org/TR/webauthn-3/"
+   },
+   {
+    "claim": "A1 log: WCAG 2.2 SC 3.3.8 manual transcription non-compliant; paste must work",
+    "status": "confirmed",
+    "url": "https://www.w3.org/WAI/WCAG22/Understanding/accessible-authentication-minimum.html"
+   },
+   {
+    "claim": "A1: Hosted Keycloak exceeds $5/month (no URL, inference)",
+    "status": "unverifiable",
+    "url": "https://www.keycloak.org/high-availability/multi-cluster/concepts-memory-and-cpu-sizing"
+   }
+  ]
+ },
+ "redteam:privacy": {
+  "designs": [
+   {
+    "key": "A",
+    "survivability": "adequate",
+    "fatal": [],
+    "serious": [
+     "S-A1: Postgres xmin is readable on every cc_web-readable table. It gives an exact global transaction order, which defeats created_at coarsening. Any identity row that is rewritten at activity-correlated moments (for example an OIDC sign-in upsert of identity.users, roster sync, preferences) then joins to content by nearest xid through an ordinary query. Test #13 checks only writes inside the posting transaction. Fix: give cc_web views or functions instead of base-table SELECT, make identity upserts no-ops when nothing changed, and wash content xmin. (System-column visibility is Unverified against the official page.)",
+     "S-A2: Variant K3 passes the KEK as a bind parameter on every privileged call, next to the session token and the body. Any parameter-logging path (log_statement or log_min_duration_statement, auto_explain, pgaudit, client-side interpolation by a driver or pooler) would log the master key, the identity token and the content together. Fix: Vault (K2), or compute the HMACs in the app so the key never enters SQL.",
+     "S-A3: A level-distribution time series read during term can be differenced against the content timeline, which attributes threshold crossings to specific posts. NQ-A7(a) only hides the distribution once the sharing window opens. Fix: one end-of-term snapshot, or frozen snapshots on a fixed cadence.",
+     "S-A4: Mode D credit tokens are bearer tokens kept in localStorage. On a shared device they can be redeemed by the next student, and students can trade them. Fix: bind redemption to the issuing session."
+    ],
+    "unmet_requirements": [
+     "§6.2 ordinary queries cannot join: partly met until S-A1 is fixed",
+     "§10 Students alone decide whether to share: partly met until S-A3 is fixed",
+     "§7.9 credit the right student in Mode D: unmet until S-A4 is fixed",
+     "§7.12/§7.10 survey-then-share sequencing (X3) not addressed"
+    ],
+    "vendor_fact_errors": [
+     "None found in the facts re-checked. Caveats: Postgres logging defaults are treated as the deployed defaults (the actual vendor values are Unverified), and the claim that K3 keeps the KEK from the DB vendor is weaker than stated because the KEK crosses the DB connection on every call."
+    ]
+   },
+   {
+    "key": "B",
+    "survivability": "adequate",
+    "fatal": [],
+    "serious": [
+     "S-B1: For 'you upvoted' and the inbox, the BOARD service receives one viewer's tag set for N questions in a single call. Per-item unlinkability therefore holds for the database but fails at the service layer: a BOARD log or compromise can build pseudonymous profiles. Fix: BOARD returns the full tag sets and the Gateway tests membership itself.",
+     "S-B2: Receipts are bearer tokens (the browser retries POST /credit {receipt}), so credit can be traded or leaked on shared devices and the verified level may not be the named student's own. Fix: a Gateway MAC that binds the receipt to the cpid.",
+     "S-B3: Batching hides time but not action type. Per-cpid deltas within a batch, together with DB-Board buckets and always-on D1 Time Travel, give a cpid-to-authored-questions profile without K_root. The both-dumps attacker is rated 'mostly holds', which is too optimistic. Fix: a per-action-type k rule, or apply credits once a day.",
+     "S-B4: The Free-plan 10 ms CPU spike covers only merges, not the email sweep (roster × updated questions) or inbox HMACs. Likely result is Workers Paid at $5/month, and the pressure to consolidate Workers would collapse the separation.",
+     "S-B5: A daily-refreshed level histogram still allows day-level differencing, and survey-then-share sequencing is not addressed."
+    ],
+    "unmet_requirements": [
+     "§7.9/§7.10 integrity: partly met until S-B2 is fixed",
+     "§3 identity-linked discussion analytics: at risk at the BOARD service layer until S-B1 is fixed",
+     "§10 Students alone decide: partly met (X2/X3)"
+    ],
+    "vendor_fact_errors": [
+     "None found. Re-checked D1 limits (10 DBs on Free; 500 MB/10 GB; Time Travel 7/30 days), Workers Logs on by default for new Workers, and Queues on Free (10,000 ops/day, fixed 24 h retention, 3 ops per message). Omission: Cloudflare Observability pricing changes on 2026-12-01."
+    ]
+   },
+   {
+    "key": "C",
+    "survivability": "weak",
+    "fatal": [
+     "F-C1: The recommended hybrid H1 keeps author_pseudonym and reporter_pseudonym = HMAC(K_c, user_id) on every content row, and K_c must be online for every request. The operator, anyone with secrets plus a dump, or a legal order can therefore recover all past question and comment authorship silently, with no approval or audit. That defeats §6.4 'default: nobody can deanonymize' in practice. C also misstates the comparison (it says that under A/B a dump with K_c 'links everything'; authorship is never stored in A/B) and claims K_c can be held k-of-n, which is impossible for an online key. Fix: no author column, per-item tags as in A/B."
+    ],
+    "serious": [
+     "S-C1: Per-course pseudonyms on content rows let any Board-store query group a student's whole activity (profiles, §3 activity breakdowns). One identification exposes everything that student did.",
+     "S-C2: Level-token issuance (level_token_issued flips for P_c) followed by the named share links the pseudonym to the name through timing or logs, and that exposes the entire authored history. The proposed 'auto-issue for everyone' is not possible with blind signing, and 'wait a day before sharing' can silently fail to carry out a student's decision to share.",
+     "S-C3: The 'key structural finding' that exact merge de-duplication requires a linkable per-course pseudonym is overstated. A and B achieve exact merges with per-item tags plus a key-holding roster recompute. Left unqualified in the ADR, it would push the owner toward pseudonym-on-row designs.",
+     "S-C4: Integrity regressions in C1: undetectable level-token transfer, Sybil pseudonyms through device-loss re-issuance (double upvotes, §7.7), and credit loss.",
+     "S-C5: Under C1, §7.13 targeted email is only partly met (in-app only, or a uniform digest)."
+    ],
+    "unmet_requirements": [
+     "§6.4 default nobody can deanonymize: unmet in practice for the operator under H1",
+     "§3 no individual activity breakdowns / identity-linked analytics: at risk (S-C1)",
+     "§7.13 targeted email: partly unmet under C1",
+     "§7.7 no double-counting: not guaranteed with C1 re-issuance",
+     "§7.10 verified level: not guaranteed with C1 token transfer"
+    ],
+    "vendor_fact_errors": [
+     "Crypto and library facts correct (blindrsa-ts 0.4.6, Apache-2.0, sjcl 1.0.9). Omission: blindrsa-ts declares node >=24.",
+     "Decision-relevant comparative errors: the A/B dump comparison, the k-of-n custody claim for an online key, and the overgeneralised merge 'structural finding'."
+    ]
+   }
+  ],
+  "cross_cutting": [
+   "X1: Error-reporting SDK defaults. Sentry's Next.js SDK collects server-side incoming request bodies, the IP and cookies by default, and always sends setUser() data (verified 2026-10-11). One error on POST /questions then puts identity and content in one error report, which §3 forbids. No design names this default.",
+   "X2: Level-histogram time-series differencing during term (not just after sharing opens) attributes threshold crossings to posts and narrows candidates once names are shared. Proposed NEW-1: end-of-term snapshot only, or fixed-cadence frozen snapshots.",
+   "X3: Survey-then-share sequencing. §7.12 puts the survey before sharing. A new survey response revealed live next to a new named share on the same date links text to name in small classes. Proposed NEW-2: reveal survey results only after the survey closes.",
+   "X4: Post-redirect-get. The GET of a brand-new question id right after posting writes the author's IP to host request logs, and auth logs map that IP to a name. Not mentioned by any design.",
+   "X5: Live counters and new-question arrival in presentation mode are a classroom observation channel. Show a snapshot instead.",
+   "X6: Any impersonation or support tool (Q7) gives per-student access to the session-bound 'my state' oracles, which deanonymizes votes, follows and counts.",
+   "X7: Per-event email templates (for example 'Question merged') plus audit-log dates link followers to questions for the email provider plus the operator. Use one generic template.",
+   "X8: IP and timing correlation across host, auth and email logs, plus the active operator or host vendor, cannot be fixed under a <$5/month budget. These must be documented limitations (§6.2, §11).",
+   "X9: Stylometry, self-identification and small classes: document them. Per-item tags (A/B) avoid giving an attacker a ready-made grouping.",
+   "X10: Hide/delete credit and self-upvote blocking need an author link that A and B deliberately lack. Owner decision needed before the Q9 ADR.",
+   "X11: Backups, PITR and D1 Time Travel delay the effect of crypto-shredding. X12: mid-term account deletion breaks merge de-dup unless enrolment tombstones are kept."
+  ],
+  "summary": "This answers what the privacy agent was doing. It was the adversarial red-teamer for the three Q9 privacy designs, and that critique is now finished. It is written to P:/code/_clearcourse-scratch/critique/privacy-redteam.md (about 510 lines). Earlier runs of this step had hung on overlong responses; this run wrote the file one section at a time.\n\nI read the three design notes, CONTRIBUTING.md and CLAUDE.md; I did not re-read source-prompt.txt. I re-checked 7 vendor and standard facts against official pages (checked 2026-10-11): Cloudflare Workers Logs, Queues and D1; Postgres system columns; blindrsa-ts on npm; Sentry's Next.js defaults. No vendor-fact errors turned up. Claims I could not confirm are marked Unverified, most importantly who can read the Postgres xmin column through tables and views.\n\nRatings:\n- **A (database-enforced): adequate.** It is the most complete and honest note. Its main gap is that the web app's normal DB role can read xmin (an internal transaction counter) on tables it can see. That would let an ordinary query link a student's sign-in to their post, getting around the timestamp coarsening. Other gaps: in variant K3 the master key is passed in every SQL call; the instructor's level-count view can be compared over time to pin threshold crossings on specific posts; and in its deferred-credit mode, credit tokens can be handed to another student.\n- **B (separated services): adequate.** The service that stores questions is sent each viewer's upvote/follow markers in one request, so it can build per-student profiles. Credit receipts can be handed to another student. Batching hides timing but not the kind of action. The Free-plan CPU check leaves out the email sweep, so it probably needs Workers Paid at $5/month.\n- **C (cryptographic): weak.** Its recommended hybrid stores an author pseudonym on every question and comment, and the key is online. Whoever holds that key can recover every past author silently, which defeats §6.4. C also overstates its \"merges need a linkable pseudonym\" finding (A and B already do exact merges without one) and gets the comparison with A/B backwards. Its blind-token exit survey is worth keeping.\n\nAttacks that hit all three designs:\n- An error-reporting tool's default settings would put identity and question text in the same error report.\n- The level-count view, read repeatedly during term, can be lined up against new posts.\n- A student who fills in the survey and then shares their level in one sitting can be linked to their survey text.\n- Viewing a brand-new question right after posting it records the author's IP in the host's logs.\n\nThere are 7 proposed new open questions (NEW-1 to NEW-7) and a list of actors no design can protect against, for the limitations-of-anonymity document. Suggested direction, for the owner to decide: A's data model and tests, a few of B's ideas, C's survey tokens, plus fixes for the cross-cutting attacks."
+ },
+ "research:open-questions": {
+  "file": "P:/code/_clearcourse-scratch/research/other-O2-blocking-open-questions.md",
+  "recommendation": "Proposal for the owner, not a decision. Adopt WCAG 2.2 AA (Q15), a Markdown threat model in docs/threat-model/ (Q8), and a manual moderation queue with placeholder rate limits and no stored reporter identity (Q20). These are the milestone-1 blockers. Split milestone 1 into 1a (sign-in, admin config, manual card editor, audit, tests) and 1b (board, moderation, presentation, search, private counter), with 1b starting only after the Q9 ADR and threat model exist. Defer sharing, the survey, per-level analytics, the wizard, grading and export, so that Q16, Q18, Q10, Q11 and Q12 do not block the first public prototype. Only the Q16 rule shape (release once after the window closes, with a residual check) goes into the data model now; the default N=10 is a placeholder.",
+  "options": [
+   {
+    "name": "Q15: WCAG 2.2 AA vs 2.1 AA vs 2.0 AA",
+    "verdict": "Proposal: 2.2 AA. It is a superset of the 2.0 AA legal floor in AODA and UW Policy 58, and W3C recommends using the latest version. Blocks M1: yes."
+   },
+   {
+    "name": "Q16: fixed cell size / class minimum / residual check / release after window / banding / noise",
+    "verdict": "Proposal: one release after sharing closes, plus a residual check (at least N non-sharers, not all at one level), plus complementary suppression. Survey responses revealed in one batch, unordered, without timestamps. N=10 is a placeholder. Blocks M1 only if sharing, the survey or level counts ship."
+   },
+   {
+    "name": "Q20: per-user vs per-IP vs host WAF limits; manual queue vs auto-hide vs pre-moderation; soft vs hard delete",
+    "verdict": "Proposal: R3 (per-user/course/action for writes, per-IP before sign-in), M1 manual queue, soft delete, reports stored without reporter identity. All numbers are placeholders. Blocks M1 if the board ships."
+   },
+   {
+    "name": "Q8: Markdown in repo / tool file / external doc / repo + in-app page",
+    "verdict": "Proposal: Markdown in docs/threat-model/ using STRIDE and LINDDUN, plus an owner-approved in-app limitations page. Blocks M1: yes (§6.3)."
+   },
+   {
+    "name": "Q14: Postgres INSERT-only table / + hash chain / + locked object storage / logging vendor",
+    "verdict": "Proposal: audit E1 (moderation) and E2 (deanonymization), which the spec requires; E3–E8 for owner approval. Storage L1+L2 (INSERT-only table plus hash chain), with L3 (locked object storage) before any deanonymization. Retention is a placeholder."
+   },
+   {
+    "name": "Q17: keep all / per-domain schedule / institution-configurable / prototype wipe",
+    "verdict": "Proposal: prototype wipe (D4) plus per-domain lifecycle hooks for M1; institution-configurable periods (D3) from the UW Privacy office before any UW pilot."
+   },
+   {
+    "name": "Q18: manual / dates fixed at policy publication / LMS-derived / term-wide",
+    "verdict": "Proposal: W2+F2. Dates are fixed when the participation policy is published, and export/apply happens only after close. Not needed for M1 if sharing is deferred."
+   },
+   {
+    "name": "Q13: none essential / rule-affecting essential / in-app-only essential / per-course",
+    "verdict": "Proposal: N3. Card changes and the sharing-window notice are essential in-app; all email is user-managed; email never contains anonymous content text."
+   },
+   {
+    "name": "Q1: config file / minimal admin page / + role management / full multi-tenant",
+    "verdict": "Proposal: A2, a minimal settings page plus an institution table holding the §4 configurables."
+   },
+   {
+    "name": "Q7: none / synthetic view-as-role / read-only / full impersonation",
+    "verdict": "Proposal: none (I0), with synthetic previews (I1) optional. Not a blocker if the answer is none."
+   },
+   {
+    "name": "Q19: inline strings / externalised English / institution overrides / lang tags on cards / bilingual",
+    "verdict": "Proposal: L1 from day one (cheap), and L3 if WCAG 2.2 AA is adopted (SC 3.1.2). Translations are deferred."
+   },
+   {
+    "name": "Q10/Q11/Q12 deferral",
+    "verdict": "All three can be deferred: ship the manual editor, pass/fail only or no grading, and no export. NQ-12a must be answered before sharing ships because export/apply is the trigger that makes shares final."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "AODA requires designated public sector organizations (including universities) to make public websites meet WCAG 2.0 AA except 1.2.4 and 1.2.5",
+    "url": "https://www.ontario.ca/page/how-make-websites-accessible",
+    "status": "verified"
+   },
+   {
+    "claim": "Colleges and universities are designated public sector organizations under O. Reg. 191/11",
+    "url": "https://www.ontario.ca/page/accessibility-rules-public-sector-organizations",
+    "status": "verified"
+   },
+   {
+    "claim": "O. Reg. 191/11 primary text (s. 14) could not be rendered",
+    "url": "https://www.ontario.ca/laws/regulation/110191",
+    "status": "unverified"
+   },
+   {
+    "claim": "UW Policy 58 commits to WCAG 2.0 AA for all Public Websites, including new sites accessible to all students",
+    "url": "https://uwaterloo.ca/secretariat/policies-procedures-guidelines/policies/policy-58-accessibility",
+    "status": "verified"
+   },
+   {
+    "claim": "WCAG 2.2 is current (Oct 2023, updated Dec 2024); W3C encourages the latest version; 2.2 conformance implies 2.1/2.0 conformance; ISO/IEC 40500:2025 equals WCAG 2.2",
+    "url": "https://www.w3.org/WAI/standards-guidelines/wcag/",
+    "status": "verified"
+   },
+   {
+    "claim": "WCAG 2.2 SC 3.1.2 Language of Parts is Level AA",
+    "url": "https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html",
+    "status": "verified"
+   },
+   {
+    "claim": "TBS: no universal minimum cell size; 10 often cited for less sensitive data, 20 for more sensitive; never below 3",
+    "url": "https://www.canada.ca/en/treasury-board-secretariat/services/access-information-privacy/access-information-privacy-notices/2020-03-protecting-privacy-releasing-information-about-small-number-individuals.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Ontario IPC de-identification guidelines map low/medium/high invasion to illustrative cell sizes 10/15/20",
+    "url": "https://www.ipc.on.ca/sites/default/files/legacy/2016/08/Deidentification-Guidelines-for-Structured-Data.pdf",
+    "status": "verified"
+   },
+   {
+    "claim": "US ED PTAC warns that suppressed cells can be recovered by subtraction from totals, and treats teachers as having inside knowledge; majority of states use minimum 10",
+    "url": "https://studentprivacy.ed.gov/sites/default/files/resource_document/file/FAQs_disclosure_avoidance_0.pdf",
+    "status": "verified"
+   },
+   {
+    "claim": "UW does not release SCP survey results to instructors for classes of 5 or fewer",
+    "url": "https://uwaterloo.ca/teaching-assessment-processes/resources-instructors",
+    "status": "verified"
+   },
+   {
+    "claim": "OWASP API4:2023 recommends per-client/per-operation rate limits tuned to business needs and gives no numbers",
+    "url": "https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption",
+    "status": "verified"
+   },
+   {
+    "claim": "PostgreSQL object owners' right to modify/destroy cannot be revoked, so INSERT-only grants don't protect against the owner",
+    "url": "https://www.postgresql.org/docs/current/ddl-priv.html",
+    "status": "verified"
+   },
+   {
+    "claim": "S3 Object Lock compliance mode cannot be bypassed even by root; R2 bucket lock rules can be removed by the account",
+    "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html",
+    "status": "verified"
+   },
+   {
+    "claim": "OWASP Logging Cheat Sheet: log authn/authz events and admin actions, mask sensitive data, build in tamper detection, don't keep logs beyond retention",
+    "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+    "status": "verified"
+   },
+   {
+    "claim": "UW ed-tech guideline: determine whether an Information Risk Assessment is needed first; prefer tools not requiring identification; notify students; allow opt-out; follow WatClass",
+    "url": "https://uwaterloo.ca/privacy/guidelines/online-educational-technologies",
+    "status": "verified"
+   },
+   {
+    "claim": "CASL defines a CEM by commercial purpose; s. 6(6)(d) exempts factual account/membership notices from consent (Act current to 2026-09-21)",
+    "url": "https://laws-lois.justice.gc.ca/eng/acts/E-1.6/page-1.html",
+    "status": "verified"
+   },
+   {
+    "claim": "W3C: retrofitting internationalization is much more difficult and time-consuming than designing for it",
+    "url": "https://www.w3.org/International/questions/qa-i18n",
+    "status": "verified"
+   },
+   {
+    "claim": "LEARN/Brightspace grade-import CSV format",
+    "url": "https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/284530130/LEARN+help",
+    "status": "unverified"
+   },
+   {
+    "claim": "FIPPA Reg. 460 minimum retention after use",
+    "url": "https://www.ontario.ca/laws/regulation/900460",
+    "status": "unverified"
+   },
+   {
+    "claim": "LINDDUN is a free privacy threat-modelling framework from KU Leuven",
+    "url": "https://linddun.org/",
+    "status": "verified"
+   }
+  ],
+  "new_open_questions": [
+   "NQ-15a: Does UW require a newer WCAG version, VPAT/ACR or accessibility review beyond Policy 58's WCAG 2.0 AA?",
+   "NQ-16a: May instructors lower the survey threshold, or is there an institution-level floor?",
+   "NQ-16b: Is N the same for level counts and survey reveal?",
+   "NQ-16c: Are in-term level counts wanted at all, given the differencing risk?",
+   "NQ-20a: Can hidden content be un-hidden and deleted content restored, and by whom?",
+   "NQ-20b: What happens to open reports when content is merged or edited?",
+   "NQ-20c: Does hiding/deleting a post remove the author's participation credit?",
+   "NQ-20d: Can an author edit or delete their own anonymous post?",
+   "NQ-20e: Does 'without exposing identities' (§7.7) cover the moderator's identity in the log?",
+   "NQ-8a: Must the limitations of anonymity be visible in the app, or is the repo document enough?",
+   "NQ-14a: Does a UW records-retention schedule apply to audit logs of a teaching tool?",
+   "NQ-17a: On account removal, does a student's anonymous content stay, go, or does the student choose?",
+   "NQ-17b: Is a UW Information Risk Assessment needed before a UW pilot, and who requests it?",
+   "NQ-18a: May the instructor move sharing dates after publication, and in which direction?",
+   "NQ-18b: Is the survey a required step before sharing or skippable?",
+   "NQ-18c: Can a student share before the end of the course?",
+   "NQ-13a: May notification emails include question titles/text, or only a link?",
+   "NQ-13b: Are essential notifications essential on both channels or one?",
+   "NQ-1a: Can the truncated Administration spec text be recovered, or will the owner write it?",
+   "NQ-7a: Is a synthetic whole-course 'view as student' preview wanted?",
+   "NQ-19a: Who translates and approves verbatim spec texts if a second language is added?",
+   "NQ-10a: May the wizard ship without recommendations before the rule table exists?",
+   "NQ-12a: Does 'applies the result' (§7.10) mean an in-app action, a LEARN grade push, or both?",
+   "NQ-2a: Will the public prototype use real UW courses/students or demo courses and invited testers?",
+   "NQ-2b: Is duplicate merge required in milestone 1?",
+   "NQ-2c: Is a milestone 1a/1b split acceptable?"
+  ],
+  "risks": [
+   "Differencing: aggregate level counts minus the named shared-results list can reveal non-sharers' levels; a single N threshold does not prevent it (Q16).",
+   "Survey-then-share ordering plus timestamps or a live response counter can link written survey answers to a named sharer (Q16/Q18).",
+   "Notification emails and follow lists create identity-to-content links in third-party mail systems unless payloads omit content text (Q13, Q9).",
+   "Storing reporter identity on reports, or detailed host request logs with precise post times, creates timing and identity side channels (Q20).",
+   "INSERT-only Postgres audit tables are not immutable against the table owner; §6.4 'immutable' needs external locked storage before any deanonymization (Q14).",
+   "Deleting a student's posts on account removal conflicts with unlinkability; must be designed with Q9 (Q17).",
+   "A public prototype with real UW students may trigger UW privacy obligations (Information Risk Assessment, notice, opt-out) before launch (NQ-2a).",
+   "Including the board (1b) in milestone 1 makes Q8 and Q9 hard prerequisites; schedule risk if Q9 design is slow.",
+   "Several primary legal texts (O. Reg. 191/11, FIPPA Reg. 460, CRTC FAQ) could not be fetched, and the LEARN grade CSV format is unverified.",
+   "The CASL reading (notifications are not commercial messages) is an interpretation, not legal advice."
+  ]
+ },
+ "judge:privacy": {
+  "file": "P:/code/_clearcourse-scratch/compare/privacy.md",
+  "recommendation": "PROPOSAL for the owner (Q9 stays open): adopt \"A+\", a layered hybrid on design A's single-Postgres core. All five §6.1 domains sit in separate schemas with no cross-domain foreign keys. No content row stores an author, pseudonym, tag or session (P1). Counters are keyed by pid = HMAC(K_pid, user_id), and de-duplication uses per-item keyed tags. The per-course key K_c is stored only wrapped (AES-GCM under a host-held KEK). Unwrapping and every HMAC happen app-side in a server-only linkage module, so no key ever enters SQL (fixes red-team S-A2). No runtime role can SELECT any base table outside `catalog`: reads go through SECURITY DEFINER functions, and identity upserts are no-ops when nothing changed (fixes S-A1, the xmin channel). Functions that carry credit or tags can be called only by a separate `cc_link` login role used solely by the linkage module. No read function takes a viewer's tag list; the app checks membership itself (B's S-B1 fix). Merges re-key tags by recomputing over the roster inside one transaction, and counters are never touched. Crediting is synchronous (Mode S) in the prototype, with an optional daily-batch Mode B that needs no schema change. Notifications are computed on read in-app, and email is one generic, content-free daily digest whose outbox rows are deleted after sending. Askers are not auto-followed. The level distribution is a frozen snapshot on a fixed cadence and is hidden once sharing opens. Survey text is revealed only after the survey closes; C's blind-token survey is kept as an upgrade. Crypto-shredding at end of term is an option (Q17). Scores: A+ 83.5, A 74.5, B-full 67.0, B-lite 66.5, C-H1 65.0, C1 53.5. B-full only wins if protection against the operator carries about a third of all weight (PQ-P1). The document also holds the threat-model outline, an 18-item limitations list, 22 controls, 36 negative tests and a verification log (14 pages re-fetched; checked date recorded as 2026-10-11).",
+  "ranking": [
+   {
+    "option": "A+ (A plus red-team fixes, with grafts from B and C)",
+    "rank": 1,
+    "rationale": "Meets every REQUIRED-tier property (ordinary queries including system columns, staff, logs, exports, identifiers, non-sharers' levels) once S-A1 to S-A4 and X1 to X7 are applied. Most locks become CI catalogue assertions. Fits plain managed Postgres under the stack judge's ~USD 1.17/month proposal. About 18 to 25 sessions (unmeasured)."
+   },
+   {
+    "option": "A as written",
+    "rank": 2,
+    "rationale": "Same strong data model and the cheapest build (13 to 17 sessions), but it has an ordinary-query xmin channel (S-A1), passes the KEK as a bind parameter so it can reach DB logs (S-A2), and its level time series leaks non-sharers' levels (S-A3)."
+   },
+   {
+    "option": "B-full (separated stores and services)",
+    "rank": 3,
+    "rationale": "Removes the SQL join class structurally and is strongest against holders of only some stores. Costs about 29 to 39 sessions across roughly 8 DBs and 9 services. Workers Free CPU risk pushes toward the USD 5 paid minimum. Still has the BOARD tag-set leak (S-B1), bearer receipts (S-B2) and per-type batch deltas (S-B3)."
+   },
+   {
+    "option": "B-lite",
+    "rank": 4,
+    "rationale": "Fewer services, but one Gateway credential holds identity, shared results and the notification sweep, so most of B's operator gain is lost while much of its complexity remains."
+   },
+   {
+    "option": "C-H1 (server pseudonym stored on content rows)",
+    "rank": 5,
+    "rationale": "Anyone holding K_c can silently recover the authorship of every question and comment (F-C1), and any Board reader can GROUP BY a per-student profile (S-C1). Only its blind-token survey and dump-diff test are worth keeping."
+   },
+   {
+    "option": "C1 (client-held blind-signed pseudonym)",
+    "rank": 6,
+    "rationale": "Strongest against stored-data holders, but targeted email (§7.13) is partly unmet, Sybil re-issue can double-count upvotes (§7.7), level tokens are transferable (§7.10, §7.11), it corners the §6.4 option, and key-recovery UX is the hardest part for a solo developer."
+   }
+  ],
+  "must_haves": [
+   "No author, pid, tag, session, IP or UA column on any anonymous table, enforced by a per-table column allow-list (C-01, T-02)",
+   "No runtime role has SELECT on any base table outside catalog; reads only through definer functions; a test proves cc_web cannot read xmin or ctid (C-02, T-01, T-21)",
+   "Identity and roster upserts are no-ops when unchanged; auth-library session refresh disabled and the session table readable only by cc_auth (C-09, T-24)",
+   "Keys only app-side: wrapped K_c readable only via cc_link, KEK only in the host secret store, no key material in SQL, settings or logs (C-06, T-17)",
+   "Credit- and tag-bearing definers callable only by the cc_link role of the linkage module; no read function accepts a viewer's tag list (C-07, C-08)",
+   "ENABLE plus FORCE RLS on locked tables; definers have search_path pinned and PUBLIC EXECUTE revoked in the creating transaction; no BYPASSRLS on any cc_* role (C-03 to C-05)",
+   "Logging invariants (log_statement none, log_min_duration_statement -1, log_parameter_max_length_on_error 0, track_commit_timestamp off, ORM logger off), tested through the production driver and pooler (T-07, T-33)",
+   "No third-party error, analytics or replay SDK on routes that receive anonymous content unless NEW-4 approves explicit settings (Sentry collects request bodies and IP by default)",
+   "UUIDv4 only, no ids in query strings, no post-redirect GET of a newly created id (C-13)",
+   "Level distribution as frozen snapshots, suppressed below N and hidden once sharing opens; survey revealed only after close; presentation-mode snapshots (C-16)",
+   "One generic content-free email template, daily digest, outbox rows deleted after send, no auto-follow on asking (C-17, C-18)",
+   "Enrolment tombstones until seal so merges stay exact (C-19); merge property test (T-11)",
+   "Threat model and limitations-of-anonymity document (§5 outline, 18 items) written before any content or participation code (§6.3)"
+  ],
+  "risks": [
+   "The operator, host and DB vendors stay inside the trust boundary: with full data plus the KEK, upvote, follow and report sets and per-student counts can be reconstructed. This is a documented limitation, not engineered away.",
+   "Mode S leaves an operator-level xmin link between a content row and the counter row until the student's next action or the nightly wash. How much the wash actually helps is Unverified.",
+   "Whether system columns can be reached through definer functions or views, and whether Better Auth can suppress ipAddress/userAgent, are Unverified and need spikes T-21 and T-24 before the ADR.",
+   "No author link means credit for hidden spam cannot be revoked and self-upvotes cannot be blocked unless the owner accepts a P1 weakening (PQ-P2, PQ-P3).",
+   "One app process holds every DB credential, so an app-server compromise defeats the cc_link role separation (S-tier).",
+   "Build estimate of about 18 to 25 sessions is unmeasured; PL/pgSQL definers and catalogue discipline need care on every migration.",
+   "Crypto-shredding only takes effect after vendor backup and WAL copies expire, and vendor-internal retention is Unverified.",
+   "Merge recomputation timing at realistic roster sizes is Unverified (T-31)."
+  ],
+  "open_questions": [
+   "PQ-P1: Is the operator inside the trust boundary for the prototype and for production? (NQ-A9, PNQ-B13, NQ-C2, NEW-3). This is the one answer that could flip the recommendation toward a B topology.",
+   "PQ-P2: Does hiding or deleting content remove earned credit? (NQ-A5, PNQ-B11, NQ-C10)",
+   "PQ-P3: Self-upvotes, upvote withdrawal, and double-upvote credit after a merge (NQ-A3, NQ-A4, NQ-A6, PNQ-B2, NQ-C6)",
+   "PQ-P4: Who receives Answer posted and Question merged; does asking auto-follow? (NQ-A1, NQ-A13, PNQ-B7)",
+   "PQ-P5: Level-distribution cadence and differencing rule (NQ-A7, PNQ-B10, NQ-C9, NEW-1)",
+   "PQ-P6: Survey results only after close; duplicate prevention (NEW-2, NQ-A14, PNQ-B9)",
+   "PQ-P7: Precision of post timestamps (NQ-A8, PNQ-B6)",
+   "PQ-P8: Crediting mode S or daily batch B (NQ-A10, PNQ-B1, NEW-5)",
+   "PQ-P9: Error and analytics tools on content routes (NEW-4)",
+   "PQ-P13: May the auth library store IP, UA and session timestamps; must refresh be disabled? (new, from Better Auth docs; relates to Q4)",
+   "PQ-P17 and PQ-P18: Editing own posts and handling repeat abusers (NQ-A2, NQ-A12, PNQ-B8)",
+   "PQ-P21: Who holds the KEK; may AI agents access production secrets or logs?",
+   "Existing questions it depends on: Q3, Q4, Q7, Q8, Q9 block the ADR; Q1, Q2, Q5, Q6, Q12, Q13, Q14, Q16, Q17, Q18, Q20 must be answered before the dependent features are built"
+  ]
+ },
+ "research:design-a11y": {
+  "file": "P:/code/_clearcourse-scratch/research/design-D1-system-a11y.md",
+  "recommendation": "PROPOSAL for the owner, to approve via an ADR: build the UI from shadcn/ui source and Tailwind CSS v4 on React Aria primitives, with Base UI as the fallback. Run a short spike first, because shadcn's style/base choice cannot be changed after init. All styling would come from our own three-layer CSS-custom-property tokens. Admin brand colours would pass through a server-side WCAG contrast guardrail (UW gold pairs accessibly only with black). Fonts would be open-licence and self-hosted. No UW or D2L fonts, logos or BrightspaceUI components would be used, and GOV.UK patterns would be borrowed for tags, question pages and error summaries. Propose WCAG 2.2 AA for Q15, checked by axe via Playwright in CI plus a manual NVDA/VoiceOver/zoom/forced-colours checklist. Passing axe should never be presented as conformance.",
+  "options": [
+   {
+    "name": "shadcn/ui + Tailwind v4 (copy-in source; MIT)",
+    "verdict": "Recommended foundation (proposal). Must be customised heavily (palette, radii, type, density, no gradients or sparkle icons) to avoid the stock look."
+   },
+   {
+    "name": "React Aria Components (Adobe, Apache-2.0, 1.22.1)",
+    "verdict": "Recommended primitive base inside shadcn (aria-* styles), because it is the strongest on stated screen-reader testing, i18n and RTL. Confirm that every needed component exists via a spike first."
+   },
+   {
+    "name": "Base UI (@base-ui/react 1.9.0, MIT; shadcn default since July 2026)",
+    "verdict": "Fallback primitive base. The most mainstream shadcn path."
+   },
+   {
+    "name": "Radix Primitives (MIT, WorkOS)",
+    "verdict": "Acceptable. Actively released in 2026, but its a11y claim is 'basic keyboard support' and no AT is named. No longer shadcn's default."
+   },
+   {
+    "name": "Headless UI (MIT, 2.2.10)",
+    "verdict": "Not recommended. Only 16 components, too few for the wizard, editor and board."
+   },
+   {
+    "name": "Radix Themes (3.3.0)",
+    "verdict": "Not recommended. The fixed named accent scales make runtime admin branding (§4) awkward, and there is no contrast guarantee once tokens are overridden."
+   },
+   {
+    "name": "Mantine (9.7.2, MIT)",
+    "verdict": "Credible alternative if the owner prefers a pre-styled kit. It is not Tailwind-based, and primaryColor must be a 10-shade palette key."
+   },
+   {
+    "name": "MUI Material UI (9.5.0)",
+    "verdict": "Not recommended. It implements Material Design, which conflicts with §8's calm academic tone (inference)."
+   },
+   {
+    "name": "BrightspaceUI/core (Apache-2.0, D2L)",
+    "verdict": "Do not use as a UI kit. It is built 'for building Brightspace applications', and D2L trademark terms forbid implied affiliation. It would also add a second (Lit) component model. Use it as a pattern reference only."
+   },
+   {
+    "name": "GOV.UK Design System / USWDS",
+    "verdict": "Use as pattern and content sources: tags, question pages, error summary, plain language. Do not reuse their brands, crown, banner or GDS Transport typeface."
+   },
+   {
+    "name": "Q15 target: WCAG 2.2 AA (+ AAA 2.4.13 and 1.4.6 for presentation mode as stretch goals)",
+    "verdict": "Proposed. Ontario's legal floor is WCAG 2.0 AA. WCAG 3 is still a Working Draft."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "shadcn components.json style enum has radix-*, base-* and aria-* variants across eight styles, plus an rtl flag",
+    "url": "https://ui.shadcn.com/schema.json",
+    "status": "verified"
+   },
+   {
+    "claim": "shadcn style, baseColor and cssVariables cannot be changed after initialization",
+    "url": "https://ui.shadcn.com/docs/components-json",
+    "status": "verified"
+   },
+   {
+    "claim": "shadcn changelog lists 'July 2026 Base UI as the Default'",
+    "url": "https://ui.shadcn.com/docs/changelog",
+    "status": "verified"
+   },
+   {
+    "claim": "shadcn theming uses OKLCH CSS variables via Tailwind @theme inline; default --radius 0.625rem",
+    "url": "https://ui.shadcn.com/docs/theming",
+    "status": "verified"
+   },
+   {
+    "claim": "React Aria claims components are 'extensively tested using many popular screen readers and devices', with translations in over 30 languages and RTL",
+    "url": "https://react-aria.adobe.com/",
+    "status": "verified"
+   },
+   {
+    "claim": "Radix Primitives claim 'basic keyboard support' per APG and do not name the AT tested; MIT, maintained by WorkOS",
+    "url": "https://www.radix-ui.com/primitives/docs/overview/accessibility",
+    "status": "verified"
+   },
+   {
+    "claim": "@brightspace-ui/core is Apache-2.0, 'for building Brightspace applications', and depends on lit",
+    "url": "https://registry.npmjs.org/@brightspace-ui/core/latest",
+    "status": "verified"
+   },
+   {
+    "claim": "D2L forbids using its marks in product names or in ways implying affiliation or endorsement",
+    "url": "https://www.d2l.com/legal/trademarks/",
+    "status": "verified"
+   },
+   {
+    "claim": "UW brand fonts (Bureau Grotesque, Le Monde Livre, Typ1451) are centrally licensed; Barlow Condensed is the named free alternative",
+    "url": "https://uwaterloo.ca/brand/how-express-our-brand/typography",
+    "status": "verified"
+   },
+   {
+    "claim": "UW logo modification is not permitted, and exceptions require written approval from University Relations",
+    "url": "https://uwaterloo.ca/brand/how-express-our-brand/waterloo-logo",
+    "status": "verified"
+   },
+   {
+    "claim": "The only listed accessible pairing for every UW gold level is black #000000",
+    "url": "https://uwaterloo.ca/brand/how-express-our-brand/colour",
+    "status": "verified"
+   },
+   {
+    "claim": "WCAG 2.2 has been a W3C Recommendation since 12 Dec 2024; 4.1.1 Parsing is obsolete and removed",
+    "url": "https://www.w3.org/TR/WCAG22/",
+    "status": "verified"
+   },
+   {
+    "claim": "WCAG 3 is a Working Draft (Sept 2026); W3C advises meeting WCAG 2.2 now",
+    "url": "https://www.w3.org/WAI/standards-guidelines/wcag/wcag3-intro/",
+    "status": "verified"
+   },
+   {
+    "claim": "Ontario public websites must meet WCAG 2.0 AA (except 1.2.4 and 1.2.5) under O. Reg. 191/11",
+    "url": "https://www.ontario.ca/page/how-make-websites-accessible",
+    "status": "verified"
+   },
+   {
+    "claim": "UW states a WCAG level for third-party apps",
+    "url": "https://uwaterloo.ca/accessibility/",
+    "status": "unverified"
+   },
+   {
+    "claim": "axe-core vendor claim: finds 'on average 57% of WCAG issues automatically'",
+    "url": "https://github.com/dequelabs/axe-core",
+    "status": "verified"
+   },
+   {
+    "claim": "GDS 2017: best single free tool found 41% of 143 barriers; all ten tools combined found 71%",
+    "url": "https://accessibility.blog.gov.uk/2017/02/24/what-we-found-when-we-tested-tools-on-the-worlds-least-accessible-webpage/",
+    "status": "verified"
+   },
+   {
+    "claim": "eslint-plugin-jsx-a11y 6.10.2 declares peer ESLint up to ^9, while ESLint latest is 10.12.0; the ESLint 10 support issue #1075 is open",
+    "url": "https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues?q=eslint+10",
+    "status": "verified"
+   },
+   {
+    "claim": "GOV.UK Tag: status only, non-interactive, adjectives, never colour alone, sentence case",
+    "url": "https://design-system.service.gov.uk/components/tag/",
+    "status": "verified"
+   },
+   {
+    "claim": "GOV.UK Frontend code is MIT and docs are OGL v3.0; v6.5.0 released 27 Aug 2026",
+    "url": "https://github.com/alphagov/govuk-frontend",
+    "status": "verified"
+   },
+   {
+    "claim": "Atkinson Hyperlegible Next is OFL-licensed",
+    "url": "https://www.brailleinstitute.org/freefont/",
+    "status": "unverified"
+   },
+   {
+    "claim": "Stock shadcn defaults are the recognisable look of AI-generated apps",
+    "url": "https://ui.shadcn.com/docs/theming",
+    "status": "unverified"
+   }
+  ],
+  "new_open_questions": [
+   "PQ-D1-1: May the prototype use UW's name, logo or colours at all (has UW Brand been asked), or should it ship with a neutral demo theme?",
+   "PQ-D1-2: How close may the IA/visual design be to LEARN/Brightspace without implying D2L affiliation?",
+   "PQ-D1-3: Does UW (Policy 58, procurement, IST) require a specific WCAG level or an ACR/VPAT for third-party apps?",
+   "PQ-D1-4: Is UW a designated public sector organization under O. Reg. 191/11, and do the IASR educational-institution duties apply?",
+   "PQ-D1-5: Which timestamps are shown on anonymous content, and at what precision (deanonymization risk in small courses)?",
+   "PQ-D1-6: May admins save a brand colour that fails the contrast checks, or is the guardrail absolute?",
+   "PQ-D1-7: Which Course AI Card fields map to which Assignment AI Card fields for the 'differences shown visibly' comparison?",
+   "PQ-D1-8: Who writes and approves the UI copy (anonymity explanations, override markers, status help text, empty states)?",
+   "PQ-D1-9: Is dark mode wanted?",
+   "PQ-D1-10: Budget for a JAWS licence, an external audit, and testing with disabled users before production?",
+   "PQ-D1-11: Is an accessibility statement page wanted in milestone 1?",
+   "PQ-D1-12: React Aria vs Base UI as the shadcn primitive base (irreversible at init; decide after a spike)",
+   "PQ-D1-13: Can presentation-mode legibility be checked on real UW classroom projectors?"
+  ],
+  "risks": [
+   "shadcn style/base choice is irreversible after init; picking wrong means reinstalling components",
+   "Whether every shadcn component exists in the React Aria (aria-*) variant is unverified",
+   "eslint-plugin-jsx-a11y appears stalled (last release ~Oct 2024) and is outside its peer range on ESLint 10; may need Biome a11y rules or ESLint pinned to 9",
+   "Using UW logos, colours or name in a public prototype without permission could breach UW brand rules or imply endorsement",
+   "Reusing BrightspaceUI or Brightspace look-and-feel could imply D2L affiliation (trademark terms; design patents listed)",
+   "Third-party font CDNs, session replay or error tools could put identity and anonymous content together in one log (§6.2); self-host fonts and ban session replay",
+   "Over-promising in anonymity explanations before the threat model (Q8) and the mechanism (Q9) exist",
+   "Automated a11y tools catch only part of the problems (vendor claim 57%; GDS 2017 found 41% for the best tool); claiming conformance from axe alone would be dishonest",
+   "Admin branding can silently break contrast unless the guardrail is enforced server-side",
+   "Projector legibility values and many WCAG SC numbers in the checklist are unverified and need checking"
+  ]
+ },
+ "research:testing": {
+  "file": "P:/code/_clearcourse-scratch/research/testing-T1-strategy.md",
+  "recommendation": "PROPOSAL (owner decides; conditional on the Q3 and Q9 ADRs): use Vitest 5 for unit, property, DB and API tests, with fast-check, against a real Postgres (a GitHub Actions service container in CI, Testcontainers locally; PGlite is not used for anything that depends on roles). Add SQL catalog assertions, with pgTAP optional, and Playwright with @axe-core/playwright. Build a canary co-occurrence scanner that checks UI DOM and RSC payloads, API bodies and headers, exports, app and Postgres logs, and traces. Generate a role x endpoint matrix from the route list, deny-by-default. Add dependency-cruiser boundary rules and StrykerJS scoped to privacy modules, run on a schedule. Everything runs on GitHub Actions Free (2,000 private-repo minutes, blocked rather than billed when no payment method is on file), and every §10 criterion maps to named tests (§5.5 of the note).",
+  "options": [
+   {
+    "name": "Vitest (unit/integration runner)",
+    "verdict": "Use. v5.0 (2026-09-03), needs Node >=22.12; Next.js 16.4 has an official guide, but async Server Components need E2E instead."
+   },
+   {
+    "name": "Playwright + @axe-core/playwright",
+    "verdict": "Use for E2E, UI negative tests and a11y scans. axe tag set waits for Q15; report-only until then."
+   },
+   {
+    "name": "GitHub Actions Postgres service container",
+    "verdict": "Use in CI. Real server with roles/RLS; Linux runner required; pin to the hosted major version (Unverified which)."
+   },
+   {
+    "name": "Testcontainers (@testcontainers/postgresql 12.2.0)",
+    "verdict": "Use locally so the same tests run on a laptop; optional in CI."
+   },
+   {
+    "name": "PGlite (0.5.8)",
+    "verdict": "Do not use for privacy/role tests. Single exclusive connection; role/GRANT/RLS fidelity Unverified."
+   },
+   {
+    "name": "pgTAP (1.3.4) vs SQL assertions in Vitest",
+    "verdict": "Baseline: SQL assertions (has_table_privilege, pg_depend) plus behavioural 42501 tests. pgTAP optional if easy to install in CI."
+   },
+   {
+    "name": "fast-check (4.10.2)",
+    "verdict": "Use for merge union, credit preservation, upvote idempotence, qualifying-action and three-level properties; model-based via fc.commands."
+   },
+   {
+    "name": "StrykerJS + vitest-runner (10.0.0)",
+    "verdict": "Use, scoped to privacy-critical modules, weekly or manual. Vitest 5 compatibility Unverified; SQL safeguards covered by hand-written break-it tests."
+   },
+   {
+    "name": "dependency-cruiser (18.6.0) vs eslint-plugin-boundaries (7.1)",
+    "verdict": "dependency-cruiser as the CI gate; boundaries plugin optional for editor feedback; one rule source."
+   },
+   {
+    "name": "Supabase CLI test db",
+    "verdict": "Optional. Its JWT-claim RLS pattern does not match the proposed own-role design."
+   },
+   {
+    "name": "Public repo for free CI minutes",
+    "verdict": "Possible but not assumed; owner decision (PNQ-T6)."
+   }
+  ],
+  "key_claims": [
+   {
+    "claim": "GitHub Free private repos get 2,000 Actions minutes/month and 500 MB artifact storage (shared with Packages); usage is blocked at quota when no payment method is on file",
+    "url": "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "status": "verified"
+   },
+   {
+    "claim": "Public repos are free on standard GitHub-hosted runners; Linux 2-core overage is $0.006/min",
+    "url": "https://docs.github.com/en/billing/concepts/product-billing/github-actions",
+    "status": "verified"
+   },
+   {
+    "claim": "Private ubuntu-latest runner is 2 CPU / 8 GB RAM / 14 GB SSD (public 4/16/14); ubuntu-latest is 24.04",
+    "url": "https://docs.github.com/en/actions/reference/runners/github-hosted-runners",
+    "status": "verified"
+   },
+   {
+    "claim": "Free plan: 20 concurrent jobs, 6 h per job",
+    "url": "https://docs.github.com/en/actions/reference/limits",
+    "status": "verified"
+   },
+   {
+    "claim": "Service containers require a Linux runner; pg_isready health check pattern documented",
+    "url": "https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers",
+    "status": "verified"
+   },
+   {
+    "claim": "Vitest 5.0 released 2026-09-03; requires Node >=22.12.0 and Vite >=6.4.0",
+    "url": "https://vitest.dev/blog/vitest-5",
+    "status": "verified"
+   },
+   {
+    "claim": "Vitest does not support async Server Components; Next.js recommends E2E for them",
+    "url": "https://nextjs.org/docs/app/guides/testing/vitest",
+    "status": "verified"
+   },
+   {
+    "claim": "Playwright latest release notes entry is 1.64",
+    "url": "https://playwright.dev/docs/release-notes",
+    "status": "verified"
+   },
+   {
+    "claim": "axe-core has a wcag22aa tag; level tags are not cumulative; automated a11y testing cannot catch all WCAG issues",
+    "url": "https://github.com/dequelabs/axe-core/blob/develop/doc/API.md",
+    "status": "verified"
+   },
+   {
+    "claim": "PGlite has only a single exclusive connection; docs do not state role/RLS fidelity",
+    "url": "https://pglite.dev/docs/",
+    "status": "verified"
+   },
+   {
+    "claim": "pgTAP 1.3.4 documents table_privs_are, function_privs_are, policies_are, hasnt_fk, is_definer, roles_are",
+    "url": "https://pgtap.org/documentation.html",
+    "status": "verified"
+   },
+   {
+    "claim": "fast-check supports model-based testing (fc.commands, asyncModelRun, scheduledModelRun), shrinking and replayPath; latest 4.10.2",
+    "url": "https://fast-check.dev/docs/advanced/model-based-testing/",
+    "status": "verified"
+   },
+   {
+    "claim": "@stryker-mutator/vitest-runner 10.0.0 needs Node >=22, peer vitest >=2.0.0, dev-tested on Vitest 4.1.10; browser mode unsupported",
+    "url": "https://registry.npmjs.org/@stryker-mutator/vitest-runner/latest",
+    "status": "verified"
+   },
+   {
+    "claim": "Stryker vitest-runner works with Vitest 5",
+    "url": "https://stryker-mutator.io/docs/stryker-js/vitest-runner/",
+    "status": "unverified"
+   },
+   {
+    "claim": "dependency-cruiser 18.6.0 supports forbidden from/to path rules and TypeScript",
+    "url": "https://github.com/sverweij/dependency-cruiser",
+    "status": "verified"
+   },
+   {
+    "claim": "Postgres uuidv7 embeds a millisecond UNIX timestamp; uuid_extract_timestamp returns it for v1/v7 and null for others; current Postgres is 18",
+    "url": "https://www.postgresql.org/docs/current/functions-uuid.html",
+    "status": "verified"
+   },
+   {
+    "claim": "information_schema.view_table_usage only lists tables owned by a currently enabled role, so cross-domain view checks must use pg_depend/pg_rewrite",
+    "url": "https://www.postgresql.org/docs/current/infoschema-view-table-usage.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Postgres logs failing statement text by default (log_min_error_statement=ERROR) but not bind values (log_parameter_max_length_on_error=0), so content must always be parameterised",
+    "url": "https://www.postgresql.org/docs/current/runtime-config-logging.html",
+    "status": "verified"
+   },
+   {
+    "claim": "pg_xact_commit_timestamp only works when track_commit_timestamp is on",
+    "url": "https://www.postgresql.org/docs/current/functions-info.html",
+    "status": "verified"
+   },
+   {
+    "claim": "OWASP: deny by default, validate permissions on every request; authz unit/integration tests catch low-hanging fruit only",
+    "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+    "status": "verified"
+   },
+   {
+    "claim": "Hosted Postgres major version for the proposed provider, and whether logging settings can be read there",
+    "url": "n/a",
+    "status": "unverified"
+   },
+   {
+    "claim": "Stock postgres Docker image ships pgTAP / apt package name",
+    "url": "n/a",
+    "status": "unverified"
+   }
+  ],
+  "new_open_questions": [
+   "PNQ-T1: Should mandatory negative tests also cover institutional admins and operators? §9 names only instructors and TAs.",
+   "PNQ-T2: Scanner strictness: any identity canary next to any content canary, or only a student next to their own content? May a student's own view show 'you asked this'?",
+   "PNQ-T3: What is the exact list of TA permissions an instructor can assign (§5 gives only examples)?",
+   "PNQ-T4: Which survey metadata is 'necessary' (§7.12), e.g. is a submission date kept, and at what granularity?",
+   "PNQ-T5: What does 'preserve all comments where reasonable' (§7.7) mean for merge tests?",
+   "PNQ-T6: Private or public repository (affects free CI minutes and runner size)?",
+   "PNQ-T7: Is an external security/privacy/accessibility review wanted before production?",
+   "PNQ-T8: Any required coverage or mutation-score threshold, or none?",
+   "PNQ-T9: Should the negative suite also run against a deployed preview (synthetic data) to catch platform log/cache leaks?",
+   "PNQ-T10: Retention period for CI artefacts (traces, logs) containing synthetic canaries.",
+   "PNQ-T11: Is a read-only post-deploy catalog self-check against production acceptable, and with which credentials?"
+  ],
+  "risks": [
+   "The test suite could itself create the forbidden mapping if the seed oracle (who wrote what) is persisted to DB, fixtures, logs or CI artifacts. It must stay in test-process memory only.",
+   "PGlite or mocks used for role/RLS tests could give false confidence; privacy tests must run on a real Postgres server.",
+   "Using information_schema.view_table_usage for the no-cross-domain-view check silently misses tables not owned by the current role.",
+   "Default Postgres error logging records failing statement text; any non-parameterised query with content text leaks it into the DB log.",
+   "UUIDv7 or sequential ids would embed creation time or order and enable timing correlation; tests must assert v4 only.",
+   "Tool version drift: Vitest 5 is new, and Stryker's vitest-runner is only dev-tested on Vitest 4.1; spike before adopting.",
+   "CI minute estimates are unmeasured; nightly E2E plus mutation runs could approach the 2,000-minute quota on a private repo.",
+   "A §10 map cannot be completed for sign-in and provisioning until Q4 and Q5 are answered; those tests are placeholders.",
+   "Automated a11y and authz tests catch only part of the problems (Playwright and OWASP both say so); manual review is still needed."
+  ]
+ }
+}
