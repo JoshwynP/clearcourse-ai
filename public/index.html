@@ -12,34 +12,39 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="masthead">
-      <a class="uw-logo-link" href="https://uwaterloo.ca/" target="_blank" rel="noopener noreferrer" aria-label="University of Waterloo">
-        <img src="uwaterloo-logo.svg" alt="" width="170" height="41" />
-      </a>
       <button class="brand-link" type="button" data-view="home">
         <strong>ClearCourse</strong>
         <small>AI guidance, made clear</small>
       </button>
+      <div class="uw-credit">
+        <p>Made by University of Waterloo students</p>
+        <a class="uw-logo-link" href="https://uwaterloo.ca/" target="_blank" rel="noopener noreferrer" aria-label="University of Waterloo">
+          <img src="uwaterloo-logo.svg" alt="" width="170" height="41" />
+        </a>
+      </div>
     </header>
     <div class="colour-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Course navigation">
         <div class="sidebar-section-label">Your courses</div>
         <div id="course-nav"></div>
-        <div class="sidebar-foot">Sample courses<small>No sign-in or saved data.</small></div>
+        <div class="sidebar-foot">Sample courses<small>Fictional preview. No saved sign-in.</small></div>
       </aside>
 
       <main id="main" class="main-content">
-        <header class="topbar"><nav class="crumb" id="crumb" aria-label="Location"></nav></header>
+        <header class="topbar"><nav class="crumb" id="crumb" aria-label="Location"></nav><div id="session-slot"></div></header>
         <div id="view-root"></div>
       </main>
     </div>
     <dialog id="compose-dialog" aria-labelledby="compose-title">
       <form id="question-form" method="dialog" class="dialog-form">
-        <div class="dialog-head"><div><div class="eyebrow">START A CONVERSATION</div><h2 id="compose-title">Ask a question</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
-        <p class="dialog-note">This demo keeps questions only until you reload. Real anonymous posting will need the privacy architecture described in the project spec.</p>
+        <div class="dialog-head"><div><div class="eyebrow">DISCUSSION BOARD</div><h2 id="compose-title">Ask a question</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <p class="dialog-note">Questions you add stay in this browser tab until you reload. This preview does not provide real anonymous posting and does not accept real student information.</p>
         <label for="question-tag">Question about</label><select id="question-tag" name="tag" required></select>
         <label for="question-title">Your question</label><input id="question-title" name="title" maxlength="120" placeholder="What would you like to clarify?" required />
-        <label for="question-body">More context <span class="optional">(optional)</span></label><textarea id="question-body" name="body" maxlength="600" rows="5" placeholder="Add context that would help your instructor answer."></textarea>
+        <label for="question-body">Additional context <span class="optional">(optional)</span></label>
+        <p class="helper" id="context-note">Additional context is optional.</p>
+        <textarea id="question-body" name="body" maxlength="600" rows="5" aria-describedby="context-note" placeholder="Optional. Add context that would help your instructor answer."></textarea>
         <div class="dialog-actions"><button type="button" class="button ghost" data-close-dialog>Cancel</button><button type="submit" class="button primary">Add to demo board</button></div>
       </form>
     </dialog>

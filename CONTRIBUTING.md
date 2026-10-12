@@ -235,6 +235,7 @@ Fields:
 - Last updated date
 - Version history
 - Published status
+- Opening statement (optional)
 
 Rules:
 
@@ -242,10 +243,12 @@ Rules:
   history may be requested if concerns arise.
 - If AI is **permitted**, the instructor **must** specify permitted uses, prohibited uses and
   disclosure expectations.
-- It must include this default principle (verbatim):
-  > "Permission to use generative AI is not a recommendation or requirement to use it. Students will
-  > not receive an advantage merely for using AI. Any transparency bonus rewards evidence and
-  > reflection about the learning process, whether that process involved AI or not."
+- The opening statement is optional. The instructor may write it, edit it, or leave it blank. A
+  blank opening statement is left blank.
+- Suggested wording the instructor may use, edit, or omit:
+  > "Permission to use generative AI does not mean students are expected or required to use it. Any
+  > transparency bonus rewards reflection and evidence of the learning process equally whether or
+  > not AI was used."
 
 ### 7.4 Assignment AI Cards `[src p.6–7]`
 
@@ -272,13 +275,13 @@ Fields:
 - Version history
 - Published date
 - Last updated date
+- Opening statement (optional)
 
 Rules:
 
-- Each card begins with a **configurable** statement modeled on (verbatim default):
-  > "This assignment does not require you to use AI. If you choose to use it, the rules below explain
-  > what is permitted and what must be disclosed. The optional transparency-of-process bonus is
-  > available equally to students who use AI and students who do not."
+- The opening statement follows the same rule as the course card (§7.3): it is optional, the
+  instructor may write, edit, or omit it, and a blank statement is left blank. The suggested wording
+  in §7.3 may be used on an assignment card as well.
 - **Assignment rules override the Course AI Card where they differ. The differences must be shown
   visibly.**
 - No submissions are accepted. Students are directed to the configured LEARN submission URL.
@@ -663,3 +666,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-12 | Static preview files moved to `public/` for isolated deployment; ADR 0006 records the preview-only hosting choice. The production Q3 remains open. |
 | 2026-10-12 | Owner accepted the local application foundation in ADR 0007: TypeScript, Next.js 16.4.0, Node.js runtime, plain CSS, and PostgreSQL as the future database. Hosting, the data-access library, and the UI component library stay open under Q3. |
 | 2026-10-12 | Owner chose a local practice sign-in (Q4), professor-created courses shared by join code (Q5), Professor or Student chosen before sign-in, and no administrator role in this pilot. Questions are always anonymous (Q9). The threat model is `docs/privacy/threat-model.md` (Q8). ADRs 0008 and 0009. Production hosting of the database-backed app stays open under Q3. |
+| 2026-10-12 | Owner made the card opening statement optional for course and assignment cards. A blank statement stays blank. The suggested wording may be used, edited, or omitted (§7.3, §7.4). |
