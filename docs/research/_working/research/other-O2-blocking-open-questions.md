@@ -654,3 +654,500 @@ point shares become final. Changes to the dates follow a rule the owner approves
   publication, and in which direction? **NQ-18b** is the survey a required step before sharing, or
   only shown first and skippable? (§7.12 says "presented before"; it is also "available even if the
   student does not share".) **NQ-18c** can a student share before the end of the course?
+
+---
+
+## Q13. Which notifications are "essential" (brief)
+
+### Question and what it blocks (§13 Q13)
+
+- §13 Q13: "Which notifications are 'essential' (cannot be disabled)?" Blocks §7.13.
+- §7.13 lists eight notification types, "accessible in-app and email", and says "Users can manage
+  nonessential notifications". §7.6: "Affected students are notified" when a published rule changes.
+  §6.4 lists "notification rules" as part of any deanonymization process.
+- Email delivery itself is Q6 (other branch).
+- **Blocks milestone 1: only if notifications are in milestone 1.** In-app notifications could ship
+  first; email depends on Q6.
+
+### Options considered
+
+| Option | Essential (cannot be disabled) | Everything else | Notes |
+|---|---|---|---|
+| N1. Nothing essential | None | All user-managed | Contradicts the spec's wording, which implies some notifications are essential; and §7.6 "Affected students are notified" would be defeated if a student turned card-change notices off |
+| N2. **Rule- and rights-affecting only** | Assignment card changed, Course card changed (§7.6 rule changes); Sharing window open (§7.10 finality); any deanonymization notice (§6.4) if that capability ever exists | Answer posted, Followed question updated, Question merged, Participation level reached, End-of-course survey available | Essential = information a student needs to know their obligations or rights |
+| N3. N2 but "essential" applies to the **in-app** channel only; email for every type stays user-manageable | Same set, in-app | All email | Reduces inbox pressure; fits §8 "avoid attention-maximizing patterns" |
+| N4. Instructor chooses per course | Configurable | Configurable | More UI; not in the spec |
+
+### Evidence (checked 2026-10-11)
+
+- Canada's Anti-Spam Legislation (S.C. 2010, c. 23), "current to 2026-09-21": a message is a
+  commercial electronic message if "it is reasonable to conclude that it has as its purpose, or one
+  of its purposes, to encourage participation in a commercial activity" (s. 1(2)); s. 6(6) removes
+  the consent requirement (but not the s. 6(2) form requirements) for a message that "solely"
+  "provides notification of factual information about" an "ongoing subscription, membership,
+  account ... or similar relationship" (s. 6(6)(d)).
+  https://laws-lois.justice.gc.ca/eng/acts/E-1.6/page-1.html
+  Reading: ClearCourse's notifications are factual course/account messages with no commercial
+  purpose, so CASL is probably not the constraint; this is **an interpretation, not legal advice**,
+  and should be confirmed if the product is ever offered commercially to other institutions (§4).
+  (The CRTC CASL FAQ page returned HTTP 403 to WebFetch.)
+
+### Privacy implications (§6)
+
+- Notification payloads are a §6.2 surface. An email that says "Your question 'How do I cite
+  ChatGPT in A2?' was answered" places identity (the recipient's address) next to anonymous content
+  text and the fact of authorship, in a third-party mail system (Q6 provider) and in the recipient's
+  inbox. **Proposal:** emails about a student's own or followed questions carry no content text and
+  no question title, only a link ("A question you follow has an update").
+- "Answer posted" to the asker, and "Followed question updated", require the system to know which
+  student asked or follows which question, i.e. an identity-to-content link. This is a Q9 design
+  input (follow lists are identity-bearing; they belong to neither domain 1 nor domain 3 cleanly).
+  Follows are not counted toward participation (§7.9), but they are still a mapping instructors must
+  not see (§6.2).
+- "Participation level reached" must not be sent at a moment or in a form an instructor could
+  observe (e.g. no instructor-visible delivery log).
+- Email provider logs pair address with subject line: keep subject lines generic.
+
+### Recommendation (proposal for the owner)
+
+**N3**: treat course-card and assignment-card change notices, "Sharing window open" and (if it ever
+exists) any deanonymization notice as essential **in-app**; let users manage every email type. All
+email bodies and subjects carry no anonymous content text. Defer email entirely if Q6 is not decided
+for milestone 1. The exact wording of every notification is copy text for the owner to approve.
+
+### Dependencies
+
+- Q6 (email provider), Q9 (follow and "my question" mappings), Q18 (when "Sharing window open"
+  fires).
+- Proposed new open questions: **NQ-13a** may notification emails include question titles or text,
+  or only a link? **NQ-13b** are "essential" notifications essential on both channels or only one?
+
+---
+
+## Q1. Scope of "Administration" for a prototype
+
+### Question and what it blocks (§13 Q1)
+
+- §13 Q1: "What is the full scope of 'Administration'? The source text is truncated `[src p.17]`."
+  Blocks §7.15. The spec text reads only "Allow institutional administrators to update website"
+  (confirmed in `source-prompt.txt`, line 54).
+- Known admin duties from elsewhere: configure "names, links, policy language, branding and LMS
+  configuration" (§4, `[src p.1]`); the exceptional deanonymization configuration only if policy
+  requires it (§6.4, §7.15); must not "routinely connect anonymous content with student identities"
+  (§5). §11 lists "administrative configuration" as a deliverable.
+- **Blocks milestone 1: partly.** Branding and policy links appear on every card (§7.3 Policy 71
+  link, Guidelines link, "Configurable institutional-policy warning"), so *some* configuration
+  source is needed. A full admin UI is not.
+
+### Options considered
+
+| Option | Milestone-1 admin scope | Strengths | Weaknesses |
+|---|---|---|---|
+| A1. Config file / seed data only | Institution name, policy links, policy-warning text, branding colours set in a reviewed file; no admin UI | Fastest; no admin role to secure yet | Not "administrator-configurable" in the UI sense; a code deploy per change (acceptable for a prototype, not for §4 "without code changes" in production) |
+| A2. **Minimal admin settings page** | One institution; edit the §4 items (names, links, policy language, branding); LMS configuration left empty until Q5 | Proves the §4 model early; low risk; keeps the data model multi-institution ready | An admin role and its authorization tests are needed now |
+| A3. A2 + user/role management (assign instructor role, create courses) | Adds provisioning screens | Lets the owner run a public prototype without LTI | Overlaps Q5; a manual "make instructor" step could be abused; must be audited (Q14 E6/E7) |
+| A4. Full multi-institution admin | Tenants, per-institution SSO, LMS | Production-shaped | Far beyond a prototype; Q1 is unanswered |
+
+### Evidence
+
+- Spec only (§4, §5, §6.4, §7.15, §11; `source-prompt.txt` line 54). No external source needed.
+
+### Privacy implications (§6)
+
+- The admin dashboard is one of the six places §6.2 says must never show identity next to content
+  text. An admin page that lists users must not also list or search content, and vice versa.
+- Admins are a role that must be in the §9 negative tests too (§5: no routine connection of content
+  to identities), not only instructors and TAs.
+- An admin able to grant roles (A3) could enrol themselves as a student or instructor in a course.
+  The threat model (Q8) should record what an admin-turned-instructor can still not see.
+
+### Recommendation (proposal for the owner)
+
+**A2 for milestone 1**, with an `institution` table that holds the §4 configurables from day one
+(even with a single row), so later institutions need no schema change. Whether A3's role management
+is also needed depends on Q5 (provisioning branch). Do not invent further admin powers until Q1 is
+answered.
+
+### Dependencies
+
+- Q5 (provisioning), Q14 (audit of configuration changes), Q7 (support procedure), Q19 (policy
+  language per locale).
+- Proposed new open question **NQ-1a**: can the owner recover the missing text of the spec's
+  "Administration" section from the original author, or should the owner write it?
+
+---
+
+## Q7. Impersonation or support procedure
+
+### Question and what it blocks (§13 Q7)
+
+- §13 Q7: "Is any impersonation/support procedure wanted, or none at all?" Blocks §5.
+- §5 and §3: impersonation is prohibited "without a tightly controlled, audited support procedure"
+  `[src p.2]`.
+- **Blocks milestone 1: no, if the answer for milestone 1 is "none".** The other options add a
+  capability that could defeat §6 and must not ship without design.
+
+### Options considered
+
+| Option | What a support person can do | Privacy risk | Effort |
+|---|---|---|---|
+| I0. **None** | Nothing as another user; support uses the admin page and the database console | Lowest | None |
+| I1. "View as role" preview (no real user) | See a synthetic student or instructor view of a course | Low: no real identity is assumed. Instructors already have "preview the student view" for cards (§7.6) | Low |
+| I2. Read-only impersonation of a real user, with consent and audit | See exactly what that user sees | **High**: viewing a student's private counter page and "my questions" (if Q9 has such a view) reveals what is anonymous to everyone else | Medium–high |
+| I3. Full impersonation with approval workflow | Act as the user | Highest: can post "anonymously" as someone, or share their level | High |
+
+### Evidence
+
+- Spec only (§3, §5, §6.4). No external source was needed to state the options. The pattern that a
+  deanonymization process needs multiple approvers, a reason, immutable audit and notification
+  (§6.4) is a reasonable template for any future I2/I3 design; that is an analogy, not a
+  requirement.
+
+### Privacy implications (§6)
+
+- Impersonating a student is a deanonymization path: anything the student can see about their own
+  activity, the impersonator sees. I2/I3 therefore fall under §6.4's "Default: nobody can
+  deanonymize".
+- Even I0 leaves operator access to the database. The threat model must say what an operator with
+  database credentials can and cannot learn, which is mainly a Q9 matter.
+
+### Recommendation (proposal for the owner)
+
+**I0 (none)** for milestone 1 and as the default, optionally with **I1** (synthetic "view as role"
+previews) if the owner wants it for demos. Revisit I2/I3 only if a real support need appears, and
+then design it under §6.4's safeguards.
+
+### Dependencies
+
+- Q9, Q14 (E9), Q1.
+- Proposed new open question **NQ-7a**: is a synthetic "view as student" preview of a whole course
+  (beyond the card preview in §7.6) wanted?
+
+---
+
+## Q19. Internationalisation (i18n)
+
+### Question and what it blocks (§13 Q19)
+
+- §13 Q19: "Should content support languages other than English (i18n)?" Blocks UI.
+- Related: §4 "policy language" is administrator-configurable and "Later institutions must be
+  supportable without code changes" `[src p.1]`. Several texts are **verbatim** in the spec (§7.3
+  default principle, §7.4 default statement, §7.10 pre-share text, §7.12 survey questions); a
+  translation of verbatim text would itself be new copy needing approval.
+- Two different things hide in this question: (a) **UI strings** (buttons, labels, notices) and
+  (b) **user content** (cards written by instructors, questions by students).
+- **Blocks milestone 1: no for translations; yes for one cheap structural choice** (whether UI
+  strings are externalised from the first commit).
+
+### Options considered
+
+| Option | Day-one work | Later cost to add a language | Notes |
+|---|---|---|---|
+| L0. English only, strings inline in components | None | High: every component touched; verbatim texts scattered | W3C: retrofitting is "much more difficult and time-consuming" |
+| L1. **English only, but UI strings externalised in one message catalogue; `lang="en"` on pages; locale-aware date/number formatting** | Small: a message-key lookup instead of literals; one catalogue file | Low: add a catalogue per locale | Also puts every verbatim spec string in one reviewable place, which helps §15 "quote the spec" checks |
+| L2. L1 + per-institution overrides of UI strings | Medium | Low | Supports §4 configurability of "policy language"; overlaps Q1 |
+| L3. L1 + a language field on instructor-authored cards and per-field `lang` attributes | Small extra | n/a | Supports WCAG 3.1.2 if an instructor writes a card or part of one in another language |
+| L4. Full bilingual UI (e.g. English and French) from day one | High | n/a | No requirement; translation of verbatim texts needs owner approval |
+
+### Evidence (checked 2026-10-11)
+
+- W3C Internationalization Activity, "Localization vs. Internationalization": internationalization
+  is "the design and development of a product ... that enables easy localization"; adapting a
+  product later is "much more difficult and time-consuming than designing a deliverable with the
+  intent of presenting it globally"; it should not be "an afterthought that can often involve awkward
+  and expensive re-engineering". (No last-updated date shown.)
+  https://www.w3.org/International/questions/qa-i18n
+- WCAG 2.2 SC 3.1.2 Language of Parts (Level AA): "The human language of each passage or phrase in
+  the content can be programmatically determined", with exceptions for proper names, technical
+  terms and similar. So if Q15 adopts 2.2 AA, any non-English passage an instructor writes must be
+  marked, which is an i18n-adjacent requirement regardless of Q19.
+  https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html
+- Whether Ontario's French Language Services Act or any UW policy requires French for a student-
+  facing tool: **Unverified** (not researched; no source fetched).
+- Choice of i18n library (e.g. a framework's built-in routing or a message-format library) belongs
+  to the Q3 stack branch; none is verified here.
+
+### Privacy implications (§6)
+
+- Minor. Per-user locale preference is identity-domain data (domain 3). A language tag on an
+  anonymous question (if L3 is extended to student content) is low-cardinality metadata that, in a
+  class with one francophone student, could identify the author. **Proposal:** do not store or
+  display a language tag on anonymous student content; §7.12 also says "No unnecessary metadata".
+
+### Recommendation (proposal for the owner)
+
+**L1 now** (externalise UI strings, set `lang`, use locale-aware formatting), **L3** for instructor
+card fields if Q15 adopts WCAG 2.2 AA, and treat translations (L4) as out of scope until the owner
+answers Q19. The cost of L1 is roughly one indirection per string and a single catalogue file; it is
+the cheap half of the work.
+
+### Dependencies
+
+- Q3 (library), Q15 (3.1.2), Q1/§4 (institution overrides of policy language).
+- Proposed new open question **NQ-19a**: if a second language is added, who translates and approves
+  the spec's verbatim texts (§7.3, §7.4, §7.10, §7.12)?
+
+---
+
+## Q10, Q11, Q12. Wizard rules, ranked-grading defaults, grade export format: can they wait?
+
+### Questions and what they block (§13 Q10–Q12)
+
+| Q | Text (§13) | Blocks | Needed for milestone 1? |
+|---|---|---|---|
+| Q10 | "The fixed decision rules the card-builder wizard uses to generate recommendations, and its curated resources." | §7.6 wizard path | **No**, if milestone 1 ships the **manual editor** path only. §7.6 offers "two paths" and lets instructors "skip the wizard", so the manual editor is a complete path on its own |
+| Q11 | "Recommended default values for ranked grading." | §7.11 ranked mode | **No**, if milestone 1 has no grading settings, or offers **pass/fail only** (pass/fail needs no numeric default: the instructor picks Contributor or Sustained Contributor, §7.11) |
+| Q12 | "Grade export format required by UW (e.g. LEARN gradebook CSV)." | §7.11 export | **No**, if milestone 1 has no export. But note §7.10: revocation is allowed "until the instructor exports or applies", so the **finality event** must exist before sharing ships, even if the file format does not |
+
+### Options considered
+
+| Q | Option | Notes |
+|---|---|---|
+| Q10 | W-a. Defer the wizard; ship manual editor (proposal) | Satisfies §7.6 manual path; no invented rules |
+| Q10 | W-b. Owner authors a rule table (question → answer → recommended field text) as a reviewed document, then it is encoded | The only route consistent with "explicit fixed rules" and "transparent decision rule behind any recommendation" (§7.6) and §3 (no generative model setting policy) |
+| Q10 | W-c. Ship wizard questions (the twelve in §7.6) as a guided form that fills fields **without** recommendations | Partial; still needs "short explanation" and "Why this matters" copy per question, which the owner must write |
+| Q11 | G-a. Defer ranked mode | Pass/fail alone is a §7.11 mode |
+| Q11 | G-b. Ship ranked mode with **no** prefilled values (instructor must enter them) | §7.11 says "Recommended defaults are provided", so this is incomplete, not wrong, until Q11 is answered |
+| Q12 | E-a. "Apply" as an in-app action only (records finality, no file) | Gives §7.10 its finality trigger without a format decision |
+| Q12 | E-b. Generic CSV (name, level, date shared) | Matches exactly the three fields §7.10 allows instructors to receive; still a format choice the owner must approve |
+| Q12 | E-c. LEARN/Brightspace grade-import CSV | Needs the official format; **Unverified** here (see evidence) |
+
+### Evidence (checked 2026-10-11)
+
+- Spec only for scope (§3, §7.6, §7.10, §7.11).
+- LEARN grade import format: the UW LEARN help pages moved to IST's knowledge base on Atlassian
+  Confluence (https://uwaterloo.ca/learn-help/instructors/grades now redirects to
+  https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/261226669/Teaching+Learning+and+Research ;
+  LEARN help: https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/284530130/LEARN+help ).
+  No grade-import page was found in the fetched content, and a guessed D2L community URL returned
+  404. **The Brightspace grade CSV format is Unverified**; the owner (or the Q5 branch, if LTI
+  Assignment and Grade Services is in scope) should get it from LEARNhelp (learnhelp@uwaterloo.ca is
+  the contact the page gives).
+
+### Privacy implications (§6)
+
+- Q12: any export is in §6.2's list ("export"). It may contain only name, verified level and date
+  shared (§7.10), and must be produced from domain 4 alone, never by joining domains 2 or 1. A §9
+  negative test should parse the export and assert no other columns.
+- Q12/Q18: each export is a snapshot an instructor can subtract from a later one (Q16). F2 (export
+  only after the window closes) limits this.
+- Q10: wizard answers are instructor data, not student data; low privacy risk. The §3 prohibition
+  on a generative model setting policy is the main constraint.
+- Q11: none.
+
+### What the owner needs to provide (proposal)
+
+- **Q10:** a rule table and the curated resource list, written or approved by the owner. Until then,
+  ship the manual editor.
+- **Q11:** a value per level for ranked mode (or confirmation that ranked mode waits).
+- **Q12:** confirmation of whether milestone 1 needs any export; if yes, the LEARN format from
+  LEARNhelp, or approval of a generic CSV with exactly the §7.10 fields.
+
+### Proposed new open questions
+
+- **NQ-12a**: does "applies the result" (§7.10) mean an in-app action, a grade pushed to LEARN, or
+  both? It is the trigger that makes shares final.
+- **NQ-10a**: may the wizard ship without recommendations (questions and explanations only) before
+  the rule table exists?
+
+---
+
+## Q2. Candidate milestone-1 feature set (proposal, not a decision)
+
+### Question and what it blocks (§13 Q2)
+
+- §13 Q2: "Goal of the first build: a public prototype or the full production system? Which features
+  are in the first milestone?" Blocks the roadmap.
+- The owner has stated the goal: a public prototype people can sign in to and use, looking polished
+  and credible (§8), not painting the production system (§10–§11) or the privacy architecture (§6)
+  into a corner. The **feature list** is still open; below is a candidate for the owner to accept,
+  trim or extend.
+- Rule applied: §13 says nothing that depends on an open question may be built until it is answered.
+  So each feature lists the questions that must be answered first. §6.3 adds that Q9 must be in an
+  ADR and the threat model **before any content or participation code is written**.
+
+### Candidate features
+
+Column "Proposal" is this branch's suggestion: **In** (milestone 1), **Later**, or **Stub** (data
+model hooks only, no UI).
+
+| # | Feature | CONTRIBUTING ref | Blocked by (must be answered first) | Proposal |
+|---|---|---|---|---|
+| F1 | Sign-in for real users | §10 item 1, §11 | Q3, Q4 | **In** |
+| F2 | Courses, enrolment, roles (incl. TA permission assignment) | §5, §10 item 2 | Q5; Q1 if admins create courses | **In** (simplest provisioning Q5 allows) |
+| F3 | Institution configuration (names, policy links, policy warning, branding) | §4, §7.15 | Q1 (scope), Q14 (audit of changes) | **In** as A2 (see Q1) |
+| F4 | Course AI Card: manual editor, preview, draft/publish, versioning, verbatim default principle | §7.1, §7.3, §7.6 (manual path), §10 item 3 | Q15, Q19 (L1 structure), Q14 (E3) | **In** |
+| F5 | Assignment AI Cards with visible overrides, LEARN link, states draft/published/archived/superseded | §7.4, §10 item 4 | Same as F4 | **In** |
+| F6 | Change records on published rule changes (what, why, effective date, applies to work underway) | §7.6 versioning | Q14; Q13 for the "students are notified" part | **In** (record); notice depends on F15 |
+| F7 | Transparency-bonus fields on cards (requirements and links only, no uploads) | §7.4, §7.5, §3 | None beyond F5 | **In** |
+| F8 | Card-builder wizard with fixed-rule recommendations | §7.6 | **Q10** | **Later** |
+| F9 | Anonymous board: ask, comment, upvote, "Still unclear", follow, two tags only, filters | §7.2, §7.7, §10 items 5–6 | **Q9, Q8** (§6.3), Q20, Q15 | **In**, only after the Q9 ADR and threat model exist |
+| F10 | Moderation: answer, pin, recategorize, hide, delete, resolve/reopen, report + queue, rate limits | §7.7, §10 item 7 | **Q9**, **Q20**, Q14 (E1), Q17 (tombstones) | **In** (M1 manual queue, placeholder limits) |
+| F11 | Merge duplicates with correct counts | §7.7, §10 item 8 | **Q9** (no double-counting, credit preserved), Q20 (reports on merge, NQ-20b) | **Later** or **In** if the Q9 design makes it straightforward; it is a §10 production criterion either way |
+| F12 | Presentation mode | §7.8, §10 item 9 | Depends on F9/F10 | **In** (small, high demo value) |
+| F13 | Search and filtering within a course | §7.14 | Depends on F9/F10 | **In** (basic filters and sorts) |
+| F14 | Private participation counter and three levels (student view only) | §7.9, §7.10 first bullet, §10 items 10–11 | **Q9** | **In** (private view) |
+| F15 | In-app notifications | §7.13 | Q13 | **In** for card-change notices if Q13 answered; otherwise **Later** |
+| F16 | Email notifications | §7.13 | Q6, Q13, NQ-13a | **Later** |
+| F17 | Student-controlled sharing, revocation, finality | §7.10, §10 items 12–13 | **Q18**, NQ-12a, Q16 (if level counts are shown) | **Later** (Stub: domain-4 tables) |
+| F18 | Grading settings (pass/fail, ranked) | §7.11 | Q11 (ranked), Q12 | **Later** |
+| F19 | End-of-course survey | §7.12, §10 item 14 | **Q16**, **Q18**, Q9 (one response per student) | **Later** (Stub: domain-5 separation) |
+| F20 | Analytics: course aggregates (totals, unanswered, % resolved, Course vs assignment) | §7.16 | None of the level-count rules; Q16 only for level counts | **In** without level counts |
+| F21 | Analytics: students per level; survey aggregates | §7.16 | **Q16**, Q18 | **Later** |
+| F22 | Audit logging for shipped features | §7.17, §11 | **Q14** | **In** (L1+L2, see Q14) |
+| F23 | Threat model and limitations of anonymity | §6.2, §11 | **Q8** | **In** (precondition for F9, F14) |
+| F24 | Automated tests incl. negative privacy tests | §9, §11, §15 | Q3 (tooling) | **In** for every shipped feature |
+| F25 | Deployment documentation | §11 | Q3 | **In** |
+| F26 | Retention: prototype wipe notice and lifecycle hooks | §13 Q17 | **Q17**, NQ-2a | **In** (D4 + hooks) |
+| F27 | Deanonymization process | §6.4 | Institutional policy | **Never by default**; not in milestone 1 |
+| F28 | Impersonation | §3, §5 | Q7 | **Not in milestone 1** (I0) |
+
+### Privacy implications (§6)
+
+- The proposed milestone 1 contains anonymous content (F9) and private counters (F14). That is
+  deliberate: the owner asked that the prototype not paint §6 into a corner, and the only way to test
+  the privacy architecture is to build it. The cost is that **Q8 and Q9 become hard prerequisites
+  for the first content code** (§6.3). A smaller, safer alternative is a milestone 1a of F1–F7,
+  F20-without-content, F22–F26 (cards only, no anonymous content), followed by a 1b that adds
+  F9–F14 once the Q9 ADR exists.
+- Leaving sharing (F17) and the survey (F19) for later avoids Q16's differencing problem in
+  milestone 1, because instructors then see no per-level data at all.
+- Real students posting real questions in a public prototype brings in the UW guidance (Information
+  Risk Assessment, notify students, allow opt-out; see Q17 evidence). Whether the public prototype
+  uses real UW courses is NQ-2a.
+
+### Recommendation (proposal for the owner)
+
+Adopt the **In** rows above as the candidate milestone 1, split into **1a (cards, sign-in, admin
+config, audit, tests)** and **1b (board, moderation, presentation, search, private counter)**, so
+that a polished, usable product exists even while Q9 is being designed. Answer the questions marked
+in bold in the "Blocked by" column before the matching code starts.
+
+### Proposed new open questions
+
+- **NQ-2a**: will the public prototype be used with real UW courses and students, or only with demo
+  courses and invited testers? (Changes Q17, NQ-17b and whether a UW Information Risk Assessment is
+  needed first.)
+- **NQ-2b**: is merge (F11) required in milestone 1, given it is a §10 criterion but depends heavily
+  on Q9?
+- **NQ-2c**: is a split into milestone 1a and 1b acceptable?
+
+---
+
+## Summary: does each question block milestone 1?
+
+All "Proposal" entries are suggestions for the owner, not decisions.
+
+| Q | Blocks milestone 1? | Proposal | Owner input needed |
+|---|---|---|---|
+| Q15 | **Yes** (every UI story, §15 item 5) | WCAG 2.2 AA | Approve target |
+| Q16 | Only if sharing, survey or level-count analytics ship (proposal: they don't) | Rule shape: release once after window closes + residual check + complementary suppression; placeholder N = 10 | Approve rule shape now; N later |
+| Q20 | **Yes**, if the board ships | R3 rate limits (placeholder numbers), M1 manual queue, soft delete, reporter identity not stored | Approve workflow and placeholder numbers; NQ-20a–e |
+| Q8 | **Yes** (precondition for content code, §6.3) | Markdown in `docs/threat-model/` + owner-approved user-facing limitations page | Approve format/location |
+| Q14 | **Partly** (events for shipped features) | Audit E1, E2; E3–E8 for approval; L1+L2 storage | Approve event list; retention later |
+| Q17 | **Partly** (real people's data) | D4 prototype wipe + D2 lifecycle hooks; D3 before UW pilot | Approve prototype policy and wording; NQ-17a |
+| Q18 | Only if sharing/survey ship | W2 + F2 (dates set at policy publication; export only after close) | Later |
+| Q13 | Only if notifications ship | N3; no content text in email | Approve essential set |
+| Q1 | **Partly** (§4 config needed by cards) | A2 minimal admin settings, `institution` table | Approve; NQ-1a |
+| Q7 | No, if "none" | I0 (none), optional I1 previews | Confirm "none" |
+| Q19 | No for translation; yes for string externalisation | L1 (+L3 if WCAG 2.2 AA) | Confirm English-only for now |
+| Q10 | No (manual editor path) | Defer wizard | Rule table later |
+| Q11 | No (pass/fail only or no grading) | Defer ranked mode | Values later |
+| Q12 | No (no export); but finality trigger needed before sharing | Defer; define "apply" (NQ-12a) | LEARN format later |
+| Q2 | — | Candidate set above, split 1a/1b | Accept, trim or extend |
+
+---
+
+## Consolidated proposed new open questions
+
+None of these is a requirement; each is proposed for the owner to add to §13 or dismiss.
+
+| ID | Question | Arose from |
+|---|---|---|
+| NQ-15a | Does UW require a newer WCAG version, a VPAT/ACR, or an accessibility review beyond Policy 58's WCAG 2.0 AA? | Q15 |
+| NQ-16a | May instructors lower the survey threshold, or is there an institution-level floor? | Q16 |
+| NQ-16b | Is N the same for level counts and survey reveal? | Q16 |
+| NQ-16c | Are in-term level counts wanted at all, given the differencing risk? | Q16 |
+| NQ-20a | Can hidden content be un-hidden, and deleted content restored, and by whom? | Q20 |
+| NQ-20b | What happens to open reports when content is merged or edited? | Q20 |
+| NQ-20c | Does hiding or deleting a post remove the author's participation credit? | Q20 |
+| NQ-20d | Can an author edit or delete their own anonymous post? | Q20 |
+| NQ-20e | Does "without exposing identities" (§7.7) cover the moderator's identity in the log? | Q20 |
+| NQ-8a | Must the limitations of anonymity be visible in the app, or is the repo document enough? | Q8 |
+| NQ-14a | Does a UW records-retention schedule apply to audit logs of a teaching tool? | Q14 |
+| NQ-17a | On account removal, does a student's anonymous content stay, go, or does the student choose? | Q17 |
+| NQ-17b | Is a UW Information Risk Assessment needed before a UW pilot, and who requests it? | Q17 |
+| NQ-18a | May the instructor move sharing dates after publication, and in which direction? | Q18 |
+| NQ-18b | Is the survey a required step before sharing, or shown first and skippable? | Q18 |
+| NQ-18c | Can a student share before the end of the course? | Q18 |
+| NQ-13a | May notification emails include question titles or text, or only a link? | Q13 |
+| NQ-13b | Are essential notifications essential on both channels or one? | Q13 |
+| NQ-1a | Can the missing text of the spec's Administration section be recovered, or will the owner write it? | Q1 |
+| NQ-7a | Is a synthetic whole-course "view as student" preview wanted? | Q7 |
+| NQ-19a | Who translates and approves verbatim spec texts if a second language is added? | Q19 |
+| NQ-10a | May the wizard ship without recommendations before the rule table exists? | Q10 |
+| NQ-12a | Does "applies the result" (§7.10) mean an in-app action, a LEARN grade push, or both? | Q12 |
+| NQ-2a | Will the public prototype use real UW courses and students, or demo courses and invited testers? | Q2 |
+| NQ-2b | Is duplicate merge required in milestone 1? | Q2 |
+| NQ-2c | Is a milestone 1a / 1b split acceptable? | Q2 |
+
+Items to hand to other branches: Q9 (one survey response per student without linkage; one report
+per student per item; follow lists; deletion vs unlinkability; whether deletion touches counters);
+Q3 (request-log retention and bodies; backup retention; axe-core and i18n library status); Q4
+(SC 3.3.8 accessible authentication); Q5 (course end dates from LEARN; LTI grade services); Q6
+(generic email subjects).
+
+---
+
+## Verification log
+
+Status key: **Verified** = quoted from the fetched page on the checked date; **Unverified** = could not
+be confirmed from an official source; **Interpretation** = a reading of a verified source, not a fact
+stated by it; **Placeholder** = a number proposed here for owner approval, not sourced.
+
+| # | Claim | URL | Checked | Status |
+|---|---|---|---|---|
+| 1 | AODA requires designated public sector orgs and businesses/non-profits with 50+ employees to make public websites accessible (since 2021-01-01) to WCAG 2.0 AA, except 1.2.4 and 1.2.5 | https://www.ontario.ca/page/how-make-websites-accessible | 2026-10-11 | Verified |
+| 2 | Colleges and universities are designated public sector organizations under O. Reg. 191/11 | https://www.ontario.ca/page/accessibility-rules-public-sector-organizations | 2026-10-11 | Verified |
+| 3 | Text of O. Reg. 191/11 s. 14 and its current consolidation date | https://www.ontario.ca/laws/regulation/110191 | 2026-10-11 | Unverified (page did not render) |
+| 4 | UW Policy 58 s. 7: UW will meet WCAG 2.0 AA for all Public Websites, including newly developed sites accessible to all students | https://uwaterloo.ca/secretariat/policies-procedures-guidelines/policies/policy-58-accessibility | 2026-10-11 | Verified |
+| 5 | UW accessibility pages name no WCAG version beyond 2.0 | https://uwaterloo.ca/accessibility/ ; https://uwaterloo.ca/digital-accessibility/ | 2026-10-11 | Verified (for the pages fetched) |
+| 6 | A UW IST procurement or vendor rule requiring a newer WCAG version | (none found) | 2026-10-11 | Unverified |
+| 7 | WCAG 2.2 published 2023-10-05, updated 2024-12-12; W3C encourages the latest version; 2.2 conformance implies 2.1 and 2.0; ISO/IEC 40500:2025 = WCAG 2.2 | https://www.w3.org/WAI/standards-guidelines/wcag/ | 2026-10-11 | Verified |
+| 8 | WCAG 2.2 removes 4.1.1 Parsing; new SC 2.4.11, 2.5.7, 2.5.8, 3.3.8 (AA) and 3.2.6, 3.3.7 (A) | https://www.w3.org/TR/WCAG22/ | 2026-10-11 | Verified |
+| 9 | WCAG 2.2 SC 3.1.2 Language of Parts is Level AA | https://www.w3.org/WAI/WCAG22/Understanding/language-of-parts.html | 2026-10-11 | Verified |
+| 10 | TBS PIN 2020-03: no universal minimum cell size; 10 often cited for less sensitive data, 20 for more sensitive; never less than 3; totals may need rounding | https://www.canada.ca/en/treasury-board-secretariat/services/access-information-privacy/access-information-privacy-notices/2020-03-protecting-privacy-releasing-information-about-small-number-individuals.html | 2026-10-11 | Verified |
+| 11 | Ontario IPC De-identification Guidelines (2016): risk thresholds 0.1/0.075/0.05 roughly equal to cell sizes 10/15/20, illustrative only; cell-size-of-five called loosely defined | https://www.ipc.on.ca/sites/default/files/legacy/2016/08/Deidentification-Guidelines-for-Structured-Data.pdf | 2026-10-11 | Verified (PDF; landing page returned 403) |
+| 12 | US ED PTAC: 3 as the absolute minimum; state minimums 5 to 30, majority 10; subtraction attack; complementary suppression; teachers presumed to have inside knowledge | https://studentprivacy.ed.gov/sites/default/files/resource_document/file/FAQs_disclosure_avoidance_0.pdf | 2026-10-11 | Verified |
+| 13 | UW SCP surveys: results not released to instructors for classes of 5 or fewer; a response threshold is being planned | https://uwaterloo.ca/teaching-assessment-processes/resources-instructors | 2026-10-11 | Verified |
+| 14 | Differencing between level counts and the shared list reveals non-sharers' levels | (analysis in this file, Q16) | 2026-10-11 | Interpretation (supported by #12) |
+| 15 | Default N = 10 | (proposal in Q16) | 2026-10-11 | Placeholder |
+| 16 | OWASP API4:2023: rate-limit per client and operation, tune to business needs, no numbers given, payload-size limits | https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption | 2026-10-11 | Verified |
+| 17 | Rate-limit numbers in Q20 | (proposal in Q20) | 2026-10-11 | Placeholder |
+| 18 | Many UW students share one public IP through campus NAT | (none) | 2026-10-11 | Unverified |
+| 19 | OWASP Threat Modeling Cheat Sheet: four questions; DFDs most common; maintain the model alongside the system | https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html | 2026-10-11 | Verified |
+| 20 | LINDDUN is a free privacy threat-modelling framework from KU Leuven (GO, PRO; MAESTRO "coming soon") | https://linddun.org/ | 2026-10-11 | Verified |
+| 21 | OWASP Threat Dragon current status | (not fetched) | 2026-10-11 | Unverified |
+| 22 | PostgreSQL 18 docs: an owner's right to modify or destroy an object cannot be granted or revoked; INSERT, UPDATE, DELETE granted separately | https://www.postgresql.org/docs/current/ddl-priv.html | 2026-10-11 | Verified |
+| 23 | Cloudflare R2 bucket locks prevent deletion or overwrite for a period; lock rules can be deleted by the account | https://developers.cloudflare.com/r2/buckets/bucket-locks/ | 2026-10-11 | Verified |
+| 24 | R2 pricing | (not fetched; stack branch) | 2026-10-11 | Unverified |
+| 25 | S3 Object Lock compliance mode cannot be bypassed even by root; governance mode can be bypassed with a permission | https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html | 2026-10-11 | Verified |
+| 26 | OWASP Logging Cheat Sheet: log authn/authz events, admin actions, data import/export; remove or mask sensitive data; tamper detection; logs kept no shorter and no longer than retention | https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html | 2026-10-11 | Verified |
+| 27 | UW handles information under FIPPA; records management under Policy 46 | https://uwaterloo.ca/privacy/ | 2026-10-11 | Verified |
+| 28 | UW online ed-tech guideline: determine whether an Information Risk Assessment is required first; prefer tools not requiring identification; notify; allow opt-out; follow WatClass | https://uwaterloo.ca/privacy/guidelines/online-educational-technologies | 2026-10-11 | Verified |
+| 29 | UW record keeping: dispose of short-term records; collect only what you need; no periods given | https://uwaterloo.ca/privacy/policies-guidelines/record-keeping | 2026-10-11 | Verified |
+| 30 | FIPPA Reg. 460 minimum retention after use | https://www.ontario.ca/laws/regulation/900460 | 2026-10-11 | Unverified (page did not render) |
+| 31 | Host backup retention periods | (stack branch) | 2026-10-11 | Unverified |
+| 32 | CASL s. 1(2) CEM definition (purpose to encourage participation in a commercial activity) and s. 6(6)(d) factual-information exception; Act current to 2026-09-21 | https://laws-lois.justice.gc.ca/eng/acts/E-1.6/page-1.html | 2026-10-11 | Verified |
+| 33 | ClearCourse notifications are not commercial electronic messages | (reading of #32) | 2026-10-11 | Interpretation, not legal advice |
+| 34 | CRTC CASL FAQ | https://crtc.gc.ca/eng/com500/faq500.htm | 2026-10-11 | Unverified (HTTP 403) |
+| 35 | W3C: internationalization enables easy localization; retrofitting is much more difficult and time-consuming | https://www.w3.org/International/questions/qa-i18n | 2026-10-11 | Verified (no page date shown) |
+| 36 | Ontario French Language Services Act or a UW policy requires French for this tool | (not researched) | 2026-10-11 | Unverified |
+| 37 | UW LEARN help for instructors redirects to IST's Confluence knowledge base | https://uwaterloo.ca/learn-help/instructors/grades redirects to https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/261226669/Teaching+Learning+and+Research | 2026-10-11 | Verified (302 observed) |
+| 38 | Brightspace/LEARN grade-import CSV format | https://uwaterloo.atlassian.net/wiki/spaces/ISTKB/pages/284530130/LEARN+help ; https://community.d2l.com/brightspace/kb/articles/3293-import-grades (404) | 2026-10-11 | Unverified |
+| 39 | LEARN can supply course end dates via LTI or provisioning | (Q5 branch) | 2026-10-11 | Unverified |
+| 40 | axe-core current version and licence; i18n library choice | (stack branch) | 2026-10-11 | Unverified |
+| 41 | The spec's Administration text is only "Allow institutional administrators to update website" | P:/code/clearcourse-ai/docs/research/source-prompt.txt line 54 | 2026-10-11 | Verified (local source) |
+
+_End of branch O2 notes. All recommendations are proposals for the owner; no open question is closed
+by this document._
