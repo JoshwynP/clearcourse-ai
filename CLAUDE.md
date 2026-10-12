@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-Instructions for Claude working in this repository. This project is built entirely with Claude, so
-these rules apply to every session.
+Instructions for Claude working in this repository. `AGENTS.md` contains the short shared guidance
+for Cursor and other coding agents; the product requirements remain in `CONTRIBUTING.md`.
 
 ## The one rule
 
