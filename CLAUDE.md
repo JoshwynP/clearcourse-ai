@@ -56,12 +56,13 @@ touches identity, content, participation or survey data:
 
 ## Current state
 
-- **Stage:** Planning. No application code yet. `docs/plan.md` and ADRs 0001–0004 are **Proposed**
-  and await the owner's approval. They are advisory until approved, and CONTRIBUTING.md wins on any
-  conflict.
+- **Stage:** A static, fictional-data experience prototype exists (`index.html`, `styles.css`,
+  `app.js`), authorized by ADR 0005. `docs/plan.md` and ADRs 0001–0004 remain **Proposed**
+  for the real application. They are advisory until approved, and CONTRIBUTING.md wins on any conflict.
 - **Stack:** Not decided (CONTRIBUTING §12, Q3). ADR 0001 proposes one. Don't scaffold a framework
   until an ADR is approved.
-- **Commands:** None yet. Add build/test/lint/dev commands here once the stack exists.
+- **Prototype command:** `python3 -m http.server 8000`, then open `http://localhost:8000`.
+  `node --check app.js` checks JavaScript syntax. Add full build/test/lint commands once the real stack exists.
 
 ## Repo map
 

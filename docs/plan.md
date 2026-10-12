@@ -1,5 +1,7 @@
 # ClearCourse AI build plan
 
+> This is the original long-range proposal. For the working static prototype and immediate next steps, start with [BUILD-NOW.md](../BUILD-NOW.md). The owner chose a fictional-data public preview as the first milestone on 2026-10-12 (ADR 0005).
+
 > **Advisory plan.** Date: 2026-10-12. Status: **Proposed**, waiting for the owner's approval.
 > Not binding until the owner approves it and the approved parts are promoted into
 > [CONTRIBUTING.md](../CONTRIBUTING.md) (§1). If this plan and CONTRIBUTING.md disagree,

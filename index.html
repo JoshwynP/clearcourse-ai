@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7f5" />
+    <meta name="description" content="ClearCourse AI: clear assignment guidance and course conversations." />
+    <title>ClearCourse AI — Prototype</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Course navigation">
+        <div class="brand"><div class="brand-mark" aria-hidden="true">C<span>·</span></div><div><strong>ClearCourse</strong><small>AI guidance, made clear</small></div></div>
+        <div class="sidebar-section-label">YOUR COURSES</div>
+        <button class="course-option active" type="button" data-course="sds"><span class="course-icon green">S</span><span><strong>SDS 210</strong><small>Technology &amp; society</small></span><span class="course-arrow" aria-hidden="true">›</span></button>
+        <button class="course-option" type="button" data-course="engl"><span class="course-icon plum">E</span><span><strong>ENGL 109</strong><small>Introduction to writing</small></span><span class="course-arrow" aria-hidden="true">›</span></button>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label">IN THIS COURSE</div>
+        <nav class="primary-nav" aria-label="Views">
+          <button class="nav-item active" data-view="conversation" type="button"><span aria-hidden="true">▤</span> Conversation</button>
+          <button class="nav-item" data-view="cards" type="button"><span aria-hidden="true">▦</span> AI guidance</button>
+          <button class="nav-item" data-view="instructor" type="button"><span aria-hidden="true">✎</span> Instructor studio</button>
+        </nav>
+        <div class="sidebar-foot"><span class="demo-dot"></span> Interactive prototype <small>Sample course content. No sign-in or saved data.</small></div>
+      </aside>
+
+      <main id="main" class="main-content">
+        <header class="topbar"><div class="crumb">Courses <span>/</span> <strong id="crumb-course">SDS 210</strong></div><div class="top-actions"><span class="prototype-label">PROTOTYPE</span><span class="avatar" aria-label="Demo viewer">JD</span></div></header>
+        <div id="view-root"></div>
+      </main>
+    </div>
+    <dialog id="compose-dialog" aria-labelledby="compose-title">
+      <form id="question-form" method="dialog" class="dialog-form">
+        <div class="dialog-head"><div><div class="eyebrow">START A CONVERSATION</div><h2 id="compose-title">Ask a question</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+        <p class="dialog-note">This demo keeps questions only until you reload. Real anonymous posting will need the privacy architecture described in the project spec.</p>
+        <label for="question-tag">Question about</label><select id="question-tag" name="tag" required></select>
+        <label for="question-title">Your question</label><input id="question-title" name="title" maxlength="120" placeholder="What would you like to clarify?" required />
+        <label for="question-body">More context <span class="optional">(optional)</span></label><textarea id="question-body" name="body" maxlength="600" rows="5" placeholder="Add context that would help your instructor answer."></textarea>
+        <div class="dialog-actions"><button type="button" class="button ghost" data-close-dialog>Cancel</button><button type="submit" class="button primary">Add to demo board</button></div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

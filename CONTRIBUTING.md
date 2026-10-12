@@ -4,7 +4,7 @@
 > requirement written here. If something is not written here, it is not a requirement — it is an
 > open question. Do not invent, assume, or "fill in" scope. Ask, then record the answer here.
 
-**Status:** Scaffolding only. No application code exists yet. The tech stack is **not yet decided**
+**Status:** A fictional-data static experience prototype exists (ADR 0005). No authenticated application code exists yet; its tech stack is **not yet decided**
 (see §12).
 **Primary source:** [`docs/research/source-prompt.pdf`](docs/research/source-prompt.pdf) (pages 1–19 are
 the product specification). Extracted text: [`docs/research/source-prompt.txt`](docs/research/source-prompt.txt).
@@ -68,6 +68,8 @@ It combines `[src p.1]`:
 - Optional process-transparency bonuses
 - A classroom presentation mode
 - Privacy-preserving participation verification
+
+**First milestone (owner decision, 2026-10-12):** an interactive public-preview prototype with fictional course and assignment cards, a course/assignment question board, and an instructor editing preview. It is not a real student service and does not collect or persist user data. See ADR 0005 and `BUILD-NOW.md`.
 
 **Guiding principles drawn from the spec:**
 
@@ -564,8 +566,7 @@ is recorded here (move it into the relevant section and note it in §16).
 | # | Question | Blocks |
 |---|---|---|
 | Q1 | What is the full scope of "Administration"? The source text is truncated `[src p.17]`. | §7.15 |
-| Q2 | Goal of the first build: a public **prototype** or the full **production** system? Which features are in the first milestone? | Roadmap |
-| Q3 | Tech stack and hosting (§12). | All code |
+| Q3 | Tech stack and hosting (§12) for the authenticated application. The fictional-data static prototype is covered by ADR 0005. | Real application code |
 | Q4 | Authentication for the prototype: real UW SSO, a generic OIDC provider, or a dev-only stand-in? | Sign-in |
 | Q5 | Course/role provisioning integration: LTI 1.3 with LEARN/Brightspace, CSV import, manual entry, or another method? `[src p.19]` | Provisioning |
 | Q6 | Email delivery provider for notifications. | §7.13 |
@@ -623,3 +624,4 @@ A change is done only when **all** of the following are true:
 | Date | Change |
 |---|---|
 | 2026-10-11 | Initial version created from `docs/research/source-prompt.pdf` (pages 1–19 as spec, 20–31 as advisory). Stack undecided. |
+| 2026-10-12 | Owner chose an immediate fictional-data public prototype as the first milestone (Q2); ADR 0005 permits a static experience demo while Q3 remains open for the real application. |
