@@ -32,7 +32,7 @@ The completed service must follow `CONTRIBUTING.md`: exactly one Course AI Card 
 ## The next seven Cursor sessions
 
 1. **Finish the look.** Review the flatter prototype on desktop and phone. Make one small visual change at a time; do not add features.
-2. **Publish the fictional preview.** Choose a static preview host. Verify the URL and keep the demo notice. Do not enter real student information.
+2. **Publish the fictional preview.** Follow `CURSOR-START-HERE.md` to connect Vercel to the private repo and deploy only `public/`. Verify the URL and keep the demo notice. Do not enter real student information.
 3. **Close Q3 for the app.** Review ADR 0001 and 0002, update current package and hosting facts, make a short decision record, then stop research.
 4. **Scaffold the real app.** Create the framework project on a new branch, with one route for the course list and one for a card, a build command, and a smoke test.
 5. **Move the visual shell.** Carry over the plain visual language and responsive layout. Keep sample data and no sign-in yet.

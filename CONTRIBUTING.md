@@ -630,3 +630,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-11 | Initial version created from `docs/research/source-prompt.pdf` (pages 1–19 as spec, 20–31 as advisory). Stack undecided. |
 | 2026-10-12 | Owner chose an immediate fictional-data public prototype as the first milestone (Q2); ADR 0005 permits a static experience demo while Q3 remains open for the real application. |
 | 2026-10-12 | Owner clarified the prototype visual direction: simpler chat layout, neutral palette and one green accent (§8). |
+| 2026-10-12 | Static preview files moved to `public/` for isolated deployment; ADR 0006 records the preview-only hosting choice. The production Q3 remains open. |

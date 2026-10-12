@@ -10,7 +10,7 @@ The owner wants to see and test the course experience immediately, before commit
 
 ## Decision
 
-Build a dependency-free HTML, CSS, and JavaScript prototype using fictional courses and browser-session state. It demonstrates the course conversation, the AI cards, and a manual editing preview. It makes no API requests and stores no identity or discussion data. This decision does not approve the production stack, hosting, authentication, or privacy architecture in ADRs 0001–0004.
+Build a dependency-free HTML, CSS, and JavaScript prototype in `public/` using fictional courses and browser-session state. It demonstrates the course conversation, the AI cards, and a manual editing preview. It makes no API requests and stores no identity or discussion data. This decision does not approve the production stack, hosting, authentication, or privacy architecture in ADRs 0001–0004.
 
 ## Consequences
 

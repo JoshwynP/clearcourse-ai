@@ -56,18 +56,23 @@ touches identity, content, participation or survey data:
 
 ## Current state
 
-- **Stage:** A static, fictional-data experience prototype exists (`index.html`, `styles.css`,
-  `app.js`), authorized by ADR 0005. `docs/plan.md` and ADRs 0001–0004 remain **Proposed**
+- **Stage:** A static, fictional-data experience prototype exists in `public/`, authorized by
+  ADR 0005. ADR 0006 covers its preview hosting. `docs/plan.md` and ADRs 0001–0004 remain **Proposed**
   for the real application. They are advisory until approved, and CONTRIBUTING.md wins on any conflict.
 - **Stack:** Not decided (CONTRIBUTING §12, Q3). ADR 0001 proposes one. Don't scaffold a framework
   until an ADR is approved.
-- **Prototype command:** `python3 -m http.server 8000`, then open `http://localhost:8000`.
-  `node --check app.js` checks JavaScript syntax. Add full build/test/lint commands once the real stack exists.
+- **Prototype command:** `python3 -m http.server 8000 --directory public`, then open `http://localhost:8000`.
+  `node --check public/app.js` checks JavaScript syntax. Add full build/test/lint commands once the real stack exists.
 
 ## Repo map
 
 ```
 CONTRIBUTING.md        Source of truth: purpose, scope, requirements, open questions
+AGENTS.md              Shared short instructions for Cursor and other agents
+CURSOR-START-HERE.md    Cursor setup and public preview handoff
+BUILD-NOW.md           Staged plan for the complete application
+public/                Fictional-data static preview; only web output
+vercel.json            Preview-only output directory configuration
 CLAUDE.md              This file
 README.md              Short overview and status
 docs/plan.md           Proposed phased build plan, owner decisions, session kickoff prompt
