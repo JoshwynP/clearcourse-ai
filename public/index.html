@@ -13,22 +13,14 @@
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Course navigation">
-        <div class="brand"><div class="brand-mark" aria-hidden="true">C<span>·</span></div><div><strong>ClearCourse</strong><small>AI guidance, made clear</small></div></div>
-        <div class="sidebar-section-label">YOUR COURSES</div>
-        <button class="course-option active" type="button" data-course="sds"><span class="course-icon green">S</span><span><strong>SDS 210</strong><small>Technology &amp; society</small></span><span class="course-arrow" aria-hidden="true">›</span></button>
-        <button class="course-option" type="button" data-course="engl"><span class="course-icon plum">E</span><span><strong>ENGL 109</strong><small>Introduction to writing</small></span><span class="course-arrow" aria-hidden="true">›</span></button>
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label">IN THIS COURSE</div>
-        <nav class="primary-nav" aria-label="Views">
-          <button class="nav-item active" data-view="conversation" type="button"><span aria-hidden="true">▤</span> Conversation</button>
-          <button class="nav-item" data-view="cards" type="button"><span aria-hidden="true">▦</span> AI guidance</button>
-          <button class="nav-item" data-view="instructor" type="button"><span aria-hidden="true">✎</span> Instructor studio</button>
-        </nav>
+        <div class="brand"><button class="brand-link" type="button" data-action="courses"><strong>ClearCourse</strong><small>AI guidance, made clear</small></button></div>
+        <div class="sidebar-section-label">Your courses</div>
+        <div id="course-nav"></div>
         <div class="sidebar-foot"><span class="demo-dot"></span> Interactive prototype <small>Sample course content. No sign-in or saved data.</small></div>
       </aside>
 
       <main id="main" class="main-content">
-        <header class="topbar"><div class="crumb">Courses <span>/</span> <strong id="crumb-course">SDS 210</strong></div><div class="top-actions"><span class="prototype-label">PROTOTYPE</span><span class="avatar" aria-label="Demo viewer">JD</span></div></header>
+        <header class="topbar"><nav class="crumb" id="crumb" aria-label="Location"></nav><div class="top-actions"><span class="prototype-label">Prototype</span></div></header>
         <div id="view-root"></div>
       </main>
     </div>

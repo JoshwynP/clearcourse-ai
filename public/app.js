@@ -40,7 +40,7 @@ const courses = {
   }
 };
 
-const state = { course: "sds", view: "conversation", filter: "all", search: "", card: "course", expanded: null, role: "student" };
+const state = { course: "sds", view: "courses", filter: "all", search: "", card: "course", expanded: null, role: "student" };
 const root = document.querySelector("#view-root");
 const dialog = document.querySelector("#compose-dialog");
 const toast = document.querySelector("#toast");
@@ -53,12 +53,47 @@ function assignmentById(id) { return current().assignments.find(a => a.id === id
 function showToast(message) { toast.textContent = message; toast.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 3200); }
 function intro(eyebrow, title, subtitle, action = "") { return `<div class="page-intro"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p class="page-subtitle">${esc(subtitle)}</p></div>${action}</div>`; }
 
-function render() {
+function renderChrome() {
   const course = current();
-  document.querySelector("#crumb-course").textContent = course.code;
-  document.querySelectorAll(".course-option").forEach(button => { const active = button.dataset.course === state.course; button.classList.toggle("active", active); button.setAttribute("aria-current", active ? "true" : "false"); });
-  document.querySelectorAll(".nav-item").forEach(button => { const active = button.dataset.view === state.view; button.classList.toggle("active", active); button.setAttribute("aria-current", active ? "page" : "false"); });
-  root.innerHTML = state.view === "conversation" ? renderConversation() : state.view === "cards" ? renderCards() : renderStudio();
+  const section = { conversation: "Conversation", cards: "AI guidance", instructor: "Instructor studio" }[state.view];
+  const crumb = document.querySelector("#crumb");
+  crumb.innerHTML = state.view === "courses"
+    ? "<strong>Courses</strong>"
+    : `<button type="button" data-action="courses">Courses</button><span aria-hidden="true">/</span>${section ? `<button type="button" data-course="${esc(state.course)}" data-view="home">${esc(course.code)}</button><span aria-hidden="true">/</span><strong>${section}</strong>` : `<strong>${esc(course.code)}</strong>`}`;
+  document.querySelector("#course-nav").innerHTML = Object.entries(courses).map(([id, item]) => {
+    const here = state.view !== "courses" && state.course === id;
+    const sections = [
+      ["conversation", "Conversation"],
+      ["cards", "AI guidance"],
+      ["instructor", "Instructor studio"],
+    ];
+    return `<div class="course-group${here ? " current" : ""}"><button class="course-option${here && state.view === "home" ? " active" : ""}" type="button" data-course="${id}" data-view="home"${here && state.view === "home" ? ' aria-current="page"' : ""}><strong>${esc(item.code)}</strong><small>${esc(item.name)}</small></button><nav class="course-sections" aria-label="${esc(item.code)} sections">${sections.map(([view, label]) => `<button class="nav-item${here && state.view === view ? " active" : ""}" type="button" data-course="${id}" data-view="${view}"${here && state.view === view ? ' aria-current="page"' : ""}>${label}</button>`).join("")}</nav></div>`;
+  }).join("");
+}
+
+function render() {
+  renderChrome();
+  root.innerHTML = state.view === "courses" ? renderCourses() : state.view === "home" ? renderHome() : state.view === "conversation" ? renderConversation() : state.view === "cards" ? renderCards() : renderStudio();
+}
+
+function renderCourses() {
+  return `<div class="page"><div class="page-intro"><div><h1>Courses</h1><p class="page-subtitle">Sample courses. Open one to see the conversation and guidance.</p></div></div>
+    <div class="course-list">${Object.entries(courses).map(([id, course]) => `<button type="button" data-course="${id}" data-view="home"><strong>${esc(course.code)}</strong><span>${esc(course.name)}</span><small>${esc(course.term)}</small><p>${esc(course.courseCard.summary)}</p></button>`).join("")}</div></div>`;
+}
+
+function renderHome() {
+  const course = current();
+  const questions = course.questions.length;
+  const assignments = course.assignments.length;
+  return `<div class="page"><div class="page-intro"><div><h1>${esc(course.code)} · ${esc(course.name)}</h1><p class="page-subtitle">${esc(course.term)}</p></div></div>
+    <p class="home-summary">${esc(course.courseCard.summary)}</p>
+    <div class="home-parts">
+      <button type="button" data-view="conversation"><strong>Conversation</strong><small>${questions} sample ${questions === 1 ? "question" : "questions"}</small></button>
+      <button type="button" data-view="cards"><strong>AI guidance</strong><small>${assignments} ${assignments === 1 ? "assignment" : "assignments"}</small></button>
+      <button type="button" data-view="instructor"><strong>Instructor studio</strong><small>Manual editing preview</small></button>
+    </div>
+    <h2 class="section-heading">Assignments</h2>
+    <div class="home-parts">${course.assignments.map(a => `<button type="button" data-card="${esc(a.id)}"><strong>${esc(a.title)}</strong><small>Due ${esc(a.due)}</small></button>`).join("")}</div></div>`;
 }
 
 function renderConversation() {
@@ -72,13 +107,13 @@ function renderConversation() {
     <div class="board-toolbar"><span class="section-caption">${posts.length} ${posts.length === 1 ? "question" : "questions"}</span><input class="search" type="search" id="question-search" aria-label="Search questions" placeholder="Search this conversation" value="${esc(state.search)}"></div>
     <div class="post-list">${posts.length ? posts.map(renderPost).join("") : '<div class="empty">No questions match this view yet.</div>'}</div></section>
     <aside class="side-stack" aria-label="Course guidance"><section class="panel panel-pad"><div class="side-header"><h2 class="section-title">AI guidance</h2><button type="button" class="text-link" data-action="cards">View all →</button></div><p class="section-caption">The rules, in one place.</p><div class="mini-card"><span class="mini-icon" aria-hidden="true">▦</span><h3>Start with the course card</h3><p>${esc(course.courseCard.summary)}</p><button data-card="course" type="button">Read course guidance →</button></div></section>
-    <section class="panel panel-pad"><h2 class="section-title">Assignments</h2><p class="section-caption">Each card explains what applies to that work.</p>${course.assignments.map(a => `<div class="assignment-mini"><div class="date"><small>${esc(a.due.split(" ")[0].toUpperCase())}</small>${esc(a.due.split(" ")[1])}</div><div><strong>${esc(a.title)}</strong><small>${esc(a.status)}</small><button class="text-link" type="button" data-card="${esc(a.id)}" style="margin-top:7px">Open card →</button></div></div>`).join("")}</section>
+    <section class="panel panel-pad"><h2 class="section-title">Assignments</h2><p class="section-caption">Each card explains what applies to that work.</p>${course.assignments.map(a => `<div class="assignment-mini"><div><strong>${esc(a.title)}</strong><small>Due ${esc(a.due)}</small><button class="text-link" type="button" data-card="${esc(a.id)}">Open card</button></div></div>`).join("")}</section>
     <div class="notice"><h3>About this prototype</h3><p>The questions and course are examples. Anything you add disappears on reload. No real student identity, anonymous posting, or participation record exists here.</p></div></aside></div></div>`;
 }
 
 function renderPost(post) {
   const open = state.expanded === post.id;
-  return `<article class="post"><button class="vote ${post.voted ? "voted" : ""}" data-vote="${post.id}" aria-label="${post.voted ? "Remove demo upvote from" : "Upvote"} ${esc(post.title)}" aria-pressed="${Boolean(post.voted)}" type="button">⌃<span>${post.votes}</span></button><div><span class="post-tag ${post.tag === "course" ? "" : "assignment"}">${esc(tagName(post.tag))}</span><h3>${esc(post.title)}</h3><p>${esc(post.body)}</p><div class="post-meta"><span>${esc(post.time)}</span><button type="button" data-expand="${post.id}" aria-expanded="${open}">${post.replies.length} ${post.replies.length === 1 ? "reply" : "replies"} · ${open ? "Hide" : "Open"}</button></div>${open ? `<div class="reply-box">${post.replies.map(reply => `<div class="reply"><strong>${esc(reply.role)}</strong>${esc(reply.text)}</div>`).join("")}${!post.replies.length ? '<p>No replies yet. Start the conversation.</p>' : ""}<form class="reply-actions" data-reply="${post.id}"><input name="reply" maxlength="400" aria-label="Write a demo reply" placeholder="Write a reply for this demo" required><button class="button small" type="submit">Reply</button></form></div>` : ""}</div></article>`;
+  return `<article class="post"><span class="post-tag ${post.tag === "course" ? "" : "assignment"}">${esc(tagName(post.tag))}</span><h3>${esc(post.title)}</h3><p>${esc(post.body)}</p><div class="post-meta"><button class="vote ${post.voted ? "voted" : ""}" data-vote="${post.id}" aria-label="${post.voted ? "Remove demo upvote from" : "Upvote"} ${esc(post.title)}" aria-pressed="${Boolean(post.voted)}" type="button">${post.voted ? "Upvoted" : "Upvote"} ${post.votes}</button><span>${esc(post.time)}</span><button type="button" data-expand="${post.id}" aria-expanded="${open}">${post.replies.length} ${post.replies.length === 1 ? "reply" : "replies"} · ${open ? "Hide" : "Open"}</button></div>${open ? `<div class="reply-box">${post.replies.map(reply => `<div class="reply"><strong>${esc(reply.role)}</strong>${esc(reply.text)}</div>`).join("")}${!post.replies.length ? '<p>No replies yet. Start the conversation.</p>' : ""}<form class="reply-actions" data-reply="${post.id}"><input name="reply" maxlength="400" aria-label="Write a demo reply" placeholder="Write a reply for this demo" required><button class="button small" type="submit">Reply</button></form></div>` : ""}</article>`;
 }
 
 function renderCards() {
@@ -118,7 +153,14 @@ function openCompose(defaultTag = "course") {
 
 document.addEventListener("click", event => {
   const courseButton = event.target.closest("[data-course]");
-  if (courseButton) { state.course = courseButton.dataset.course; state.filter = "all"; state.search = ""; state.card = "course"; state.expanded = null; render(); return; }
+  if (courseButton) {
+    const changingCourse = courseButton.dataset.course !== state.course;
+    state.course = courseButton.dataset.course;
+    if (courseButton.dataset.view) state.view = courseButton.dataset.view;
+    if (changingCourse) { state.filter = "all"; state.search = ""; state.card = "course"; state.expanded = null; }
+    render();
+    return;
+  }
   const viewButton = event.target.closest("[data-view]");
   if (viewButton) { state.view = viewButton.dataset.view; render(); return; }
   const filterButton = event.target.closest("[data-filter]");
@@ -132,6 +174,7 @@ document.addEventListener("click", event => {
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (action === "compose" || action === "ask-about-card") { openCompose(action === "ask-about-card" ? state.card : "course"); return; }
   if (action === "cards") { state.view = "cards"; render(); return; }
+  if (action === "courses") { state.view = "courses"; render(); return; }
   if (event.target.closest("[data-close-dialog]")) dialog.close();
 });
 
