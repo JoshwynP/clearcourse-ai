@@ -40,7 +40,7 @@ const courses = {
   }
 };
 
-const state = { course: "sds", view: "conversation", filter: "all", search: "", card: "course", expanded: null, role: "student" };
+const state = { course: "sds", view: "home", filter: "all", search: "", card: "course", expanded: null, role: "student" };
 const root = document.querySelector("#view-root");
 const dialog = document.querySelector("#compose-dialog");
 const toast = document.querySelector("#toast");
@@ -53,17 +53,30 @@ function assignmentById(id) { return current().assignments.find(a => a.id === id
 function showToast(message) { toast.textContent = message; toast.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 3200); }
 function intro(eyebrow, title, subtitle, action = "") { return `<div class="page-intro"><div><div class="eyebrow">${esc(eyebrow)}</div><h1>${esc(title)}</h1><p class="page-subtitle">${esc(subtitle)}</p></div>${action}</div>`; }
 
+function renderHome() {
+  const items = Object.entries(courses).map(([id, item]) => `<li><button class="course-option" type="button" data-course="${id}" data-view="conversation"><strong>${esc(item.code)}</strong><small>${esc(item.name)}</small></button></li>`).join("");
+  return `<div class="page"><div class="page-intro"><div><h1>Home</h1><p class="page-subtitle">AI guidance, made clear</p></div></div><p class="preview-note">ClearCourse AI helps instructors state clearly, per course and per assignment, how generative AI may and may not be used.</p><h2 class="section-title">Sample courses</h2><ul class="home-list">${items}</ul></div>`;
+}
+
 function renderChrome() {
   const course = current();
+  const onHome = state.view === "home";
   const section = { conversation: "Conversation", cards: "AI guidance", instructor: "Instructor studio" }[state.view] || "Conversation";
-  document.querySelector("#crumb").innerHTML = `<button type="button" data-course="${esc(state.course)}" data-view="conversation">${esc(course.code)}</button><span aria-hidden="true">/</span><strong>${section}</strong>`;
+  document.querySelector("#crumb").innerHTML = onHome
+    ? `<strong>Home</strong>`
+    : `<button type="button" data-view="home">Home</button><span aria-hidden="true">/</span><button type="button" data-course="${esc(state.course)}" data-view="conversation">${esc(course.code)}</button><span aria-hidden="true">/</span><strong>${section}</strong>`;
   const sections = [
     ["conversation", "Conversation"],
     ["cards", "AI guidance"],
     ["instructor", "Instructor studio"],
   ];
+  const brand = document.querySelector(".masthead .brand-link");
+  if (brand) {
+    if (onHome) brand.setAttribute("aria-current", "page");
+    else brand.removeAttribute("aria-current");
+  }
   document.querySelector("#course-nav").innerHTML = Object.entries(courses).map(([id, item]) => {
-    const open = state.course === id;
+    const open = state.course === id && !onHome;
     const links = open
       ? `<nav class="course-sections" aria-label="${esc(item.code)} sections">${sections.map(([view, label]) => `<button class="nav-item${state.view === view ? " active" : ""}" type="button" data-course="${id}" data-view="${view}"${state.view === view ? ' aria-current="page"' : ""}>${label}</button>`).join("")}</nav>`
       : "";
@@ -73,7 +86,7 @@ function renderChrome() {
 
 function render() {
   renderChrome();
-  root.innerHTML = state.view === "cards" ? renderCards() : state.view === "instructor" ? renderStudio() : renderConversation();
+  root.innerHTML = state.view === "home" ? renderHome() : state.view === "cards" ? renderCards() : state.view === "instructor" ? renderStudio() : renderConversation();
 }
 
 function renderConversation() {

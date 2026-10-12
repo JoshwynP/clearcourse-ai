@@ -10,7 +10,7 @@ This document turns that scope into small, demonstrable releases. Each stage end
 
 ## Product direction
 
-The interface should feel like an ordinary, familiar course communication site: a course list, a conversation area, and AI guidance within reach. Use white, light grey, and one dark green accent; flat borders; compact spacing; plain system typography; and obvious text labels. Avoid gradients, multiple accent colours, glossy cards, rounded dashboard tiles, decorative icons, and AI imagery. Do not copy WhatsApp branding or assets. The current static prototype is a design and interaction reference, not production code that must be preserved.
+The interface should feel like an ordinary, familiar course communication site: a home page, a course list, a conversation area, and AI guidance within reach. Use the University of Waterloo palette — black, white, grey, and gold — with a black banner, the University wordmark, the ClearCourse name linking home, and the four-level gold colour bar. Keep flat borders, compact spacing, plain system typography, and obvious text labels. Gold is for the colour bar and highlights; text on white or grey stays black. Avoid gradients, glossy cards, rounded dashboard tiles, decorative icons, and AI imagery. Do not copy WhatsApp branding or assets. The current static prototype is a design and interaction reference, not production code that must be preserved.
 
 The completed service must follow `CONTRIBUTING.md`: exactly one Course AI Card and one card per assignment, exactly Course or Specific Assignment tags for questions, architectural anonymity, private participation based only on questions/comments/upvotes, and sharing controlled by the student. Never add AI detection, student scoring, or automatic policy generation.
 
@@ -33,7 +33,7 @@ The completed service must follow `CONTRIBUTING.md`: exactly one Course AI Card 
 
 The public preview in `public/` is the front-end reference: the open course shows its conversation and guidance together, and its sections appear in the sidebar only while that course is open. Finish feedback on that layout before backend work.
 
-The next build is stage 2, sign-in and course membership. It stays blocked until Q4–Q5 are decided (`CONTRIBUTING.md` §13). Real anonymous posting stays blocked until stage 5, after Q8–Q9. Do not start either while the front end is still being adjusted.
+The local app now has the stage 2 practice sign-in, course join codes, and always-anonymous questions (ADRs 0008 and 0009). The public preview in `public/` stays fictional and has no accounts. Do not deploy the Next.js app over that preview.
 
 ## The next seven Cursor sessions
 
@@ -42,7 +42,7 @@ The next build is stage 2, sign-in and course membership. It stays blocked until
 3. **Close Q3 for the app.** Review ADR 0001 and 0002, update current package and hosting facts, make a short decision record, then stop research.
 4. **Scaffold the real app.** Create the framework project on a new branch, with one route for the course list and one for a card, a build command, and a smoke test.
 5. **Move the visual shell.** Carry over the plain visual language and responsive layout. Keep sample data and no sign-in yet.
-6. **Close Q4–Q5.** Choose pilot sign-in and course provisioning. Implement the smallest secure role/course access slice, with denial tests.
+6. **Close Q4–Q5.** Done for this pilot in ADR 0008: practice sign-in, Professor or Student chosen first, and course join codes, with denial tests.
 7. **Build the first real card.** Create a course card as a draft, preview it, publish it, and read it as a student. Add assignment cards in the next session.
 
 After each session: run the app, inspect the changed screen, run the relevant tests, commit the change, and write the next slice in one sentence. Do not ask an agent to implement all nine stages at once.
@@ -72,8 +72,6 @@ Copy this into a fresh Cursor Agent chat after Q3 is decided:
 
 ## Decisions that need the owner
 
-- Q3: production hosting, the database access library, and the UI component library. ADR 0007 accepts the local Next.js foundation. ADR 0002 and the rest of ADR 0001 are still proposals.
-- Q4–Q5: pilot authentication and course provisioning.
-- Q8–Q9: the reviewed privacy design for real anonymous posts and private participation.
+- Q3: production hosting of the database-backed app, the database access library, and the UI component library. ADR 0007 accepts the local Next.js foundation. ADR 0008 keeps the signed-in app on the developer machine. ADR 0002 and the rest of ADR 0001 are still proposals.
 
 Decide other open questions at the stage that needs them. This keeps the research proportionate to what is being built.

@@ -1,0 +1,14 @@
+{
+  "name": "clearcourse-ai",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w clearcourse-web",
+    "build": "npm run build -w clearcourse-web",
+    "start": "npm run start -w clearcourse-web",
+    "lint": "npm run lint -w clearcourse-web",
+    "test": "npm test -w clearcourse-web"
+  }
+}

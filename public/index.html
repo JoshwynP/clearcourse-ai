@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f0f2f5" />
+    <meta name="theme-color" content="#000000" />
     <meta name="description" content="ClearCourse AI: clear assignment guidance and course conversations." />
     <title>ClearCourse AI</title>
     <link rel="stylesheet" href="styles.css" />
@@ -11,9 +11,18 @@
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <header class="masthead">
+      <a class="uw-logo-link" href="https://uwaterloo.ca/" target="_blank" rel="noopener noreferrer" aria-label="University of Waterloo">
+        <img src="uwaterloo-logo.svg" alt="" width="170" height="41" />
+      </a>
+      <button class="brand-link" type="button" data-view="home">
+        <strong>ClearCourse</strong>
+        <small>AI guidance, made clear</small>
+      </button>
+    </header>
+    <div class="colour-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Course navigation">
-        <div class="brand"><div><strong>ClearCourse</strong><small>AI guidance, made clear</small></div></div>
         <div class="sidebar-section-label">Your courses</div>
         <div id="course-nav"></div>
         <div class="sidebar-foot">Sample courses<small>No sign-in or saved data.</small></div>

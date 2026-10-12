@@ -143,6 +143,13 @@ Authorization is **strict, role-based and course-based** `[src p.2]`:
 - Impersonation is not implemented unless there is a tightly controlled, audited support
   procedure `[src p.2]`. (Whether one is wanted at all is an open question, Q7.)
 
+**Pilot sign-in (owner, 2026-10-12; [ADR 0008](docs/decisions/0008-stand-in-sign-in-and-course-codes.md)):**
+A person chooses Professor or Student before signing in, then enters a name. Professor is the
+Instructor role. The same name and role returns to the same courses. There is no teaching-assistant
+role and no administrator role in this pilot. Administration is not being built; its full scope
+remains Q1. A professor creates a course and shares a join code. A student opens that course with
+the code. This is not University of Waterloo sign-in, LTI, or CSV import.
+
 ---
 
 ## 6. Privacy architecture
@@ -167,8 +174,8 @@ These five domains must be technically separated:
   must not be able to join the action content back to the student's identity**.
 - Required techniques: privacy-preserving event processing, separated tables or schemas, restricted
   service roles, opaque identifiers, and narrowly scoped internal APIs.
-- **The threat model and the limitations of anonymity must be documented.** This is a deliverable
-  (Q8).
+- **The threat model and the limitations of anonymity must be documented.** The pilot document is
+  [docs/privacy/threat-model.md](docs/privacy/threat-model.md).
 - Identity-bearing information and anonymous-content text must not appear together in any
   application log, analytics event, error report, database view, export or administrator dashboard.
 
@@ -177,9 +184,14 @@ These five domains must be technically separated:
 Some requirements require the system to know, *somewhere*, that an action belongs to a student.
 For example, upvotes must be combined "without double-counting a student" `[src p.11]`, and
 counters must credit the right student `[src p.3]`. The design has to satisfy these without giving
-ordinary queries, instructors, TAs or admins a usable mapping. How to do this is an open
-architectural decision (Q9). It must be written up in an ADR and in the threat model before any
-content or participation code is written.
+ordinary queries, instructors, TAs or admins a usable mapping.
+
+**Pilot decision (owner, 2026-10-12; [ADR 0009](docs/decisions/0009-anonymous-content-separation.md)):**
+Questions are always anonymous. Identity and content stay in separate stores. A vote stores only
+`HMAC-SHA256(vote key, question id)`. The vote key stays in the identity store. Replies are labeled
+by role, never by name. Participation counters are not in this pilot. Nobody can deanonymize
+through the application. The local file stand-in can still be read by someone with the computer;
+production must use separate database roles before real students use it.
 
 ### 6.4 Abuse handling and deanonymization `[src p.4]`
 
@@ -477,10 +489,13 @@ The full list of audited events is Q14.
   clear status labels · explicit anonymity explanations · non-gamified private participation levels.
 - Avoid: AI-generated aesthetics · robots · surveillance motifs · leaderboards · streaks ·
   competitive badges · attention-maximizing patterns.
-- **Prototype visual direction (owner decision, 2026-10-12):** use a familiar chat-style layout
-  with white, light grey and one dark green accent, flat borders, compact spacing and plain text
-  labels. Keep it simple and somewhat old-web in feel; avoid glossy cards and decorative colour.
-  WhatsApp is an inspiration for familiarity, not a source of copied branding or assets.
+- **Prototype visual direction (owner decision, 2026-10-12):** use a familiar chat-style layout,
+  flat borders, compact spacing and plain text labels. Colours are the University of Waterloo
+  palette: black, white, grey, and gold. Each page starts with a black banner containing the
+  University of Waterloo wordmark and the name ClearCourse, which links to the home page, then the
+  four-level gold colour bar used on University of Waterloo websites. Gold is used for bars and
+  highlights; text on white or grey stays black. Avoid glossy cards and decorative colour. WhatsApp
+  is an inspiration for familiarity, not a source of copied branding or assets.
 - Accessibility is required `[src p.1, p.16]`. The conformance target (e.g. WCAG 2.x AA) is Q15.
 
 ---
@@ -527,11 +542,29 @@ automated tests, deployment documentation and administrative configuration. In a
 
 ---
 
-## 12. Architecture and stack (undecided)
+## 12. Architecture and stack
 
-**Nothing in this section is decided.** It records the advice from the AI chat on pages 20–31 of
-the source. That advice is not a requirement. A stack is chosen only through an ADR in
-`docs/decisions/` that the owner approves.
+**Decided for the local application (owner, 2026-10-12; [ADR 0007](docs/decisions/0007-local-app-foundation.md)):**
+
+- Language: TypeScript.
+- Framework: Next.js 16.4.0 App Router, Node.js runtime only. The app is in `web/` so the fictional
+  preview in `public/` can stay deployable ([ADR 0006](docs/decisions/0006-static-preview-hosting.md)).
+- No `proxy.ts`, no `middleware.ts`, no Cache Components, and no third-party error reporting or
+  analytics in this foundation.
+- Interface: plain CSS custom properties matching §8. A component library is not initialized.
+- Database: PostgreSQL is the intended store when persistence starts, because §6 needs separate
+  schemas, restricted roles, and row-level security. It is not installed yet. The access library
+  and migrations stay proposed in [ADR 0001](docs/decisions/0001-application-stack.md).
+- Pilot sign-in ([ADR 0008](docs/decisions/0008-stand-in-sign-in-and-course-codes.md)): practice
+  sign-in and course join codes run on the local Next.js server. Records stay in gitignored files
+  on that machine. The app is not deployed over the static preview.
+
+**Still open under Q3:** production hosting of the database-backed app
+([ADR 0002](docs/decisions/0002-hosting-and-infrastructure.md)), the database access library, and
+the UI component library.
+
+The rest of this section records advice from the AI chat on pages 20–31 of the source. That advice
+is not a requirement unless an approved ADR says so.
 
 *Advisory* (from `[src p.24–31]`):
 
@@ -553,12 +586,12 @@ the source. That advice is not a requirement. A stack is chosen only through an 
   the same advice relies on for privacy separation. Choosing D1 would need a different separation
   design.
 - The chat suggests linking participation counters with a "one-way hashed identifier". A plain or
-  unkeyed hash of a known user ID can be reversed by hashing every enrolled user and comparing. The
-  scheme needs real threat-model analysis (Q9).
+  unkeyed hash of a known user ID can be reversed by hashing every enrolled user and comparing.
+  That scheme is not used. The pilot uses the HMAC vote token in ADR 0009.
 - Pricing and free-tier figures in the chat are unverified and may be out of date. Check current
   vendor pricing before deciding.
-- A hosted SSO integration with UW requires the institution's cooperation. A prototype may need a
-  stand-in identity provider (Q4).
+- A hosted SSO integration with UW requires the institution's cooperation. The pilot uses the
+  local stand-in in ADR 0008.
 
 ---
 
@@ -569,14 +602,10 @@ is recorded here (move it into the relevant section and note it in §16).
 
 | # | Question | Blocks |
 |---|---|---|
-| Q1 | What is the full scope of "Administration"? The source text is truncated `[src p.17]`. | §7.15 |
-| Q3 | Tech stack and hosting (§12) for the authenticated application. The fictional-data static prototype is covered by ADR 0005. | Real application code |
-| Q4 | Authentication for the prototype: real UW SSO, a generic OIDC provider, or a dev-only stand-in? | Sign-in |
-| Q5 | Course/role provisioning integration: LTI 1.3 with LEARN/Brightspace, CSV import, manual entry, or another method? `[src p.19]` | Provisioning |
+| Q1 | What is the full scope of "Administration"? The source text is truncated `[src p.17]`. Not built in this pilot (§5). | §7.15 |
+| Q3 | Production hosting of the database-backed app, the database access library, and the UI component library. The local app and its stand-in hosting are decided in §12 and ADRs 0007 and 0008. | Hosting, the first persisted schema, and the component library |
 | Q6 | Email delivery provider for notifications. | §7.13 |
 | Q7 | Is any impersonation/support procedure wanted, or none at all? | §5 |
-| Q8 | Format and location of the threat-model document. | §6 |
-| Q9 | Exact mechanism that keeps content and identity unjoinable while still crediting counters and de-duplicating upvotes. | §6, §7.7, §7.9 |
 | Q10 | The fixed decision rules the card-builder wizard uses to generate recommendations, and its curated resources. | §7.6 |
 | Q11 | Recommended default values for ranked grading. | §7.11 |
 | Q12 | Grade export format required by UW (e.g. LEARN gradebook CSV). | §7.11 |
@@ -630,4 +659,7 @@ A change is done only when **all** of the following are true:
 | 2026-10-11 | Initial version created from `docs/research/source-prompt.pdf` (pages 1–19 as spec, 20–31 as advisory). Stack undecided. |
 | 2026-10-12 | Owner chose an immediate fictional-data public prototype as the first milestone (Q2); ADR 0005 permits a static experience demo while Q3 remains open for the real application. |
 | 2026-10-12 | Owner clarified the prototype visual direction: simpler chat layout, neutral palette and one green accent (§8). |
+| 2026-10-12 | Owner updated that visual direction to the University of Waterloo black, white, grey, and gold palette, with the University wordmark, gold colour bar, and a home page reached from the ClearCourse name (§8). |
 | 2026-10-12 | Static preview files moved to `public/` for isolated deployment; ADR 0006 records the preview-only hosting choice. The production Q3 remains open. |
+| 2026-10-12 | Owner accepted the local application foundation in ADR 0007: TypeScript, Next.js 16.4.0, Node.js runtime, plain CSS, and PostgreSQL as the future database. Hosting, the data-access library, and the UI component library stay open under Q3. |
+| 2026-10-12 | Owner chose a local practice sign-in (Q4), professor-created courses shared by join code (Q5), Professor or Student chosen before sign-in, and no administrator role in this pilot. Questions are always anonymous (Q9). The threat model is `docs/privacy/threat-model.md` (Q8). ADRs 0008 and 0009. Production hosting of the database-backed app stays open under Q3. |
