@@ -748,7 +748,16 @@ fieldset label {
 .manage-create { padding: 12px; }
 .status-tag { padding: 2px 6px; border: 1px solid var(--line); font-size: 12px; }
 .button.small { min-height: 28px; padding: 4px 8px; font-size: 12px; }
-.studio-form { max-width: 800px; }
+.studio-form { max-width: 800px; margin-top: 0; }
+.editor-table { margin: 16px 0; }
+.editor-table th { width: 36%; }
+.editor-table th label, .editor-opening label, .editor-meta label { font-weight: 600; }
+.editor-table td { background: var(--surface); }
+.editor-table textarea.field { min-height: 58px; resize: vertical; }
+.editor-opening { margin: 16px 0; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--gold-4); }
+.editor-opening textarea.field { min-height: 64px; margin-top: 7px; }
+.editor-meta { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; margin-top: 16px; }
+.editor-meta .field { margin-top: 5px; }
 .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
 
@@ -761,6 +770,11 @@ fieldset label {
 @media (max-width: 740px) {
   .card-layout { grid-template-columns: 1fr; }
   .manage-item { align-items: flex-start; flex-direction: column; }
+  .editor-meta { grid-template-columns: 1fr; }
+  .editor-table, .editor-table tbody, .editor-table tr, .editor-table th, .editor-table td { display: block; width: 100%; }
+  .editor-table th { border-bottom: 0; }
+  .editor-table td { border-top: 0; }
+  .editor-table tr + tr { margin-top: 8px; }
   .masthead {
     gap: 12px;
     padding: 12px;

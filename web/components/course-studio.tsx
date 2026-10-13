@@ -1,30 +1,8 @@
 import Link from "next/link";
 import { saveCourseCard, saveAssignmentCard, setAssignmentStatus } from "@/lib/actions";
-import type { AssignmentCard, AssignmentDetails } from "@/lib/app-store";
+import { assignmentRows, courseRows } from "@/lib/card-rows";
+import type { AssignmentCard } from "@/lib/app-store";
 import type { CardFields } from "@/lib/identity-model";
-
-const assignmentFields: [keyof AssignmentDetails, string][] = [
-  ["due", "Due date"], ["learning", "Learning being assessed"],
-  ["permitted", "Is AI permitted?"], ["allowed", "When AI is allowed"],
-  ["notAllowed", "When AI is not allowed"], ["disclose", "When disclosure is required"],
-  ["discloseNot", "When disclosure is not required"],
-  ["processRequested", "When process evidence is requested"],
-  ["processNot", "When process evidence is not requested"],
-  ["bonusPercent", "Optional transparency bonus percentage"],
-  ["bonusRequirements", "Requirements for receiving the transparency bonus"],
-  ["resources", "Resources"], ["other", "Other optional information"],
-  ["learn", "LEARN submission link"], ["opening", "Opening statement (optional)"],
-];
-
-const courseFields: [keyof CardFields, string][] = [
-  ["opening", "Opening statement (optional)"], ["counts", "What counts as generative AI"],
-  ["permitted", "Whether generative AI is generally permitted"],
-  ["summary", "Course summary"], ["allowed", "Uses generally allowed"],
-  ["notAllowed", "Uses generally prohibited"], ["disclose", "General disclosure requirements"],
-  ["transparency", "Transparency-of-process expectations"],
-  ["suspected", "How suspected inappropriate use is addressed"],
-  ["warning", "Institutional-policy warning"], ["resources", "Additional resources"],
-];
 
 export function CourseStudio({ courseId, card, assignments, selectedId, error }: {
   courseId: string; card: CardFields; assignments: AssignmentCard[]; selectedId?: string; error?: string;
@@ -55,31 +33,35 @@ export function CourseStudio({ courseId, card, assignments, selectedId, error }:
         <div className="manage-create"><Link className="button" href={`/courses/${courseId}/studio?card=new`}>Create an assignment card</Link></div>
       </section>
       {selected || newAssignment ? (
-        <form className="panel panel-pad composer studio-form" action={saveAssignmentCard} key={selected?.id ?? "new"}>
+        <form className="panel panel-pad studio-form" action={saveAssignmentCard} key={selected?.id ?? "new"}>
           <h2>{selected ? `Edit ${selected.title}` : "New assignment card"}</h2>
           <p className="meta">Saved cards start as private drafts. Publish when the wording is ready.</p>
           <input type="hidden" name="courseId" value={courseId} />
           {selected ? <input type="hidden" name="id" value={selected.id} /> : null}
-          <label htmlFor="identifier">Assignment identifier</label>
-          <input className="field" id="identifier" name="identifier" required maxLength={40} pattern="[A-Za-z0-9_-]+" defaultValue={selected?.identifier} />
-          <label htmlFor="assignment-title">Assignment title</label>
-          <input className="field" id="assignment-title" name="title" required maxLength={120} defaultValue={selected?.title} />
-          {assignmentFields.map(([key, label]) => (
-            <div className="form-row" key={key}><label htmlFor={key}>{label}</label>
-              <textarea className="field" id={key} name={key} maxLength={2000} defaultValue={selected?.details[key]} /></div>
-          ))}
+          <div className="editor-meta">
+            <div><label htmlFor="assignment-title">Assignment title</label><input className="field" id="assignment-title" name="title" required maxLength={120} defaultValue={selected?.title} /></div>
+            <div><label htmlFor="identifier">Assignment identifier</label><input className="field" id="identifier" name="identifier" required maxLength={40} pattern="[A-Za-z0-9_-]+" defaultValue={selected?.identifier} /></div>
+          </div>
+          <div className="editor-opening"><label htmlFor="assignment-opening">Opening statement <span className="meta">(optional)</span></label>
+            <textarea className="field" id="assignment-opening" name="opening" maxLength={2000} defaultValue={selected?.details.opening} /></div>
+          <table className="card-table editor-table"><caption className="sr-only">Assignment AI card editor</caption><tbody>
+            {assignmentRows.map(([label, key]) => <tr key={key}><th scope="row"><label htmlFor={`assignment-${key}`}>{label}</label></th>
+              <td><textarea className="field" id={`assignment-${key}`} name={key} maxLength={2000} defaultValue={selected?.details[key]} /></td></tr>)}
+          </tbody></table>
           <div className="form-actions"><button className="button primary" type="submit">Save card</button>
-            <Link className="button" href={`/courses/${courseId}/guidance${selected?.status === "published" ? `?card=${selected.id}` : ""}`}>View student cards</Link>
+            {selected ? <Link className="button" href={`/courses/${courseId}/guidance?card=${selected.id}`}>View saved card</Link> : null}
           </div>
         </form>
       ) : (
-        <form className="panel panel-pad composer studio-form" action={saveCourseCard}>
+        <form className="panel panel-pad studio-form" action={saveCourseCard}>
           <h2>Course AI card</h2>
           <input type="hidden" name="courseId" value={courseId} />
-          {courseFields.map(([key, label]) => <div className="form-row" key={key}>
-            <label htmlFor={`course-${key}`}>{label}</label>
-            <textarea className="field" id={`course-${key}`} name={key} defaultValue={card[key] ?? ""} maxLength={key === "summary" ? 1000 : 2000} />
-          </div>)}
+          <div className="editor-opening"><label htmlFor="course-opening">Opening statement <span className="meta">(optional)</span></label>
+            <textarea className="field" id="course-opening" name="opening" defaultValue={card.opening ?? ""} maxLength={2000} /></div>
+          <table className="card-table editor-table"><caption className="sr-only">Course AI card editor</caption><tbody>
+            {courseRows.map(([label, key]) => <tr key={key}><th scope="row"><label htmlFor={`course-${key}`}>{label}</label></th>
+              <td><textarea className="field" id={`course-${key}`} name={key} defaultValue={card[key] ?? ""} maxLength={key === "summary" ? 1000 : 2000} /></td></tr>)}
+          </tbody></table>
           <button className="button primary" type="submit">Save course card</button>
         </form>
       )}
