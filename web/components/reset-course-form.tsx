@@ -1,7 +1,15 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { resetCourseAction } from "@/lib/actions";
+
+function ResetSubmitButton() {
+  const { pending } = useFormStatus();
+  return <button className="button danger" type="submit" disabled={pending}>
+    {pending ? "Wiping selected data…" : "Wipe selected course data"}
+  </button>;
+}
 
 export function ResetCourseForm({ courseId, code }: { courseId: string; code: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -24,7 +32,11 @@ export function ResetCourseForm({ courseId, code }: { courseId: string; code: st
       onChange={(event) => setSelected((current) => ({ ...current, assignments: event.target.checked }))} /> Assignment AI cards <small>Requires clearing discussion so assignment-tagged questions are not left without a card.</small></label>
     <label><input type="checkbox" name="courseCard" checked={selected.courseCard}
       onChange={(event) => setSelected((current) => ({ ...current, courseCard: event.target.checked }))} /> Course AI card <small>Clears the course guidance fields. You can write new guidance in Manage My Cards.</small></label>
-    <button className="button reset-review" type="button" disabled={!labels.length} onClick={() => dialog.current?.showModal()}>Review course reset</button>
+    <button className="button reset-review" type="button" disabled={!labels.length} onClick={() => {
+      const field = dialog.current?.querySelector<HTMLInputElement>("#reset-confirmation");
+      if (field) field.value = "";
+      dialog.current?.showModal();
+    }}>Review course reset</button>
     <dialog className="reset-dialog" ref={dialog} aria-labelledby="reset-title">
       <h3 id="reset-title">Confirm course reset</h3>
       <p>You are about to permanently clear:</p>
@@ -34,7 +46,7 @@ export function ResetCourseForm({ courseId, code }: { courseId: string; code: st
       <input className="field" id="reset-confirmation" name="confirmation" required autoComplete="off" />
       <div className="form-actions">
         <button className="button" type="button" onClick={() => dialog.current?.close()}>Cancel</button>
-        <button className="button danger" type="submit">Wipe selected course data</button>
+        <ResetSubmitButton />
       </div>
     </dialog>
   </form>;

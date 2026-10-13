@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 type CourseView = "home" | "conversation" | "guidance" | "studio" | "participation" | "settings";
 
@@ -42,7 +43,7 @@ export function AppShell({
           <small>Made by UW students for UW students and professors</small>
         </Link>
         <a className="uw-logo-link" href="https://uwaterloo.ca/" target="_blank" rel="noopener noreferrer" aria-label="University of Waterloo">
-          <img src="/uwaterloo-logo.svg" alt="" width={170} height={41} />
+          <Image src="/uwaterloo-logo.svg" alt="" width={170} height={41} unoptimized />
         </a>
       </header>
       <div className="colour-bar" aria-hidden="true">
