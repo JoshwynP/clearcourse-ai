@@ -17,10 +17,12 @@ and select Free if available before creating each project.
 1. In the identity project's SQL editor, run
    [001-accounts-and-courses.sql](db/001-accounts-and-courses.sql).
 2. In the content project's SQL editor, run [002-content.sql](db/002-content.sql).
-3. Copy `.env.example` to `.env.local` in `web/` and set both Neon pooled
+3. In the identity project's SQL editor, run
+   [003-assignment-cards-and-participation.sql](db/003-assignment-cards-and-participation.sql).
+4. Copy `.env.example` to `.env.local` in `web/` and set both Neon pooled
    connection strings, a random secret of at least 32 characters, and
    `BETTER_AUTH_URL=http://localhost:3000`.
-4. From the repository root, run `npm ci`, then `npm run dev`.
+5. From the repository root, run `npm ci`, then `npm run dev`.
 
 The local JSON files in `web/.data/` are not migrated. Do not delete them until
 you have checked whether they contain work you need.
@@ -49,7 +51,10 @@ no account ID or author name, but service operators and hosting metadata can
 still make timing-based inferences. The app server currently holds both
 database credentials while processing votes; a server operator could compute
 the identity behind a vote. Do not promise full anonymity or invite real
-students on this architecture. Participation tracking, assignment-card
-publishing, and institutional enrollment checks are outside this slice. The
-full privacy review and negative tests in CONTRIBUTING.md §6 are still required
-before real student use.
+students on this architecture. Assignment-card publishing and basic participation
+counts/sharing now work for practice accounts. Counter updates span two databases
+without a distributed transaction; a failed second write could leave a count
+out of sync. Version history, institutional enrollment checks, abuse handling,
+and the full privacy review in CONTRIBUTING.md §6 are still required before
+real student use. The instructor view shows only a student's shared level,
+but operators may still infer activity from the identity-side counters.

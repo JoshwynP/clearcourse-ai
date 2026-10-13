@@ -3,14 +3,14 @@ import { randomBytes } from "node:crypto";
 export type ReplyRole = "Instructor" | "Student";
 
 export type ContentState = {
-  questions: { id: string; courseId: string; tag: "course"; title: string; body: string }[];
+  questions: { id: string; courseId: string; tag: string; title: string; body: string }[];
   replies: { id: string; questionId: string; role: ReplyRole; text: string }[];
   votes: { questionId: string; token: string }[];
 };
 
 export type ListedQuestion = {
   id: string;
-  tag: "course";
+  tag: string;
   title: string;
   body: string;
   votes: number;
@@ -22,13 +22,13 @@ export function emptyContent(): ContentState {
   return { questions: [], replies: [], votes: [] };
 }
 
-export function addQuestion(state: ContentState, courseId: string, input: { title: string; body: string }): ContentState | null {
+export function addQuestion(state: ContentState, courseId: string, input: { title: string; body: string; tag?: string }): ContentState | null {
   const title = input.title.trim();
   const body = input.body.trim();
   if (!courseId || !title) return null;
   return {
     ...state,
-    questions: [{ id: randomBytes(16).toString("hex"), courseId, tag: "course", title, body }, ...state.questions],
+    questions: [{ id: randomBytes(16).toString("hex"), courseId, tag: input.tag || "course", title, body }, ...state.questions],
   };
 }
 

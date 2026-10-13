@@ -35,6 +35,7 @@ export async function updateContent(courseId: string, update: (state: ContentSta
     const next = update(current.rows[0]?.state ?? emptyContent());
     if (next) await client.query("update content.board set state = $2::jsonb where course_id = $1", [courseId, JSON.stringify(next)]);
     await client.query("commit");
+    return Boolean(next);
   } catch (error) {
     await client.query("rollback");
     throw error;

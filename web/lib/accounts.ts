@@ -23,7 +23,7 @@ export async function currentAccount(): Promise<Account | null> {
   return { id: session.user.id, email: session.user.email, name: session.user.name, role };
 }
 
-export async function signInOrCreate(email: string, password: string, selectedRole: Role) {
+export async function signInOrCreate(email: string, password: string, selectedRole?: Role) {
   const normalized = normalizeEmail(email);
   if (!normalized || password.length < 10 || password.length > 128) return false;
   const db = database();
@@ -45,6 +45,7 @@ export async function signInOrCreate(email: string, password: string, selectedRo
       await db.query("delete from identity.login_attempt where email_key = $1", [emailKey]);
       return true;
     }
+    if (!selectedRole) return false;
     const created = await auth().api.signUpEmail({
       body: { email: normalized, password, name: normalized.split("@")[0] },
     });
@@ -60,7 +61,7 @@ export async function signInOrCreate(email: string, password: string, selectedRo
     try {
       await auth().api.signInEmail({ body: { email: normalized, password } });
       const row = await db.query("select user_id from identity.profile where user_id = (select id from public.\"user\" where email = $1)", [normalized]);
-      if (!row.rowCount) {
+      if (!row.rowCount && selectedRole) {
         const user = await db.query<{ id: string }>('select id from public."user" where email = $1', [normalized]);
         if (user.rows[0]) await db.query("insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3) on conflict (user_id) do nothing", [user.rows[0].id, selectedRole, randomBytes(32).toString("hex")]);
       }

@@ -719,6 +719,32 @@ fieldset label {
   text-align: center;
 }
 
+.card-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+.card-list { display: grid; }
+.card-choice { display: block; padding: 12px; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.card-choice:last-child { border-bottom: 0; }
+.card-choice.active { background: var(--gold-1); border-left: 3px solid var(--gold-4); }
+.card-choice strong, .card-choice small { display: block; }
+.card-choice small { margin-top: 3px; }
+.card-table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+.card-table th, .card-table td { border: 1px solid var(--line); padding: 9px 11px; text-align: left; vertical-align: top; }
+.card-table th { width: 36%; background: var(--grey); }
+.override-note { display: block; width: fit-content; margin-top: 7px; padding: 2px 6px; border: 1px solid var(--line); font-size: 12px; font-weight: 600; }
+.callout { padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--gold-4); background: var(--surface); }
+.guidance-section { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; }
+.guidance-section h3 { margin: 0 0 8px; }
+.manage-panel { margin: 0 0 16px; }
+.manage-list { list-style: none; margin: 0; padding: 0; }
+.manage-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px; border-bottom: 1px solid var(--line); }
+.manage-copy, .manage-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.manage-actions { justify-content: flex-end; }
+.manage-create { padding: 12px; }
+.status-tag { padding: 2px 6px; border: 1px solid var(--line); font-size: 12px; }
+.button.small { min-height: 28px; padding: 4px 8px; font-size: 12px; }
+.studio-form { max-width: 800px; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
 @media (min-width: 768px) {
   .colour-bar {
     height: 18px;
@@ -726,6 +752,8 @@ fieldset label {
 }
 
 @media (max-width: 740px) {
+  .card-layout { grid-template-columns: 1fr; }
+  .manage-item { align-items: flex-start; flex-direction: column; }
   .masthead {
     gap: 12px;
     padding: 12px;

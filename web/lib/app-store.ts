@@ -11,6 +11,82 @@ type CourseRow = {
   card: Partial<CardFields>;
 };
 
+export type AssignmentDetails = {
+  due: string;
+  learning: string;
+  permitted: string;
+  allowed: string;
+  notAllowed: string;
+  disclose: string;
+  process: string;
+  resources: string;
+  learn: string;
+  opening: string;
+};
+
+export type AssignmentCard = {
+  id: string;
+  courseId: string;
+  identifier: string;
+  title: string;
+  details: AssignmentDetails;
+  status: "draft" | "published" | "archived";
+  updatedAt: Date;
+};
+
+const emptyAssignment: AssignmentDetails = {
+  due: "", learning: "", permitted: "", allowed: "", notAllowed: "", disclose: "",
+  process: "", resources: "", learn: "", opening: "",
+};
+
+export async function assignmentCardsForCourse(courseId: string, includePrivate = false): Promise<AssignmentCard[]> {
+  const result = await database().query<{
+    id: string; course_id: string; identifier: string; title: string;
+    details: Partial<AssignmentDetails>; status: AssignmentCard["status"]; updated_at: Date;
+  }>(
+    `select id, course_id, identifier, title, details, status, updated_at
+     from identity.assignment_card where course_id = $1 ${includePrivate ? "" : "and status = 'published'"}
+     order by updated_at desc`, [courseId],
+  );
+  return result.rows.map((row) => ({
+    id: row.id, courseId: row.course_id, identifier: row.identifier, title: row.title,
+    details: { ...emptyAssignment, ...row.details }, status: row.status, updatedAt: row.updated_at,
+  }));
+}
+
+export async function saveAssignmentCardForInstructor(
+  userId: string, courseId: string, id: string | undefined,
+  identifier: string, title: string, details: AssignmentDetails,
+) {
+  identifier = identifier.trim(); title = title.trim();
+  if (!/^[a-zA-Z0-9_-]{1,40}$/.test(identifier) || !title || title.length > 120) return false;
+  const clean = Object.fromEntries(Object.entries(details).map(([key, value]) => [key, value.trim().slice(0, 2000)]));
+  const result = await database().query(
+    id
+      ? `update identity.assignment_card a set identifier = $4, title = $5, details = $6::jsonb, updated_at = now()
+         where a.id = $3 and a.course_id = $2 and exists
+           (select 1 from identity.course c where c.id = a.course_id and c.instructor_id = $1)
+         returning a.id`
+      : `insert into identity.assignment_card (id, course_id, identifier, title, details)
+         select $3, c.id, $4, $5, $6::jsonb from identity.course c
+         where c.id = $2 and c.instructor_id = $1 returning id`,
+    [userId, courseId, id ?? randomBytes(16).toString("hex"), identifier, title, JSON.stringify(clean)],
+  );
+  return Boolean(result.rowCount);
+}
+
+export async function setAssignmentStatusForInstructor(
+  userId: string, courseId: string, cardId: string, status: AssignmentCard["status"],
+) {
+  const result = await database().query(
+    `update identity.assignment_card a set status = $4, updated_at = now()
+     where a.id = $3 and a.course_id = $2 and exists
+       (select 1 from identity.course c where c.id = a.course_id and c.instructor_id = $1)
+     returning a.id`, [userId, courseId, cardId, status],
+  );
+  return Boolean(result.rowCount);
+}
+
 const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function courseOf(row: CourseRow): CourseRecord {

@@ -60,9 +60,10 @@ test("course shell nests the open course's sections under that course", () => {
   const current = html.match(/<a[^>]*href="\/courses\/sds\/conversation"[^>]*>/);
   assert.ok(current);
   assert.match(current[0], /aria-current="page"/);
-  assert.match(html, /Conversation/);
-  assert.match(html, /AI guidance/);
-  assert.match(html, /Instructor studio/);
+  assert.match(html, /Discussion board/);
+  assert.match(html, /AI cards/);
+  assert.match(html, /Class participation/);
+  assert.match(html, /Manage My Cards/);
 });
 
 test("course home links to the conversation, guidance, and assignments", () => {

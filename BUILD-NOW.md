@@ -41,6 +41,13 @@ Follow `web/SETUP.md` to configure two databases and switch the Vercel Root
 Directory to `web`. Until that setup and a live check are complete, the Vercel
 site remains the static preview. Do not enter real student information.
 
+The hosted practice branch now adds saved assignment drafts and publishing,
+assignment-tagged discussion filters, and private participation counts with
+student-controlled level sharing. Migration 003 is required in the identity
+database. This remains a practice release: email and Professor status are
+unverified, the participation counter is not transactionally coupled to the
+content database, and the full privacy gate still blocks real student use.
+
 ## The next seven Cursor sessions
 
 1. **Finish the look.** Review the flatter prototype on desktop and phone. Make one small visual change at a time; do not add features.

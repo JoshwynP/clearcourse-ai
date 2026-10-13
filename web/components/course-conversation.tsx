@@ -1,21 +1,34 @@
 import Link from "next/link";
 import { askQuestion, castVote, sendReply } from "@/lib/actions";
 import type { ListedQuestion } from "@/lib/content-model";
+import type { AssignmentCard } from "@/lib/app-store";
 
 export function CourseConversation({
   courseId,
   questions,
   summary,
+  assignments,
+  tag,
+  query,
 }: {
   courseId: string;
   questions: ListedQuestion[];
   summary: string;
+  assignments: AssignmentCard[];
+  tag?: string;
+  query?: string;
 }) {
+  const activeTag = tag === "course" || assignments.some((item) => item.id === tag) ? tag : "all";
+  const search = (query ?? "").trim().toLowerCase();
+  const shown = questions.filter((question) =>
+    (activeTag === "all" || question.tag === activeTag) &&
+    (!search || `${question.title} ${question.body}`.toLowerCase().includes(search)));
+  const tagName = (id: string) => id === "course" ? "Course" : assignments.find((item) => item.id === id)?.title ?? "Assignment";
   return (
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Conversation</h1>
+          <h1>Discussion board</h1>
           <p className="page-subtitle">Questions and replies do not include a name.</p>
           <p className="meta">Practice accounts only. Do not enter real student information or rely on this release for guaranteed anonymity.</p>
         </div>
@@ -23,6 +36,11 @@ export function CourseConversation({
           <summary className="button primary">Ask a question</summary>
           <form className="composer" action={askQuestion}>
             <input type="hidden" name="courseId" value={courseId} />
+            <label htmlFor="question-tag">Question about</label>
+            <select className="field" id="question-tag" name="tag" defaultValue={activeTag === "all" ? "course" : activeTag}>
+              <option value="course">General course question</option>
+              {assignments.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+            </select>
             <label htmlFor="title">Question</label>
             <input className="field" id="title" name="title" required maxLength={160} />
             <label htmlFor="body">Details</label>
@@ -33,12 +51,23 @@ export function CourseConversation({
           </form>
         </details>
       </div>
+      <form className="conversation-tools" method="get" action={`/courses/${courseId}/conversation`}>
+        <label htmlFor="question-filter">Filter by:</label>
+        <select className="field" id="question-filter" name="tag" defaultValue={activeTag}>
+          <option value="all">All questions</option><option value="course">General course questions</option>
+          {assignments.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+        </select>
+        <label htmlFor="question-search">Search</label>
+        <input className="field" id="question-search" name="q" type="search" defaultValue={query ?? ""} />
+        <button className="button" type="submit">Apply</button>
+      </form>
       <div className="layout">
       <section className="panel" aria-label="Course questions">
-      {questions.length === 0 ? <p className="meta panel-pad">No questions yet.</p> : null}
+      {shown.length === 0 ? <p className="meta panel-pad">No questions match this view.</p> : null}
       <ul className="thread">
-        {questions.map((question) => (
+        {shown.map((question) => (
           <li className="question" key={question.id}>
+            <span className="status-tag">{tagName(question.tag)}</span>
             <h2>{question.title}</h2>
             {question.body ? <p>{question.body}</p> : null}
             <form className="inline-form" action={castVote}>
@@ -57,14 +86,14 @@ export function CourseConversation({
               ))}
             </ul>
             <details className="ask-details">
-              <summary className="button">Reply</summary>
+              <summary className="button">Comments ({question.replies.length})</summary>
               <form className="composer" action={sendReply}>
                 <input type="hidden" name="courseId" value={courseId} />
                 <input type="hidden" name="questionId" value={question.id} />
-                <label htmlFor={`reply-${question.id}`}>Reply</label>
-                <textarea className="field" id={`reply-${question.id}`} name="reply" required maxLength={2000} />
+                <label htmlFor={`reply-${question.id}`}>Add comment or request clarification</label>
+                <textarea className="field" id={`reply-${question.id}`} name="reply" required maxLength={400} />
                 <button className="button" type="submit">
-                  Post reply
+                  Add comment
                 </button>
               </form>
             </details>

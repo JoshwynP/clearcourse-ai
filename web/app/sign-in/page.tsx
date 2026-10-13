@@ -19,12 +19,12 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           </div>
         </div>
         {error === "role" ? <p>Choose Professor or Student.</p> : null}
-        {error === "credentials" ? <p>Could not sign in. Check your email and password, or use a password of at least 10 characters for a new account.</p> : null}
+        {error === "credentials" ? <p>Could not sign in. Check your email and password. For a new account, choose a role and use a password of at least 10 characters.</p> : null}
         <form className="panel panel-pad composer" action={signIn}>
           <fieldset>
             <legend>Role for a new account</legend>
             <label>
-              <input type="radio" name="role" value="instructor" required /> Professor
+              <input type="radio" name="role" value="instructor" /> Professor
             </label>
             <label>
               <input type="radio" name="role" value="student" /> Student
@@ -34,7 +34,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           <input className="field" id="email" name="email" type="email" required maxLength={254} autoComplete="email" />
           <label htmlFor="password">Password</label>
           <input className="field" id="password" name="password" type="password" required minLength={10} maxLength={128} autoComplete="current-password" />
-          <p className="meta">For an existing account, your saved role is used regardless of this choice. A new email creates a practice account. Email ownership and Professor status are not verified.</p>
+          <p className="meta">Returning? Leave role blank; your saved role is used. A new email creates a practice account. Email ownership and Professor status are not verified.</p>
           <button className="button primary" type="submit">
             Sign in
           </button>

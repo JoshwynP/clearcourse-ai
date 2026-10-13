@@ -1,13 +1,14 @@
 import Link from "next/link";
 
-type CourseView = "home" | "conversation" | "guidance" | "studio";
+type CourseView = "home" | "conversation" | "guidance" | "studio" | "participation";
 
 export type NavCourse = { id: string; code: string; name: string };
 
 const sections: { view: Exclude<CourseView, "home">; label: string; href: (courseId: string) => string }[] = [
-  { view: "conversation", label: "Conversation", href: (courseId) => `/courses/${courseId}/conversation` },
-  { view: "guidance", label: "AI guidance", href: (courseId) => `/courses/${courseId}/guidance` },
-  { view: "studio", label: "Instructor studio", href: (courseId) => `/courses/${courseId}/studio` },
+  { view: "conversation", label: "Discussion board", href: (courseId) => `/courses/${courseId}/conversation` },
+  { view: "guidance", label: "AI cards", href: (courseId) => `/courses/${courseId}/guidance` },
+  { view: "participation", label: "Participation", href: (courseId) => `/courses/${courseId}/participation` },
+  { view: "studio", label: "Manage My Cards", href: (courseId) => `/courses/${courseId}/studio` },
 ];
 
 export function AppShell({
@@ -68,7 +69,7 @@ export function AppShell({
         </aside>
         <div className="main-content">
           <header className="topbar">
-            <Breadcrumb course={course} view={view} crumb={crumb} />
+            <Breadcrumb course={course} view={view} crumb={crumb} studio={studio} />
           </header>
           <main id="main">{children}</main>
         </div>
@@ -111,7 +112,7 @@ function CourseGroup({
                 href={section.href(course.id)}
                 aria-current={active ? "page" : undefined}
               >
-                {section.label}
+                {section.view === "participation" ? (studio ? "Class participation" : "My participation") : section.label}
               </Link>
             );
           })}
@@ -121,7 +122,7 @@ function CourseGroup({
   );
 }
 
-function Breadcrumb({ course, view, crumb }: { course?: NavCourse; view?: CourseView; crumb?: string }) {
+function Breadcrumb({ course, view, crumb, studio }: { course?: NavCourse; view?: CourseView; crumb?: string; studio: boolean }) {
   const section = sections.find((item) => item.view === view);
   return (
     <nav className="crumb" aria-label="Location">
@@ -135,7 +136,7 @@ function Breadcrumb({ course, view, crumb }: { course?: NavCourse; view?: Course
       {section ? (
         <>
           <span aria-hidden="true">/</span>
-          <strong>{section.label}</strong>
+          <strong>{section.view === "participation" ? (studio ? "Class participation" : "My participation") : section.label}</strong>
         </>
       ) : null}
       {!course && crumb ? (

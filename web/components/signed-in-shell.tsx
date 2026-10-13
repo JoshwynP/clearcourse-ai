@@ -10,7 +10,7 @@ export async function SignedInShell({
   children,
 }: {
   courseId?: string;
-  view?: "home" | "conversation" | "guidance" | "studio";
+  view?: "home" | "conversation" | "guidance" | "studio" | "participation";
   children: React.ReactNode;
 }) {
   const user = await currentAccount();
