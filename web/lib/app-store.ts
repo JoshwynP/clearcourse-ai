@@ -2,6 +2,7 @@ import { randomBytes, randomInt } from "node:crypto";
 import type { PoolClient } from "@neondatabase/serverless";
 import { database } from "@/lib/database";
 import { emptyCard, type CardFields, type CourseRecord } from "@/lib/identity-model";
+import type { CardLayout } from "@/lib/card-layout";
 import { courses as sampleCourses } from "@/lib/sample-courses";
 import { emptyContent } from "@/lib/content-model";
 import { updateContent } from "@/lib/content-store";
@@ -31,6 +32,7 @@ export type AssignmentDetails = {
   other: string;
   learn: string;
   opening: string;
+  layout?: CardLayout;
 };
 
 export type AssignmentCard = {
@@ -72,7 +74,7 @@ export async function saveAssignmentCardForInstructor(
 ) {
   identifier = identifier.trim(); title = title.trim();
   if (!/^[a-zA-Z0-9_-]{1,40}$/.test(identifier) || !title || title.length > 120) return false;
-  const clean = Object.fromEntries(Object.entries(details).map(([key, value]) => [key, value.trim().slice(0, 2000)]));
+  const clean = Object.fromEntries(Object.entries(details).map(([key, value]) => [key, key === "layout" ? value : String(value).trim().slice(0, 2000)]));
   const result = await database().query(
     id
       ? `update identity.assignment_card a set identifier = $4, title = $5, details = $6::jsonb, updated_at = now()
@@ -387,7 +389,7 @@ export async function joinCourseAsStudent(userId: string, joinCode: string) {
 }
 
 export async function saveCourseCardForInstructor(userId: string, courseId: string, card: CardFields) {
-  const next = Object.fromEntries(Object.entries(card).map(([key, value]) => [key, value.trim()]));
+  const next = Object.fromEntries(Object.entries(card).map(([key, value]) => [key, key === "layout" ? value : String(value).trim().slice(0, 2000)]));
   const result = await database().query(
     `update identity.course c set card = $1::jsonb where c.id = $2 and
        (c.instructor_id = $3 or exists

@@ -10,6 +10,8 @@ import { updateContent } from "@/lib/content-store";
 import { database } from "@/lib/database";
 import { voteToken, type Role } from "@/lib/identity-model";
 import { addParticipation, setParticipationSharing } from "@/lib/participation-store";
+import { parseCardLayout } from "@/lib/card-layout";
+import { assignmentEditableKeys, courseEditableKeys } from "@/lib/card-rows";
 
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email") || "");
@@ -113,6 +115,8 @@ export async function saveCourseCard(formData: FormData) {
   const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
   if (!user) redirect("/sign-in");
+  const layout = parseCardLayout(formData.get("layout"), courseEditableKeys);
+  if (!layout) redirect(`/courses/${courseId}/studio?card=course&error=fields`);
   const ok = await saveCourseCardForInstructor(user.id, courseId, {
     summary: String(formData.get("summary") || ""),
     allowed: String(formData.get("allowed") || ""),
@@ -125,6 +129,7 @@ export async function saveCourseCard(formData: FormData) {
     suspected: String(formData.get("suspected") || ""),
     warning: String(formData.get("warning") || ""),
     resources: String(formData.get("resources") || ""),
+    layout,
   });
   redirect(ok ? `/courses/${courseId}/guidance` : "/");
 }
@@ -133,18 +138,22 @@ export async function saveAssignmentCard(formData: FormData) {
   const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
   if (!user) redirect("/sign-in");
+  const layout = parseCardLayout(formData.get("layout"), assignmentEditableKeys);
+  if (!layout) redirect(`/courses/${courseId}/studio?card=${String(formData.get("id") || "new")}&error=fields`);
   const details = Object.fromEntries(
     (["due", "learning", "permitted", "allowed", "notAllowed", "disclose", "discloseNot", "processRequested", "processNot", "bonusPercent", "bonusRequirements", "resources", "other", "learn", "opening"] as const)
       .map((key) => [key, String(formData.get(key) || "")]),
-  ) as AssignmentDetails;
+  ) as unknown as AssignmentDetails;
+  details.layout = layout;
   const id = String(formData.get("id") || "") || undefined;
+  const editor = `/courses/${courseId}/studio?card=${id || "new"}`;
   try {
     const ok = await saveAssignmentCardForInstructor(
       user.id, courseId, id, String(formData.get("identifier") || ""), String(formData.get("title") || ""), details,
     );
-    redirect(ok ? `/courses/${courseId}/studio` : `/courses/${courseId}/studio?error=card`);
+    redirect(ok ? `/courses/${courseId}/studio` : `${editor}&error=card`);
   } catch (error) {
-    if ((error as { code?: string }).code === "23505") redirect(`/courses/${courseId}/studio?error=duplicate`);
+    if ((error as { code?: string }).code === "23505") redirect(`${editor}&error=duplicate`);
     throw error;
   }
 }

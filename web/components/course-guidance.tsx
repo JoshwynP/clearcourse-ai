@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { COURSE_PRINCIPLE, ASSIGNMENT_PRINCIPLE, policyLinks } from "@/lib/sample-courses";
-import { assignmentRows, courseRows } from "@/lib/card-rows";
+import { assignmentEditableKeys, assignmentRows, courseEditableKeys, courseRows } from "@/lib/card-rows";
+import { normalizeCardLayout } from "@/lib/card-layout";
 import type { AssignmentCard } from "@/lib/app-store";
 import type { CardFields } from "@/lib/identity-model";
 
@@ -10,6 +11,8 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
 }) {
   const selected = assignments.find((item) => item.id === selectedId);
   const selectedTitle = selected?.title ?? "Course AI card";
+  const courseLayout = normalizeCardLayout(card.layout, courseEditableKeys);
+  const selectedLayout = selected ? normalizeCardLayout(selected.details.layout, assignmentEditableKeys) : courseLayout;
   return (
     <div className="page">
       <div className="page-head"><div><h1>AI cards</h1><p className="page-subtitle">{code} | {name}</p></div></div>
@@ -28,10 +31,11 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
         <article className="panel panel-pad guidance-card">
           <h2>{selectedTitle}</h2>
           {selected && selected.status !== "published" ? <p className="notice">This card is {selected.status === "draft" ? "a private draft" : "archived"}. Students cannot see it.</p> : null}
-          {(selected?.details.opening ?? card.opening) ? <p className="callout">{selected?.details.opening ?? card.opening}</p> : null}
+          {!selectedLayout.hiddenFields.includes("opening") && (selected?.details.opening ?? card.opening)
+            ? <p className="callout">{selected?.details.opening ?? card.opening}</p> : null}
           <table className="card-table"><caption className="sr-only">{selectedTitle}</caption><tbody>
             {selected
-              ? assignmentRows.map(([label, key]) => (
+              ? assignmentRows.filter(([, key]) => !selectedLayout.hiddenFields.includes(key)).map(([label, key]) => (
                 <tr key={key}><th scope="row">{label}</th><td>
                   {key === "learn" && /^https:\/\/\S+$/.test(selected.details.learn)
                     ? <a href={selected.details.learn} target="_blank" rel="noopener noreferrer">Open in LEARN</a>
@@ -40,7 +44,8 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
                     ? <span className="override-note">Overrides the course card</span> : null}
                 </td></tr>
               ))
-              : courseRows.map(([label, key]) => <tr key={key}><th scope="row">{label}</th><td>{card[key] || "Not specified yet"}</td></tr>)}
+              : courseRows.filter(([, key]) => !courseLayout.hiddenFields.includes(key)).map(([label, key]) => <tr key={key}><th scope="row">{label}</th><td>{card[key] || "Not specified yet"}</td></tr>)}
+            {selectedLayout.customFields.map((field) => <tr key={field.id}><th scope="row">{field.label}</th><td>{field.value || "Not specified yet"}</td></tr>)}
           </tbody></table>
           {selected ? (selected.details.permitted.toLowerCase() !== "no" ? <p className="callout">{ASSIGNMENT_PRINCIPLE}</p> : null)
             : <p className="callout">{COURSE_PRINCIPLE}</p>}

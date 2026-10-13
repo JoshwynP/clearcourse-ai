@@ -358,6 +358,14 @@ resources · **the transparent decision rule behind any recommendation**.
   wizard · preview the student view · save drafts · publish · duplicate cards · archive or supersede
   cards.
 
+The live manual editor opens with a card chooser. An instructor explicitly selects the course card,
+an existing assignment card, or a new assignment card before editing. All standard fields appear
+on a new card. An instructor may hide a standard field without deleting its text, then restore it
+from a clearly marked hidden-fields area. Hidden fields do not appear in the student card or course
+summaries. Instructors may add and delete custom fields. Assignment title and identifier inputs
+include examples and descriptions. University policy links remain outside editable fields and
+always appear on cards. See ADR 0014.
+
 **Versioning:**
 
 - Every published card is versioned. The rules visible to students **at each point in time** are
@@ -710,3 +718,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-13 | Owner requested separate sign-up/sign-in, clearer card and discussion layouts, a fictional example course, and course-level professor/TA access. ADR 0011 updates the hosted practice scope; real student use remains unapproved. |
 | 2026-10-13 | Owner requested course detail, roster, and selective end-of-term reset controls, clearer branding and sign-up, and a one-time welcome guide. ADR 0012 records the initial release; Q17 remains open for production. |
 | 2026-10-13 | Owner clarified that ClearCourse is the intended product, not a practice site. ADR 0013 removes temporary account language, adds review steps and a persistent guide entry point, and preserves verification and privacy gates before real student use. |
+| 2026-10-13 | Owner requested explicit card selection before editing, field guidance, hide and restore for standard fields, and add and delete controls for custom fields. ADR 0014 records the layout stored with each card. |

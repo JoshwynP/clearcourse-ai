@@ -7,6 +7,8 @@ import { assignmentCardsForCourse, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
 import { database } from "@/lib/database";
 import { voteToken } from "@/lib/identity-model";
+import { normalizeCardLayout } from "@/lib/card-layout";
+import { courseEditableKeys } from "@/lib/card-rows";
 
 export default async function ConversationPage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ tag?: string; q?: string }> }) {
   const { courseId } = await params;
@@ -21,7 +23,9 @@ export default async function ConversationPage({ params, searchParams }: { param
 
   return (
     <SignedInShell courseId={courseId} view="conversation">
-      <CourseConversation courseId={courseId} questions={questions} summary={course.card.summary} assignments={assignments} tag={tag} query={q} />
+      <CourseConversation courseId={courseId} questions={questions}
+        summary={normalizeCardLayout(course.card.layout, courseEditableKeys).hiddenFields.includes("summary") ? "" : course.card.summary}
+        assignments={assignments} tag={tag} query={q} />
     </SignedInShell>
   );
 }

@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, randomInt } from "node:crypto";
+import type { CardLayout } from "@/lib/card-layout";
 
 export type Role = "instructor" | "student";
 
@@ -14,6 +15,7 @@ export type CardFields = {
   suspected?: string;
   warning?: string;
   resources?: string;
+  layout?: CardLayout;
 };
 
 export type UserRecord = {

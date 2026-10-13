@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { SignedInShell } from "@/components/signed-in-shell";
 import { assignmentCardsForCourse, courseStaffRole, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
+import { normalizeCardLayout } from "@/lib/card-layout";
+import { assignmentEditableKeys, courseEditableKeys } from "@/lib/card-rows";
 
 export default async function CoursePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -13,6 +15,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const staff = await courseStaffRole(user.id, courseId);
   const teaching = Boolean(staff);
   const assignments = await assignmentCardsForCourse(courseId, teaching);
+  const courseLayout = normalizeCardLayout(course.card.layout, courseEditableKeys);
 
   return (
     <SignedInShell courseId={courseId} view="home">
@@ -28,7 +31,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             Students join with this code: <strong>{course.joinCode}</strong>
           </p>
         ) : null}
-        {course.card.summary ? <p className="lead">{course.card.summary}</p> : null}
+        {course.card.summary && !courseLayout.hiddenFields.includes("summary") ? <p className="lead">{course.card.summary}</p> : null}
         <ul className="part-list">
           <li>
             <Link href={`/courses/${course.id}/conversation`}>Discussion board</Link>
@@ -50,7 +53,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         <h2 className="section-heading">Assignments</h2>
         {assignments.length ? <ul className="part-list">
           {assignments.map((item) => <li key={item.id}><Link href={`/courses/${courseId}/guidance?card=${item.id}`}>
-            <strong>{item.title}</strong><small>{item.status === "draft" ? "Private draft | " : item.status === "archived" ? "Archived | " : ""}{item.details.due ? `Due ${item.details.due}` : "View AI card"}</small>
+            <strong>{item.title}</strong><small>{item.status === "draft" ? "Private draft | " : item.status === "archived" ? "Archived | " : ""}{item.details.due && !normalizeCardLayout(item.details.layout, assignmentEditableKeys).hiddenFields.includes("due") ? `Due ${item.details.due}` : "View AI card"}</small>
           </Link></li>)}
         </ul> : <p>{teaching ? "No assignment cards yet. Create one in Manage My Cards." : "No assignment cards published yet."}</p>}
       </div>
