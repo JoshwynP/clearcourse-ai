@@ -62,13 +62,15 @@ export function AppShell({
         <aside className="sidebar" aria-label="Course navigation">
           <CourseNavigator courses={courses} courseId={course?.id} view={view} studio={studio} owner={owner} participation={participation} />
           <div className="sidebar-foot">
+            <div className="sidebar-account">
+              {footer ?? (
+                <div className="account-details">
+                  <strong className="account-name">ClearCourse</strong>
+                  <span className="account-role">Made by UW students for UW students and professors</span>
+                </div>
+              )}
+            </div>
             <WelcomeGuide role={welcomeRole} needsWelcome={needsWelcome} />
-            {footer ?? (
-              <>
-                <strong className="account-name">ClearCourse</strong>
-                <span className="account-role">Made by UW students for UW students and professors</span>
-              </>
-            )}
           </div>
         </aside>
         <div className="main-content">

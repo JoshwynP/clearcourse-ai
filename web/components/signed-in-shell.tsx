@@ -34,8 +34,8 @@ export async function SignedInShell({
       needsWelcome={user.needsWelcome}
       footer={
         <>
-          <strong className="account-name">{user.name}</strong>
-          <span className="account-role">{staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}</span>
+          <div className="account-details"><strong className="account-name">{user.name}</strong>
+          <span className="account-role">{staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}</span></div>
           <form action={signOut}>
             <button className="text-action" type="submit">
               Sign out
