@@ -8,7 +8,7 @@ export function CourseHome({ course }: { course: SampleCourse }) {
   return (
     <div className="page">
       <h1>
-        {course.code} · {course.name}
+        {course.code} | {course.name}
       </h1>
       <p className="page-subtitle">{course.term}</p>
       <p className="lead">{course.card.summary}</p>

@@ -21,12 +21,12 @@ export default async function ParticipationPage({ params }: { params: Promise<{ 
     <div className="page">
       <div className="page-head"><div>
         <h1>{teaching ? "Class participation" : "My participation"}</h1>
-        <p className="page-subtitle">{course.code} · {course.name}</p>
+        <p className="page-subtitle">{course.code} | {course.name}</p>
       </div></div>
       {teaching ? <section className="panel panel-pad">
         <h2>Shared levels</h2>
         <p>Only students who chose to share appear here. Their questions, comments, and upvotes are not shown.</p>
-        <p className="meta">Practice accounts only. Do not use this page for real student grading.</p>
+        <p className="meta">Participation records have not completed the privacy and grading review. Do not use this page for student grading.</p>
         {shared.length ? <table className="card-table"><caption className="sr-only">Students who shared a contributor level</caption>
           <thead><tr><th scope="col">Student</th><th scope="col">Contributor level</th><th scope="col">When shared</th></tr></thead>
           <tbody>{shared.map((item, index) => <tr key={index}><td>{item.name}</td><td>{item.level}</td><td>{item.sharedAt.toLocaleDateString("en-CA")}</td></tr>)}</tbody>
@@ -55,7 +55,7 @@ export default async function ParticipationPage({ params }: { params: Promise<{ 
             <p>Your specific questions and engagement stay private in the course view. Your professor will only see your contributor level if you share it.</p>
             <form action={changeParticipationSharing}><input type="hidden" name="courseId" value={courseId} />
               <input type="hidden" name="shared" value="true" /><button className="button primary" type="submit">Share my grade</button></form></>}
-          <p className="meta">Practice accounts only. This release is not approved for real student participation or guaranteed anonymity.</p>
+          <p className="meta">Participation privacy review is still in progress. Do not rely on guaranteed anonymity or use these levels for grading.</p>
         </section>
       </div>}
     </div>

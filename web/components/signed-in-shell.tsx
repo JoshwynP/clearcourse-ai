@@ -3,7 +3,6 @@ import { AppShell } from "@/components/app-shell";
 import { signOut } from "@/lib/actions";
 import { courseStaffRole, coursesForUser, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
-import { WelcomeGuide } from "@/components/welcome-guide";
 
 export async function SignedInShell({
   courseId,
@@ -31,6 +30,8 @@ export async function SignedInShell({
       studio={Boolean(staff)}
       owner={staff === "owner" || staff === "professor"}
       participation={staff !== "ta"}
+      welcomeRole={user.role}
+      needsWelcome={user.needsWelcome}
       footer={
         <>
           <strong className="account-name">{user.name}</strong>
@@ -44,7 +45,6 @@ export async function SignedInShell({
       }
     >
       {children}
-      {user.needsWelcome ? <WelcomeGuide role={user.role} /> : null}
     </AppShell>
   );
 }

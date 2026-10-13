@@ -5,8 +5,7 @@
 > open question. Do not invent, assume, or "fill in" scope. Ask, then record the answer here.
 
 **Status:** A fictional-data static preview exists (ADR 0005). A separate
-Next.js practice app has database-backed accounts and course features (ADR 0010).
-Neither is approved for real student use; production choices remain open in §12.
+Next.js app in `web/` is the intended ClearCourse product and has database-backed accounts and course features (ADRs 0010–0013). Its current release is not approved for real student use because verification and the §6 privacy gate remain incomplete.
 **Primary source:** [`docs/research/source-prompt.pdf`](docs/research/source-prompt.pdf) (pages 1–19 are
 the product specification). Extracted text: [`docs/research/source-prompt.txt`](docs/research/source-prompt.txt).
 Citations below look like `[src p.N]` and refer to that PDF's page numbers.
@@ -144,14 +143,14 @@ Authorization is **strict, role-based and course-based** `[src p.2]`:
 - Impersonation is not implemented unless there is a tightly controlled, audited support
   procedure `[src p.2]`. (Whether one is wanted at all is an open question, Q7.)
 
-**Pilot sign-in (owner, 2026-10-12; [ADR 0008](docs/decisions/0008-stand-in-sign-in-and-course-codes.md)):**
+**Historical pilot sign-in (owner, 2026-10-12; [ADR 0008](docs/decisions/0008-stand-in-sign-in-and-course-codes.md)):**
 A person chooses Professor or Student before signing in, then enters a name. Professor is the
 Instructor role. The same name and role returns to the same courses. There is no teaching-assistant
 role and no administrator role in this pilot. Administration is not being built; its full scope
 remains Q1. A professor creates a course and shares a join code. A student opens that course with
 the code. This is not University of Waterloo sign-in, LTI, or CSV import.
 
-**Hosted practice account decision (owner, 2026-10-12, updated 2026-10-13;
+**Account decision (owner, 2026-10-12, updated 2026-10-13;
 [ADR 0010](docs/decisions/0010-database-practice-accounts.md),
 [ADR 0011](docs/decisions/0011-practice-sign-up-templates-and-staff.md)):**
 Sign-up and sign-in are separate. Sign-up saves a name, email, password, and a
@@ -160,23 +159,22 @@ create one. The saved role does not change on later sign-ins. Email ownership
 and instructor status are not verified. This must not be used as authority for
 real courses or real student participation.
 
-In the hosted practice app, a course owner can add existing accounts by email
+In the hosted app, a course owner can add existing accounts by email
 as course professors or teaching assistants and remove their access. Course
 professors can edit cards and see shared participation levels. Teaching
 assistants can edit cards and answer questions, but cannot see participation
 levels or manage access. Only the owner manages access. A fictional example
 course can be created with a prefilled course card and two assignment cards;
-the alternative is a blank course. These are practice-only choices (ADR 0011).
+the alternative is a blank course. These are current application choices (ADR 0011).
 
-**Practice course operations and welcome (owner, 2026-10-13;
+**Course operations and welcome (owner, 2026-10-13;
 [ADR 0012](docs/decisions/0012-practice-course-operations-and-welcome.md)):**
 Course owners and added professors may edit course details, rotate the join code, add/remove existing
 Student accounts, and selectively reset discussion/participation, enrollment,
 assignment cards, or the Course AI card. The teaching team is retained; only
 the owner changes staff access. A reset requires review and typed confirmation.
 New accounts see a welcome guide and acknowledge it once. Password confirmation
-is required during sign-up. These practice controls do not decide Q17, the
-production data-retention policy, and do not authorize real student use.
+is required during sign-up. The guide remains available from every page after acknowledgement. The settings interface confirms detail changes and sensitive actions before submission; the selective wipe options open only after the wipe button is selected. These controls do not decide Q17, the production data-retention policy, and do not authorize real student use.
 
 ---
 
@@ -530,7 +528,7 @@ The full list of audited events is Q14.
   four-level gold colour bar used on University of Waterloo websites. Gold is used for bars and
   highlights; text on white or grey stays black. Avoid glossy cards and decorative colour. WhatsApp
   is an inspiration for familiarity, not a source of copied branding or assets.
-- **Hosted practice masthead update (owner decision, 2026-10-13; ADR 0012):** ClearCourse links home
+- **Hosted masthead update (owner decision, 2026-10-13; ADR 0012):** ClearCourse links home
   from the top left; the University wordmark appears at the top right. The banner says the site was
   made by UW students for UW students and professors.
 - Accessibility is required `[src p.1, p.16]`. The conformance target (e.g. WCAG 2.x AA) is Q15.
@@ -710,4 +708,5 @@ A change is done only when **all** of the following are true:
 | 2026-10-12 | Owner set the student sharing wording (§7.10). A private grade says it is not shared. Sharing explains that questions and engagement stay private and the professor sees only the contributor level. After sharing, the student is told the professor has been notified, and the student can stop sharing. |
 | 2026-10-12 | Owner chose persistent ClearCourse practice accounts with email/password, a saved first-selected role, and a database-backed Next.js site. ADR 0010 records separate identity and content PostgreSQL projects. Email and Professor status remain unverified, so real student use is not approved. |
 | 2026-10-13 | Owner requested separate sign-up/sign-in, clearer card and discussion layouts, a fictional example course, and course-level professor/TA access. ADR 0011 updates the hosted practice scope; real student use remains unapproved. |
-| 2026-10-13 | Owner requested course detail, roster, and selective end-of-term reset controls, clearer branding and sign-up, and a one-time welcome guide. ADR 0012 defines the hosted practice scope; Q17 remains open for production. |
+| 2026-10-13 | Owner requested course detail, roster, and selective end-of-term reset controls, clearer branding and sign-up, and a one-time welcome guide. ADR 0012 records the initial release; Q17 remains open for production. |
+| 2026-10-13 | Owner clarified that ClearCourse is the intended product, not a practice site. ADR 0013 removes temporary account language, adds review steps and a persistent guide entry point, and preserves verification and privacy gates before real student use. |

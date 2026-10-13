@@ -11,7 +11,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   const { error } = await searchParams;
   return <AppShell courses={[]} crumb="Sign up"><div className="page">
     <div className="page-head"><div><h1>Sign up</h1>
-      <p className="page-subtitle">Create a ClearCourse practice account.</p></div></div>
+      <p className="page-subtitle">Create a ClearCourse account.</p></div></div>
     {error ? <p role="alert">{error === "password" ? "Passwords do not match. Please enter them again." : "Could not create the account. Check your details, use a unique email, and choose a password of at least 10 characters."}</p> : null}
     <form className="panel panel-pad composer" action={signUp}>
       <label htmlFor="signup-name">Name</label>
@@ -26,7 +26,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
         <label><input type="radio" name="role" value="instructor" required /> Professor</label>
         <label><input type="radio" name="role" value="student" required /> Student</label>
       </fieldset>
-      <p className="auth-note">Email ownership and Professor status are not verified. Use practice information only.</p>
+      <p className="auth-note">Email ownership and Professor status are not verified yet. Do not enter identifying student information.</p>
       <button className="button primary" type="submit">Create account</button>
     </form>
     <p className="auth-switch">Already have an account? <Link href="/sign-in">Sign in</Link></p>

@@ -30,7 +30,7 @@ export function CourseConversation({
         <div>
           <h1>Discussion board</h1>
           <p className="page-subtitle">Questions and replies do not include a name.</p>
-          <p className="meta">Practice accounts only. Do not enter real student information or rely on this release for guaranteed anonymity.</p>
+          <p className="meta">Email and Professor status are not verified yet. Do not include identifying student information or assume guaranteed anonymity.</p>
         </div>
       </div>
       <details className="panel ask-panel">

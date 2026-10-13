@@ -1,7 +1,7 @@
-# Database-backed practice app
+# ClearCourse application setup
 
 The Next.js app in `web/` is the application to deploy. Its sign-in is independent
-of University of Waterloo. A new email and password create a practice account;
+of University of Waterloo. A new email and password create a ClearCourse account;
 the chosen role is stored once. No email ownership or instructor status is
 verified. Do not invite real students or enter real student information yet.
 
@@ -61,7 +61,7 @@ still make timing-based inferences. The app server currently holds both
 database credentials while processing votes; a server operator could compute
 the identity behind a vote. Do not promise full anonymity or invite real
 students on this architecture. Assignment-card publishing and basic participation
-counts/sharing now work for practice accounts. Counter updates span two databases
+counts/sharing are available in the current app. Counter updates span two databases
 without a distributed transaction; a failed second write could leave a count
 out of sync. Version history, institutional enrollment checks, abuse handling,
 and the full privacy review in CONTRIBUTING.md §6 are still required before

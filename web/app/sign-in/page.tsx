@@ -16,7 +16,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         <div className="page-head">
           <div>
             <h1>Sign in</h1>
-            <p className="page-subtitle">Use the email and password for your ClearCourse practice account.</p>
+            <p className="page-subtitle">Use the email and password for your ClearCourse account.</p>
           </div>
         </div>
         {error === "credentials" ? <p role="alert">Could not sign in. Check your email and password.</p> : null}
@@ -30,7 +30,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           </button>
         </form>
         <div className="auth-signup-callout"><strong>Don’t have an account yet?</strong><p>Create one to save your courses and return to them later.</p>
-          <Link className="button signup-button" href="/sign-up">Create a free practice account</Link></div>
+          <Link className="button signup-button" href="/sign-up">Create an account</Link></div>
       </div>
     </AppShell>
   );

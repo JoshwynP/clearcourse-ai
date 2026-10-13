@@ -23,7 +23,7 @@ export function GuidancePanel({
   return (
     <div className="page">
       <h1>
-        {course.code} · {course.name}
+        {course.code} | {course.name}
       </h1>
       <p className="page-subtitle">Sample guidance. Nothing here is published.</p>
       <ul className="card-choices">
@@ -47,7 +47,7 @@ export function GuidancePanel({
       ) : (
         <article className="panel guidance-card">
           <p className="section-caption">
-            {course.card.status} · Updated {course.card.updated}
+            {course.card.status} | Updated {course.card.updated}
           </p>
           <h2>{course.card.title}</h2>
           <p className="lead">{course.card.summary}</p>
@@ -89,11 +89,11 @@ function AssignmentCard({ assignment, text }: { assignment: Assignment; text: Ca
   return (
     <article className="panel guidance-card">
       <p className="section-caption">
-        {assignment.status} · Updated {assignment.updated}
+        {assignment.status} | Updated {assignment.updated}
       </p>
       <h2>{assignment.title}</h2>
       <p className="lead">
-        Due {assignment.due} · {assignment.learning}
+        Due {assignment.due} | {assignment.learning}
       </p>
       <div className="callout">{ASSIGNMENT_PRINCIPLE}</div>
       <section className="guidance-section">

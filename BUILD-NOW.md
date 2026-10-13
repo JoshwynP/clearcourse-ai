@@ -29,48 +29,22 @@ The completed service must follow `CONTRIBUTING.md`: exactly one Course AI Card 
 | 8. Classroom and course operations | Add presentation mode, notifications, grading settings/export, and audit events, one feature at a time. Decide their open questions when each feature starts. | Every added feature has its own demo, acceptance test, and privacy review. |
 | 9. Wider release | Add end-of-course survey, privacy-safe aggregates, administration, institutional integration, retention/deletion, monitoring, and deployment operations. Recheck policy/legal/institutional requirements before onboarding broader use. | Production acceptance criteria in `CONTRIBUTING.md` §10 pass, including security and accessibility review. |
 
-## After the front end
+## Current application
 
-The public preview in `public/` is the front-end reference: the open course shows its conversation and guidance together, and its sections appear in the sidebar only while that course is open. Finish feedback on that layout before backend work.
+The database-backed Next.js application in `web/` is ClearCourse, the intended course product. It is deployed on Vercel with separate Neon identity and content databases. The static `public/` site remains a fictional design reference and is not the application to deploy. Earlier ADRs 0008–0012 record how the app was built and why some early releases used temporary sign-in language. ADR 0013 supersedes that language in the product.
 
-The local app first gained stage 2 practice sign-in, course join codes, and always-anonymous questions (ADRs 0008 and 0009). The public preview in `public/` remains fictional and has no accounts.
+The current app has account sign-up and sign-in, courses and join codes, course and assignment AI cards, discussion, participation views, teaching team access, course settings, and a welcome guide. This request adds clearer course navigation, confirmation for settings changes, a collapsed wipe control, and a guide users can reopen. Those changes are interface and workflow improvements. They do not complete verification of email or Professor status, the privacy gate in §6, transactional participation counts, moderation, or the production retention decision Q17. Do not invite real students or enter identifying student information until those requirements are met.
 
-The next hosted practice slice is recorded in ADR 0010. The Next.js app now has
-database-backed practice accounts, courses, cards, and a separate content store.
-The Vercel project now uses `web/` as its root and the two Neon databases in
-`web/SETUP.md`. The original static preview remains in `public/` as a design
-reference. The hosted app uses practice accounts; do not enter real student
-information.
+`web/SETUP.md` documents the current deployment and remaining gates. Continue implementation one verifiable slice at a time.
 
-The hosted practice branch now adds saved assignment drafts and publishing,
-assignment-tagged discussion filters, and private participation counts with
-student-controlled level sharing. Migration 003 is required in the identity
-database. This remains a practice release: email and Professor status are
-unverified, the participation counter is not transactionally coupled to the
-content database, and the full privacy gate still blocks real student use.
+## Next implementation slices
 
-The next practice slice separates sign-up and sign-in, restores assignment
-drafts for professors, gives the question composer its own panel, adds an
-editable fictional example course, and adds owner-controlled course staff.
-Apply identity migration 004 before deploying it. See ADR 0011.
+1. Verify email ownership and Professor eligibility before accounts can exercise course authority.
+2. Close the §6 privacy architecture questions and add negative privacy tests before real discussion or participation.
+3. Reconcile participation events across the separate databases, add moderation and abuse controls, and resolve the Q17 retention policy.
+4. Run accessibility and security review with controlled course data before inviting real students.
 
-The next hosted practice update expands course settings with course details,
-manual student enrollment, and a selective end-of-term reset. It also improves
-the masthead, sign-up, and first-account welcome guide. Apply identity migration
-005 before deploying this update. See ADR 0012. Reset remains a practice-only
-operation; production retention/deletion policy is still Q17.
-
-## The next seven Cursor sessions
-
-1. **Finish the look.** Review the flatter prototype on desktop and phone. Make one small visual change at a time; do not add features.
-2. **Publish the fictional preview.** Follow `CURSOR-START-HERE.md` to connect Vercel to the private repo and deploy only `public/`. Verify the URL and keep the demo notice. Do not enter real student information.
-3. **Close Q3 for the app.** Review ADR 0001 and 0002, update current package and hosting facts, make a short decision record, then stop research.
-4. **Scaffold the real app.** Create the framework project on a new branch, with one route for the course list and one for a card, a build command, and a smoke test.
-5. **Move the visual shell.** Carry over the plain visual language and responsive layout. Keep sample data and no sign-in yet.
-6. **Close Q4–Q5.** Done for this pilot in ADR 0008: practice sign-in, Professor or Student chosen first, and course join codes, with denial tests.
-7. **Build the first real card.** Create a course card as a draft, preview it, publish it, and read it as a student. Add assignment cards in the next session.
-
-After each session: run the app, inspect the changed screen, run the relevant tests, commit the change, and write the next slice in one sentence. Do not ask an agent to implement all nine stages at once.
+Each slice needs a visible result and focused tests. The account and settings language update is recorded in ADR 0013.
 
 ## Cursor Pro setup and spending discipline
 

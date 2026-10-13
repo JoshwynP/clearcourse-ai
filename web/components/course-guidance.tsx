@@ -12,7 +12,7 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
   const selectedTitle = selected?.title ?? "Course AI card";
   return (
     <div className="page">
-      <div className="page-head"><div><h1>AI cards</h1><p className="page-subtitle">{code} · {name}</p></div></div>
+      <div className="page-head"><div><h1>AI cards</h1><p className="page-subtitle">{code} | {name}</p></div></div>
       <div className="card-layout">
         <nav className="panel card-list" aria-label="Choose an AI card">
           <Link className={`card-choice ${selected ? "" : "active"}`} href={`/courses/${courseId}/guidance`} aria-current={selected ? undefined : "page"}>

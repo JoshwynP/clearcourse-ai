@@ -50,7 +50,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         <h2 className="section-heading">Assignments</h2>
         {assignments.length ? <ul className="part-list">
           {assignments.map((item) => <li key={item.id}><Link href={`/courses/${courseId}/guidance?card=${item.id}`}>
-            <strong>{item.title}</strong><small>{item.status === "draft" ? "Private draft · " : item.status === "archived" ? "Archived · " : ""}{item.details.due ? `Due ${item.details.due}` : "View AI card"}</small>
+            <strong>{item.title}</strong><small>{item.status === "draft" ? "Private draft | " : item.status === "archived" ? "Archived | " : ""}{item.details.due ? `Due ${item.details.due}` : "View AI card"}</small>
           </Link></li>)}
         </ul> : <p>{teaching ? "No assignment cards yet. Create one in Manage My Cards." : "No assignment cards published yet."}</p>}
       </div>

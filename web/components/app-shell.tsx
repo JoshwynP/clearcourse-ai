@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import { CourseNavigator } from "@/components/course-navigator";
+import { WelcomeGuide } from "@/components/welcome-guide";
 
 type CourseView = "home" | "conversation" | "guidance" | "studio" | "participation" | "settings";
 
@@ -22,6 +24,8 @@ export function AppShell({
   owner = false,
   participation = true,
   footer,
+  welcomeRole,
+  needsWelcome = false,
   children,
 }: {
   courses: NavCourse[];
@@ -32,6 +36,8 @@ export function AppShell({
   owner?: boolean;
   participation?: boolean;
   footer?: React.ReactNode;
+  welcomeRole?: "instructor" | "student";
+  needsWelcome?: boolean;
   children: React.ReactNode;
 }) {
   const onHome = !course && !crumb;
@@ -54,18 +60,7 @@ export function AppShell({
       </div>
       <div className="app-shell">
         <aside className="sidebar" aria-label="Course navigation">
-          <div className="sidebar-section-label">Your courses</div>
-          {courses.map((item) => (
-            <CourseGroup
-              key={item.id}
-              course={item}
-              current={item.id === course?.id}
-              view={item.id === course?.id ? view : undefined}
-              studio={studio}
-              owner={owner}
-              participation={participation}
-            />
-          ))}
+          <CourseNavigator courses={courses} courseId={course?.id} view={view} studio={studio} owner={owner} participation={participation} />
           <div className="sidebar-foot">
             {footer ?? (
               <>
@@ -82,57 +77,7 @@ export function AppShell({
           <main id="main">{children}</main>
         </div>
       </div>
-    </div>
-  );
-}
-
-function CourseGroup({
-  course,
-  current,
-  view,
-  studio,
-  owner,
-  participation,
-}: {
-  course: NavCourse;
-  current: boolean;
-  view?: CourseView;
-  studio: boolean;
-  owner: boolean;
-  participation: boolean;
-}) {
-  const onHome = current && view === "home";
-  const visible = sections.filter((section) =>
-    (section.view !== "studio" || studio) &&
-    (section.view !== "settings" || owner) &&
-    (section.view !== "participation" || participation));
-  return (
-    <div className={current ? "course-group current" : "course-group"}>
-      <Link
-        className={onHome ? "course-option active" : "course-option"}
-        href={`/courses/${course.id}`}
-        aria-current={onHome ? "page" : undefined}
-      >
-        <strong>{course.code}</strong>
-        <small>{course.name}</small>
-      </Link>
-      {current ? (
-        <nav className="course-sections" aria-label={`${course.code} sections`}>
-          {visible.map((section) => {
-            const active = view === section.view;
-            return (
-              <Link
-                key={section.view}
-                className={active ? "section-link active" : "section-link"}
-                href={section.href(course.id)}
-                aria-current={active ? "page" : undefined}
-              >
-                {section.view === "participation" ? (studio ? "Class participation" : "My participation") : section.label}
-              </Link>
-            );
-          })}
-        </nav>
-      ) : null}
+      <WelcomeGuide role={welcomeRole} needsWelcome={needsWelcome} />
     </div>
   );
 }

@@ -27,7 +27,7 @@ export function ConversationScreen({ course }: { course: SampleCourse }) {
       <div className="page-head">
         <div>
           <h1>
-            {course.code} · {course.name}
+            {course.code} | {course.name}
           </h1>
           <p className="page-subtitle">Sample questions. They stay in this browser tab until you reload.</p>
         </div>
