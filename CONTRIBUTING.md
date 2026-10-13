@@ -530,6 +530,9 @@ The full list of audited events is Q14.
   four-level gold colour bar used on University of Waterloo websites. Gold is used for bars and
   highlights; text on white or grey stays black. Avoid glossy cards and decorative colour. WhatsApp
   is an inspiration for familiarity, not a source of copied branding or assets.
+- **Hosted practice masthead update (owner decision, 2026-10-13; ADR 0012):** ClearCourse links home
+  from the top left; the University wordmark appears at the top right. The banner says the site was
+  made by UW students for UW students and professors.
 - Accessibility is required `[src p.1, p.16]`. The conformance target (e.g. WCAG 2.x AA) is Q15.
 
 ---

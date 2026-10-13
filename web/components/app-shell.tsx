@@ -68,8 +68,8 @@ export function AppShell({
           <div className="sidebar-foot">
             {footer ?? (
               <>
-                ClearCourse
-                <small>Made by UW students for UW students and professors</small>
+                <strong className="account-name">ClearCourse</strong>
+                <span className="account-role">Made by UW students for UW students and professors</span>
               </>
             )}
           </div>
