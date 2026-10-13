@@ -25,10 +25,10 @@ export function CourseNavigator({ courses, courseId, view, studio, owner, partic
   const [query, setQuery] = useState("");
   const visible = courses.filter((course) => `${course.code} ${course.name}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
-  return <section className="course-collection" aria-label="Your courses">
+  return <section className={courses.length ? "course-collection" : "course-collection no-courses"} aria-label="Your courses">
     <div className="sidebar-section-label">Your courses <span>({courses.length})</span></div>
-    <label className="course-search-label" htmlFor="course-search">Search your courses</label>
-    <input id="course-search" className="field course-search" type="search" placeholder="Search courses" value={query} onChange={(event) => setQuery(event.target.value)} />
+    {courses.length ? <><label className="course-search-label" htmlFor="course-search">Search your courses</label>
+    <input id="course-search" className="field course-search" type="search" placeholder="Search courses" value={query} onChange={(event) => setQuery(event.target.value)} /></> : null}
     <div className="course-list-scroll">
       {visible.length ? visible.map((item) => <CourseGroup key={item.id} course={item} current={item.id === courseId} view={item.id === courseId ? view : undefined} studio={studio} owner={owner} participation={participation} />) :
         <p className="course-empty">{courses.length ? "No courses match your search." : "Your courses will appear here."}</p>}
