@@ -2,14 +2,15 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { SignedInShell } from "@/components/signed-in-shell";
 import { createCourseAction, joinCourseAction } from "@/lib/actions";
-import { coursesFor } from "@/lib/identity-model";
-import { readIdentity } from "@/lib/identity-store";
-import { currentUser } from "@/lib/session";
+import { coursesForUser } from "@/lib/app-store";
+import { currentAccount } from "@/lib/accounts";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const user = await currentUser();
+  const user = await currentAccount();
   const { error } = await searchParams;
-  const mine = user ? coursesFor(readIdentity(), user.id) : [];
+  const mine = user ? await coursesForUser(user.id) : [];
 
   const page = (
     <div className="page">
@@ -65,7 +66,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </>
       ) : (
         <>
-          <p>This is not University of Waterloo sign-in.</p>
+          <p>Sign in with a ClearCourse practice account. Email ownership and Professor status are not verified.</p>
           <p className="home-actions">
             <Link className="button primary" href="/sign-in">
               Sign in

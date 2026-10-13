@@ -1,15 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import { CourseStudio } from "@/components/course-studio";
 import { SignedInShell } from "@/components/signed-in-shell";
-import { memberCourse } from "@/lib/identity-model";
-import { readIdentity } from "@/lib/identity-store";
-import { currentUser } from "@/lib/session";
+import { memberCourseForUser } from "@/lib/app-store";
+import { currentAccount } from "@/lib/accounts";
 
 export default async function StudioPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
-  const user = await currentUser();
+  const user = await currentAccount();
   if (!user) redirect("/sign-in");
-  const course = memberCourse(readIdentity(), user.id, courseId);
+  const course = await memberCourseForUser(user.id, courseId);
   if (!course || course.instructorId !== user.id) notFound();
 
   return (

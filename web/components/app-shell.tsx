@@ -60,8 +60,8 @@ export function AppShell({
           <div className="sidebar-foot">
             {footer ?? (
               <>
-                Practice sign-in
-                <small>Saved on this computer only.</small>
+                ClearCourse
+                <small>Practice accounts</small>
               </>
             )}
           </div>

@@ -1,9 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { signOut } from "@/lib/actions";
-import { coursesFor, memberCourse } from "@/lib/identity-model";
-import { readIdentity } from "@/lib/identity-store";
-import { currentUser } from "@/lib/session";
+import { coursesForUser, memberCourseForUser } from "@/lib/app-store";
+import { currentAccount } from "@/lib/accounts";
 
 export async function SignedInShell({
   courseId,
@@ -14,16 +13,15 @@ export async function SignedInShell({
   view?: "home" | "conversation" | "guidance" | "studio";
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
+  const user = await currentAccount();
   if (!user) redirect("/sign-in");
-  const identity = readIdentity();
-  const course = courseId ? memberCourse(identity, user.id, courseId) : undefined;
+  const course = courseId ? await memberCourseForUser(user.id, courseId) : undefined;
   if (courseId && !course) notFound();
   if (view === "studio" && course?.instructorId !== user.id) notFound();
 
   return (
     <AppShell
-      courses={coursesFor(identity, user.id)}
+      courses={await coursesForUser(user.id)}
       course={course}
       view={view}
       studio={Boolean(course && course.instructorId === user.id)}

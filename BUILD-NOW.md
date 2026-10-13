@@ -33,7 +33,13 @@ The completed service must follow `CONTRIBUTING.md`: exactly one Course AI Card 
 
 The public preview in `public/` is the front-end reference: the open course shows its conversation and guidance together, and its sections appear in the sidebar only while that course is open. Finish feedback on that layout before backend work.
 
-The local app now has the stage 2 practice sign-in, course join codes, and always-anonymous questions (ADRs 0008 and 0009). The public preview in `public/` stays fictional and has no accounts. Do not deploy the Next.js app over that preview.
+The local app first gained stage 2 practice sign-in, course join codes, and always-anonymous questions (ADRs 0008 and 0009). The public preview in `public/` remains fictional and has no accounts.
+
+The next hosted practice slice is recorded in ADR 0010. The Next.js app now has
+database-backed practice accounts, courses, cards, and a separate content store.
+Follow `web/SETUP.md` to configure two databases and switch the Vercel Root
+Directory to `web`. Until that setup and a live check are complete, the Vercel
+site remains the static preview. Do not enter real student information.
 
 ## The next seven Cursor sessions
 

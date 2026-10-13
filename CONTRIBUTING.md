@@ -4,8 +4,9 @@
 > requirement written here. If something is not written here, it is not a requirement — it is an
 > open question. Do not invent, assume, or "fill in" scope. Ask, then record the answer here.
 
-**Status:** A fictional-data static experience prototype exists (ADR 0005). No authenticated application code exists yet; its tech stack is **not yet decided**
-(see §12).
+**Status:** A fictional-data static preview exists (ADR 0005). A separate
+Next.js practice app has database-backed accounts and course features (ADR 0010).
+Neither is approved for real student use; production choices remain open in §12.
 **Primary source:** [`docs/research/source-prompt.pdf`](docs/research/source-prompt.pdf) (pages 1–19 are
 the product specification). Extracted text: [`docs/research/source-prompt.txt`](docs/research/source-prompt.txt).
 Citations below look like `[src p.N]` and refer to that PDF's page numbers.
@@ -149,6 +150,13 @@ Instructor role. The same name and role returns to the same courses. There is no
 role and no administrator role in this pilot. Administration is not being built; its full scope
 remains Q1. A professor creates a course and shares a join code. A student opens that course with
 the code. This is not University of Waterloo sign-in, LTI, or CSV import.
+
+**Hosted practice account decision (owner, 2026-10-12; [ADR 0010](docs/decisions/0010-database-practice-accounts.md)):**
+The first email/password sign-in creates a ClearCourse practice account without
+a separate sign-up page. The chosen Professor or Student role is saved and
+cannot be changed by selecting another role on later sign-ins. Email ownership
+and instructor status are not verified. This must not be used as authority for
+real courses or real student participation.
 
 ---
 
@@ -393,9 +401,12 @@ automatically.
 - Students privately see their question count, comment count, upvote count, current level, and the
   published course thresholds.
 - At the end of the course a student may share **only their verified level**.
-- Before sharing, show this text (verbatim):
-  > "Your instructor will receive your name and participation level. Your instructor will not
-  > receive your questions, comments, upvotes, dates, or activity breakdown."
+- While the grade is private, show: "Your grade is currently private and not shared with your
+  professor."
+- With the share action, show: "Your specific questions and engagement stay private. Your professor
+  will only see your contributor level." The action is **Share my grade**.
+- After sharing, show: "Your professor has been notified of your contributor level." The student can
+  stop sharing. Questions, comments, and upvotes stay anonymous.
 - The instructor receives only: **student name · verified level · date shared**.
 - Students can revoke a share until the instructor exports or applies the result. The app must
   clearly explain when sharing becomes final.
@@ -566,6 +577,11 @@ automated tests, deployment documentation and administrative configuration. In a
 ([ADR 0002](docs/decisions/0002-hosting-and-infrastructure.md)), the database access library, and
 the UI component library.
 
+For the hosted **practice** app, ADR 0010 chooses two separate Neon PostgreSQL
+projects and Better Auth. The setup is in `web/SETUP.md`. This does not
+approve production use with real student information; the broader hosting and
+privacy decision remains open.
+
 The rest of this section records advice from the AI chat on pages 20–31 of the source. That advice
 is not a requirement unless an approved ADR says so.
 
@@ -668,3 +684,5 @@ A change is done only when **all** of the following are true:
 | 2026-10-12 | Owner chose a local practice sign-in (Q4), professor-created courses shared by join code (Q5), Professor or Student chosen before sign-in, and no administrator role in this pilot. Questions are always anonymous (Q9). The threat model is `docs/privacy/threat-model.md` (Q8). ADRs 0008 and 0009. Production hosting of the database-backed app stays open under Q3. |
 | 2026-10-12 | Owner made the card opening statement optional for course and assignment cards. A blank statement stays blank. The suggested wording may be used, edited, or omitted (§7.3, §7.4). |
 | 2026-10-12 | The public preview demonstrates the private participation counter and student-controlled sharing (§7.9, §7.10). A professor sees only the level of a student who chose to share. Questions, comments, and upvotes stay anonymous. The preview is fictional and session-only. |
+| 2026-10-12 | Owner set the student sharing wording (§7.10). A private grade says it is not shared. Sharing explains that questions and engagement stay private and the professor sees only the contributor level. After sharing, the student is told the professor has been notified, and the student can stop sharing. |
+| 2026-10-12 | Owner chose persistent ClearCourse practice accounts with email/password, a saved first-selected role, and a database-backed Next.js site. ADR 0010 records separate identity and content PostgreSQL projects. Email and Professor status remain unverified, so real student use is not approved. |

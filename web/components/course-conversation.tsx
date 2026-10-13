@@ -17,6 +17,7 @@ export function CourseConversation({
         <div>
           <h1>Conversation</h1>
           <p className="page-subtitle">Questions and replies do not include a name.</p>
+          <p className="meta">Practice accounts only. Do not enter real student information or rely on this release for guaranteed anonymity.</p>
         </div>
         <details className="ask-details">
           <summary className="button primary">Ask a question</summary>

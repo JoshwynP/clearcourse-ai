@@ -1,108 +1,93 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { currentAccount, signInOrCreate } from "@/lib/accounts";
+import { createCourseForInstructor, joinCourseAsStudent, memberCourseForUser, saveCourseCardForInstructor } from "@/lib/app-store";
 import { addQuestion, addReply, toggleVote } from "@/lib/content-model";
-import { readContent, writeContent } from "@/lib/content-store";
-import {
-  createCourse,
-  endSession,
-  joinCourse,
-  memberCourse,
-  saveCard,
-  signInAccount,
-  voteToken,
-  type Role,
-} from "@/lib/identity-model";
-import { readIdentity, writeIdentity } from "@/lib/identity-store";
-import { clearSessionCookie, currentUser, sessionId, setSessionCookie } from "@/lib/session";
-
-function roleOf(value: FormDataEntryValue | null): Role | null {
-  return value === "instructor" || value === "student" ? value : null;
-}
+import { updateContent } from "@/lib/content-store";
+import { database } from "@/lib/database";
+import { voteToken, type Role } from "@/lib/identity-model";
 
 export async function signIn(formData: FormData) {
-  const role = roleOf(formData.get("role"));
-  const name = String(formData.get("name") || "");
-  if (!role) redirect("/sign-in?error=role");
-  const result = signInAccount(readIdentity(), { name, role });
-  if (!result) redirect("/sign-in?error=name");
-  writeIdentity(result.state);
-  await setSessionCookie(result.sessionId);
+  const role = formData.get("role");
+  if (role !== "instructor" && role !== "student") redirect("/sign-in?error=role");
+  const email = String(formData.get("email") || "");
+  const password = String(formData.get("password") || "");
+  const success = await signInOrCreate(email, password, role as Role);
+  if (!success) redirect("/sign-in?error=credentials");
   redirect("/");
 }
 
 export async function signOut() {
-  const id = await sessionId();
-  if (id) writeIdentity(endSession(readIdentity(), id));
-  await clearSessionCookie();
+  await auth().api.signOut({ headers: await headers() });
   redirect("/sign-in");
 }
 
 export async function createCourseAction(formData: FormData) {
-  const user = await currentUser();
+  const user = await currentAccount();
   if (!user) redirect("/sign-in");
-  const next = createCourse(readIdentity(), user.id, { code: String(formData.get("code") || ""), name: String(formData.get("name") || "") });
-  if (!next) redirect("/?error=course");
-  writeIdentity(next);
-  const created = next.courses[next.courses.length - 1];
-  redirect(created ? `/courses/${created.id}` : "/");
+  if (user.role !== "instructor") redirect("/");
+  const ok = await createCourseForInstructor(user.id, String(formData.get("code") || ""), String(formData.get("name") || ""));
+  redirect(ok ? "/" : "/?error=course");
 }
 
 export async function joinCourseAction(formData: FormData) {
-  const user = await currentUser();
+  const user = await currentAccount();
   if (!user) redirect("/sign-in");
-  const next = joinCourse(readIdentity(), user.id, String(formData.get("code") || ""));
-  if (!next) redirect("/?error=code");
-  writeIdentity(next);
-  redirect("/");
+  if (user.role !== "student") redirect("/");
+  const ok = await joinCourseAsStudent(user.id, String(formData.get("code") || ""));
+  redirect(ok ? "/" : "/?error=code");
 }
 
 export async function askQuestion(formData: FormData) {
-  const user = await currentUser();
+  const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
-  if (!user || !memberCourse(readIdentity(), user.id, courseId)) redirect("/sign-in");
-  const next = addQuestion(readContent(), courseId, { title: String(formData.get("title") || ""), body: String(formData.get("body") || "") });
-  if (next) writeContent(next);
+  if (!user) redirect("/sign-in");
+  if (!await memberCourseForUser(user.id, courseId)) redirect("/");
+  await updateContent(courseId, (state) => addQuestion(state, courseId, {
+    title: String(formData.get("title") || ""), body: String(formData.get("body") || ""),
+  }));
   redirect(`/courses/${courseId}/conversation`);
 }
 
 export async function sendReply(formData: FormData) {
-  const user = await currentUser();
+  const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  if (!await memberCourseForUser(user.id, courseId)) redirect("/");
   const questionId = String(formData.get("questionId") || "");
-  if (!user || !memberCourse(readIdentity(), user.id, courseId)) redirect("/sign-in");
-  const content = readContent();
-  const question = content.questions.find((item) => item.id === questionId && item.courseId === courseId);
-  if (!question) redirect(`/courses/${courseId}/conversation`);
-  const next = addReply(content, questionId, user.role === "instructor" ? "Instructor" : "Student", String(formData.get("reply") || ""));
-  if (next) writeContent(next);
+  await updateContent(courseId, (state) => {
+    if (!state.questions.some((item) => item.id === questionId && item.courseId === courseId)) return null;
+    return addReply(state, questionId, user.role === "instructor" ? "Instructor" : "Student", String(formData.get("reply") || ""));
+  });
   redirect(`/courses/${courseId}/conversation`);
 }
 
 export async function castVote(formData: FormData) {
-  const user = await currentUser();
+  const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  if (!await memberCourseForUser(user.id, courseId)) redirect("/");
   const questionId = String(formData.get("questionId") || "");
-  if (!user || !memberCourse(readIdentity(), user.id, courseId)) redirect("/sign-in");
-  const content = readContent();
-  const question = content.questions.find((item) => item.id === questionId && item.courseId === courseId);
-  if (!question) redirect(`/courses/${courseId}/conversation`);
-  const next = toggleVote(content, questionId, voteToken(user.voteKey, questionId));
-  if (next) writeContent(next);
+  const result = await database().query<{ vote_key: string }>("select vote_key from identity.profile where user_id = $1", [user.id]);
+  if (!result.rows[0]) redirect("/");
+  const token = voteToken(result.rows[0].vote_key, questionId);
+  await updateContent(courseId, (state) => toggleVote(state, questionId, token));
   redirect(`/courses/${courseId}/conversation`);
 }
 
 export async function saveCourseCard(formData: FormData) {
-  const user = await currentUser();
+  const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
   if (!user) redirect("/sign-in");
-  const next = saveCard(readIdentity(), user.id, courseId, {
+  if (user.role !== "instructor") redirect("/");
+  const ok = await saveCourseCardForInstructor(user.id, courseId, {
     summary: String(formData.get("summary") || ""),
     allowed: String(formData.get("allowed") || ""),
     notAllowed: String(formData.get("notAllowed") || ""),
     disclose: String(formData.get("disclose") || ""),
   });
-  if (!next) redirect("/");
-  writeIdentity(next);
-  redirect(`/courses/${courseId}/guidance`);
+  redirect(ok ? `/courses/${courseId}/guidance` : "/");
 }
