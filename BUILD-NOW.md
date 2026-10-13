@@ -37,9 +37,10 @@ The local app first gained stage 2 practice sign-in, course join codes, and alwa
 
 The next hosted practice slice is recorded in ADR 0010. The Next.js app now has
 database-backed practice accounts, courses, cards, and a separate content store.
-Follow `web/SETUP.md` to configure two databases and switch the Vercel Root
-Directory to `web`. Until that setup and a live check are complete, the Vercel
-site remains the static preview. Do not enter real student information.
+The Vercel project now uses `web/` as its root and the two Neon databases in
+`web/SETUP.md`. The original static preview remains in `public/` as a design
+reference. The hosted app uses practice accounts; do not enter real student
+information.
 
 The hosted practice branch now adds saved assignment drafts and publishing,
 assignment-tagged discussion filters, and private participation counts with

@@ -40,9 +40,10 @@ site origin, with no trailing slash. Redeploy only after the two SQL scripts
 have run. Verify first sign-in, wrong-password rejection, returning role,
 course creation and joining, sign-out, and anonymous questions.
 
-The current Vercel static deployment serves `public/`; changing the root
-directory is a dashboard action. A code build alone does not change the live
-site. Do not put the database URLs or auth secret in `NEXT_PUBLIC_` variables.
+The Vercel project is configured with Root Directory `web`, Framework Preset
+Next.js, and the two Neon integrations. Production deployment follows `main`;
+the `feat/app-foundation` branch has a separate preview URL. Do not put the
+database URLs or auth secret in `NEXT_PUBLIC_` variables.
 
 ## Limits
 
