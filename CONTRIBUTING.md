@@ -151,12 +151,22 @@ role and no administrator role in this pilot. Administration is not being built;
 remains Q1. A professor creates a course and shares a join code. A student opens that course with
 the code. This is not University of Waterloo sign-in, LTI, or CSV import.
 
-**Hosted practice account decision (owner, 2026-10-12; [ADR 0010](docs/decisions/0010-database-practice-accounts.md)):**
-The first email/password sign-in creates a ClearCourse practice account without
-a separate sign-up page. The chosen Professor or Student role is saved and
-cannot be changed by selecting another role on later sign-ins. Email ownership
+**Hosted practice account decision (owner, 2026-10-12, updated 2026-10-13;
+[ADR 0010](docs/decisions/0010-database-practice-accounts.md),
+[ADR 0011](docs/decisions/0011-practice-sign-up-templates-and-staff.md)):**
+Sign-up and sign-in are separate. Sign-up saves a name, email, password, and a
+Professor or Student role. Sign-in opens an existing account only; it does not
+create one. The saved role does not change on later sign-ins. Email ownership
 and instructor status are not verified. This must not be used as authority for
 real courses or real student participation.
+
+In the hosted practice app, a course owner can add existing accounts by email
+as course professors or teaching assistants and remove their access. Course
+professors can edit cards and see shared participation levels. Teaching
+assistants can edit cards and answer questions, but cannot see participation
+levels or manage access. Only the owner manages access. A fictional example
+course can be created with a prefilled course card and two assignment cards;
+the alternative is a blank course. These are practice-only choices (ADR 0011).
 
 ---
 
@@ -686,3 +696,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-12 | The public preview demonstrates the private participation counter and student-controlled sharing (§7.9, §7.10). A professor sees only the level of a student who chose to share. Questions, comments, and upvotes stay anonymous. The preview is fictional and session-only. |
 | 2026-10-12 | Owner set the student sharing wording (§7.10). A private grade says it is not shared. Sharing explains that questions and engagement stay private and the professor sees only the contributor level. After sharing, the student is told the professor has been notified, and the student can stop sharing. |
 | 2026-10-12 | Owner chose persistent ClearCourse practice accounts with email/password, a saved first-selected role, and a database-backed Next.js site. ADR 0010 records separate identity and content PostgreSQL projects. Email and Professor status remain unverified, so real student use is not approved. |
+| 2026-10-13 | Owner requested separate sign-up/sign-in, clearer card and discussion layouts, a fictional example course, and course-level professor/TA access. ADR 0011 updates the hosted practice scope; real student use remains unapproved. |

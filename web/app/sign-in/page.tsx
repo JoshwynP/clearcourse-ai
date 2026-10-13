@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { signIn } from "@/lib/actions";
 import { currentAccount } from "@/lib/accounts";
@@ -15,30 +16,20 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         <div className="page-head">
           <div>
             <h1>Sign in</h1>
-            <p className="page-subtitle">Enter your email and password. On your first visit, choose Student or Professor. Your choice and courses will be saved.</p>
+            <p className="page-subtitle">Use the email and password for your ClearCourse practice account.</p>
           </div>
         </div>
-        {error === "role" ? <p>Choose Professor or Student.</p> : null}
-        {error === "credentials" ? <p>Could not sign in. Check your email and password. For a new account, choose a role and use a password of at least 10 characters.</p> : null}
+        {error === "credentials" ? <p role="alert">Could not sign in. Check your email and password.</p> : null}
         <form className="panel panel-pad composer" action={signIn}>
-          <fieldset>
-            <legend>Role for a new account</legend>
-            <label>
-              <input type="radio" name="role" value="instructor" /> Professor
-            </label>
-            <label>
-              <input type="radio" name="role" value="student" /> Student
-            </label>
-          </fieldset>
           <label htmlFor="email">Email</label>
           <input className="field" id="email" name="email" type="email" required maxLength={254} autoComplete="email" />
           <label htmlFor="password">Password</label>
           <input className="field" id="password" name="password" type="password" required minLength={10} maxLength={128} autoComplete="current-password" />
-          <p className="meta">Returning? Leave role blank; your saved role is used. A new email creates a practice account. Email ownership and Professor status are not verified.</p>
           <button className="button primary" type="submit">
             Sign in
           </button>
         </form>
+        <p className="auth-switch">New here? <Link href="/sign-up">Create an account</Link></p>
       </div>
     </AppShell>
   );

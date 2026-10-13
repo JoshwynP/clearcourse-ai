@@ -40,6 +40,10 @@ site origin, with no trailing slash. Redeploy only after the two SQL scripts
 have run. Verify first sign-in, wrong-password rejection, returning role,
 course creation and joining, sign-out, and anonymous questions.
 
+Apply `db/004-course-staff.sql` to the identity database before deploying the
+course settings release. It adds course-level professor and TA access without
+changing existing course records.
+
 The Vercel project is configured with Root Directory `web`, Framework Preset
 Next.js, and the two Neon integrations. Production deployment follows `main`;
 the `feat/app-foundation` branch has a separate preview URL. Do not put the

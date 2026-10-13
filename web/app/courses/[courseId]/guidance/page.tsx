@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { CourseGuidance } from "@/components/course-guidance";
 import { SignedInShell } from "@/components/signed-in-shell";
-import { assignmentCardsForCourse, memberCourseForUser } from "@/lib/app-store";
+import { assignmentCardsForCourse, courseStaffRole, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
 
 export default async function GuidancePage({ params, searchParams }: { params: Promise<{ courseId: string }>; searchParams: Promise<{ card?: string }> }) {
@@ -15,7 +15,7 @@ export default async function GuidancePage({ params, searchParams }: { params: P
   return (
     <SignedInShell courseId={courseId} view="guidance">
       <CourseGuidance code={course.code} name={course.name} courseId={courseId} card={course.card}
-        assignments={await assignmentCardsForCourse(courseId, course.instructorId === user.id)} selectedId={card} />
+        assignments={await assignmentCardsForCourse(courseId, Boolean(await courseStaffRole(user.id, courseId)))} selectedId={card} />
     </SignedInShell>
   );
 }

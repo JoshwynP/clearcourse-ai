@@ -9,6 +9,7 @@ test("account and anonymous content schemas remain in separate databases", async
   try {
     await identity.exec(readFileSync(new URL("../db/001-accounts-and-courses.sql", import.meta.url), "utf8"));
     await identity.exec(readFileSync(new URL("../db/003-assignment-cards-and-participation.sql", import.meta.url), "utf8"));
+    await identity.exec(readFileSync(new URL("../db/004-course-staff.sql", import.meta.url), "utf8"));
     await content.exec(readFileSync(new URL("../db/002-content.sql", import.meta.url), "utf8"));
     await identity.query(
       'insert into public."user" (id, name, email, "emailVerified", "createdAt", "updatedAt") values ($1, $2, $3, false, now(), now())',
@@ -24,6 +25,16 @@ test("account and anonymous content schemas remain in separate databases", async
     await identity.query("insert into identity.course (id, code, name, join_code, instructor_id) values ($1, $2, $3, $4, $5)",
       ["course-1", "SDS 210", "Test course", "ABCDEFGH", "person-1"]);
     await identity.query("insert into identity.membership (course_id, user_id) values ($1, $2)", ["course-1", "person-1"]);
+    await identity.query(
+      'insert into public."user" (id, name, email, "emailVerified", "createdAt", "updatedAt") values ($1, $2, $3, false, now(), now())',
+      ["person-ta", "Example TA", "ta@example.test"],
+    );
+    await identity.query("insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3)", ["person-ta", "student", "ta-key"]);
+    await identity.query("insert into identity.membership (course_id, user_id) values ($1, $2)", ["course-1", "person-ta"]);
+    await identity.query("insert into identity.course_staff (course_id, user_id, role) values ($1, $2, $3)", ["course-1", "person-ta", "ta"]);
+    await assert.rejects(identity.query("insert into identity.course_staff (course_id, user_id, role) values ($1, $2, $3)", ["course-1", "person-1", "admin"]), /check constraint/);
+    const staff = await identity.query<{ role: string }>("select role from identity.course_staff where course_id = $1 and user_id = $2", ["course-1", "person-ta"]);
+    assert.equal(staff.rows[0]?.role, "ta");
     await identity.query("insert into identity.assignment_card (id, course_id, identifier, title) values ($1, $2, $3, $4)",
       ["card-1", "course-1", "essay", "Essay"]);
     await assert.rejects(identity.query("insert into identity.assignment_card (id, course_id, identifier, title) values ($1, $2, $3, $4)",
@@ -44,6 +55,7 @@ test("account and anonymous content schemas remain in separate databases", async
     const board = await content.query<{ state: unknown }>("select state from content.board where course_id = $1", ["course-1"]);
     assert.doesNotMatch(JSON.stringify(board.rows[0]), /person@example\.test|person-1|private-key/);
     await assert.rejects(content.query("select * from identity.profile"), /does not exist/);
+    await assert.rejects(content.query("select * from identity.course_staff"), /does not exist/);
     await assert.rejects(identity.query("select * from content.board"), /does not exist/);
   } finally {
     await identity.close();

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { signOut } from "@/lib/actions";
-import { coursesForUser, memberCourseForUser } from "@/lib/app-store";
+import { courseStaffRole, coursesForUser, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
 
 export async function SignedInShell({
@@ -10,25 +10,30 @@ export async function SignedInShell({
   children,
 }: {
   courseId?: string;
-  view?: "home" | "conversation" | "guidance" | "studio" | "participation";
+  view?: "home" | "conversation" | "guidance" | "studio" | "participation" | "settings";
   children: React.ReactNode;
 }) {
   const user = await currentAccount();
   if (!user) redirect("/sign-in");
   const course = courseId ? await memberCourseForUser(user.id, courseId) : undefined;
   if (courseId && !course) notFound();
-  if (view === "studio" && course?.instructorId !== user.id) notFound();
+  const staff = courseId ? await courseStaffRole(user.id, courseId) : null;
+  if (view === "studio" && !staff) notFound();
+  if (view === "settings" && staff !== "owner") notFound();
+  if (view === "participation" && staff === "ta") notFound();
 
   return (
     <AppShell
       courses={await coursesForUser(user.id)}
       course={course}
       view={view}
-      studio={Boolean(course && course.instructorId === user.id)}
+      studio={Boolean(staff)}
+      owner={staff === "owner"}
+      participation={staff !== "ta"}
       footer={
         <>
           {user.name}
-          <small>{user.role === "instructor" ? "Professor" : "Student"}</small>
+          <small>{staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}</small>
           <form action={signOut}>
             <button className="text-action" type="submit">
               Sign out

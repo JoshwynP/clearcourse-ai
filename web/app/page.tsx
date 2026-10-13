@@ -16,8 +16,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>Home</h1>
-          <p className="page-subtitle">AI guidance, made clear</p>
+          <h1>AI guidance, made clear</h1>
         </div>
       </div>
       <p className="lead">
@@ -43,16 +42,22 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </ul>
           {mine.length === 0 ? <p className="meta">No courses yet.</p> : null}
           {user.role === "instructor" ? (
-            <form className="panel panel-pad composer" action={createCourseAction}>
-              <h2>Create a course</h2>
-              <label htmlFor="code">Course code</label>
-              <input className="field" id="code" name="code" required maxLength={20} />
-              <label htmlFor="course-name">Course name</label>
-              <input className="field" id="course-name" name="name" required maxLength={80} />
-              <button className="button primary" type="submit">
-                Create course
-              </button>
-            </form>
+            <div className="course-create-options">
+              <form className="panel panel-pad composer" action={createCourseAction}>
+                <h2>Start with an example course</h2>
+                <p>A fictional course with a filled Course AI card and two assignment cards. You can edit every card.</p>
+                <input type="hidden" name="template" value="example" />
+                <button className="button" type="submit">Create example course</button>
+              </form>
+              <form className="panel panel-pad composer" action={createCourseAction}>
+                <h2>Create from scratch</h2>
+                <label htmlFor="code">Course code</label>
+                <input className="field" id="code" name="code" required maxLength={20} />
+                <label htmlFor="course-name">Course name</label>
+                <input className="field" id="course-name" name="name" required maxLength={80} />
+                <button className="button primary" type="submit">Create course</button>
+              </form>
+            </div>
           ) : (
             <form className="panel panel-pad composer" action={joinCourseAction}>
               <h2>Join a course</h2>
@@ -71,6 +76,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <Link className="button primary" href="/sign-in">
               Sign in
             </Link>
+            <Link className="button" href="/sign-up">Sign up</Link>
           </p>
         </>
       )}

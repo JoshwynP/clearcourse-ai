@@ -18,6 +18,7 @@ export async function addParticipation(userId: string, courseId: string, kind: k
      select m.course_id, m.user_id, greatest(0, $3::integer)
      from identity.membership m join identity.profile p on p.user_id = m.user_id
      where m.course_id = $1 and m.user_id = $2 and p.role = 'student'
+       and not exists (select 1 from identity.course_staff s where s.course_id = m.course_id and s.user_id = m.user_id)
      on conflict (course_id, user_id) do update set ${kind} = greatest(0, identity.participation.${kind} + $3)`,
     [courseId, userId, delta],
   );
@@ -41,6 +42,7 @@ export async function setParticipationSharing(userId: string, courseId: string, 
      select m.course_id, m.user_id, case when $3::boolean then now() else null end
      from identity.membership m join identity.profile p on p.user_id = m.user_id
      where m.course_id = $1 and m.user_id = $2 and p.role = 'student'
+       and not exists (select 1 from identity.course_staff s where s.course_id = m.course_id and s.user_id = m.user_id)
      on conflict (course_id, user_id) do update set shared_at = excluded.shared_at
      returning course_id`, [courseId, userId, shared],
   );
@@ -55,9 +57,12 @@ export async function sharedParticipationForInstructor(instructorId: string, cou
             else 'No Record' end as level,
        p.shared_at
      from identity.participation p
-     join identity.course c on c.id = p.course_id and c.instructor_id = $1
+     join identity.course c on c.id = p.course_id and
+       (c.instructor_id = $1 or exists
+         (select 1 from identity.course_staff s where s.course_id = c.id and s.user_id = $1 and s.role = 'professor'))
      join public."user" u on u.id = p.user_id
      where p.course_id = $2 and p.shared_at is not null
+       and not exists (select 1 from identity.course_staff s where s.course_id = p.course_id and s.user_id = p.user_id)
      order by p.shared_at desc`, [instructorId, courseId],
   );
   return result.rows.map((row) => ({ name: row.name, level: row.level, sharedAt: row.shared_at }));

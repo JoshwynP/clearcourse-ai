@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-export type ReplyRole = "Instructor" | "Student";
+export type ReplyRole = "Instructor" | "Teaching assistant" | "Student";
 
 export type ContentState = {
   questions: { id: string; courseId: string; tag: string; title: string; body: string }[];

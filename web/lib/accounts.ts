@@ -23,7 +23,7 @@ export async function currentAccount(): Promise<Account | null> {
   return { id: session.user.id, email: session.user.email, name: session.user.name, role };
 }
 
-export async function signInOrCreate(email: string, password: string, selectedRole?: Role) {
+export async function authenticateAccount(email: string, password: string, mode: "sign-in" | "sign-up", selectedRole?: Role, name?: string) {
   const normalized = normalizeEmail(email);
   if (!normalized || password.length < 10 || password.length > 128) return false;
   const db = database();
@@ -39,15 +39,16 @@ export async function signInOrCreate(email: string, password: string, selectedRo
   );
   if ((attempt.rows[0]?.attempts ?? 100) > 10) return false;
   const found = await db.query<{ id: string }>('select id from public."user" where email = $1', [normalized]);
+  if (mode === "sign-in" && !found.rowCount) return false;
+  if (mode === "sign-up" && (found.rowCount || !selectedRole || !name?.trim() || name.trim().length > 100)) return false;
   try {
-    if (found.rowCount) {
+    if (mode === "sign-in") {
       await auth().api.signInEmail({ body: { email: normalized, password } });
       await db.query("delete from identity.login_attempt where email_key = $1", [emailKey]);
       return true;
     }
-    if (!selectedRole) return false;
     const created = await auth().api.signUpEmail({
-      body: { email: normalized, password, name: normalized.split("@")[0] },
+      body: { email: normalized, password, name: name!.trim() },
     });
     await db.query(
       "insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3) on conflict (user_id) do nothing",
@@ -56,19 +57,6 @@ export async function signInOrCreate(email: string, password: string, selectedRo
     await db.query("delete from identity.login_attempt where email_key = $1", [emailKey]);
     return true;
   } catch {
-    // A simultaneous first sign-in may win the unique email constraint.
-    // Only a correct password may enter that existing account.
-    try {
-      await auth().api.signInEmail({ body: { email: normalized, password } });
-      const row = await db.query("select user_id from identity.profile where user_id = (select id from public.\"user\" where email = $1)", [normalized]);
-      if (!row.rowCount && selectedRole) {
-        const user = await db.query<{ id: string }>('select id from public."user" where email = $1', [normalized]);
-        if (user.rows[0]) await db.query("insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3) on conflict (user_id) do nothing", [user.rows[0].id, selectedRole, randomBytes(32).toString("hex")]);
-      }
-      await db.query("delete from identity.login_attempt where email_key = $1", [emailKey]);
-      return true;
-    } catch {
-      return false;
-    }
+    return false;
   }
 }

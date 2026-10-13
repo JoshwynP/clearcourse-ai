@@ -32,9 +32,10 @@ export function CourseConversation({
           <p className="page-subtitle">Questions and replies do not include a name.</p>
           <p className="meta">Practice accounts only. Do not enter real student information or rely on this release for guaranteed anonymity.</p>
         </div>
-        <details className="ask-details">
-          <summary className="button primary">Ask a question</summary>
-          <form className="composer" action={askQuestion}>
+      </div>
+      <details className="panel ask-panel">
+          <summary>Ask a question</summary>
+          <form className="ask-form" action={askQuestion}>
             <input type="hidden" name="courseId" value={courseId} />
             <label htmlFor="question-tag">Question about</label>
             <select className="field" id="question-tag" name="tag" defaultValue={activeTag === "all" ? "course" : activeTag}>
@@ -49,8 +50,7 @@ export function CourseConversation({
               Post question
             </button>
           </form>
-        </details>
-      </div>
+      </details>
       <div className="layout">
       <section className="panel" aria-label="Course questions">
       <form className="conversation-tools" method="get" action={`/courses/${courseId}/conversation`}>
@@ -67,10 +67,10 @@ export function CourseConversation({
       <ul className="thread">
         {shown.map((question) => (
           <li className="question" key={question.id}>
-            <span className="status-tag">{tagName(question.tag)}</span>
+            <span className={`status-tag question-tag ${question.tag === "course" ? "course-tag" : "assignment-tag"}`}>{tagName(question.tag)}</span>
             <h2>{question.title}</h2>
             {question.body ? <p>{question.body}</p> : null}
-            <form className="inline-form" action={castVote}>
+            <form className="inline-form question-vote" action={castVote}>
               <input type="hidden" name="courseId" value={courseId} />
               <input type="hidden" name="questionId" value={question.id} />
               <button className="text-action" type="submit">

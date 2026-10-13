@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { SignedInShell } from "@/components/signed-in-shell";
 import { changeParticipationSharing } from "@/lib/actions";
-import { memberCourseForUser } from "@/lib/app-store";
+import { courseStaffRole, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
 import { privateParticipation, sharedParticipationForInstructor } from "@/lib/participation-store";
 
@@ -11,7 +11,9 @@ export default async function ParticipationPage({ params }: { params: Promise<{ 
   if (!user) redirect("/sign-in");
   const course = await memberCourseForUser(user.id, courseId);
   if (!course) notFound();
-  const teaching = course.instructorId === user.id;
+  const staff = await courseStaffRole(user.id, courseId);
+  if (staff === "ta") notFound();
+  const teaching = Boolean(staff);
   const mine = teaching ? null : await privateParticipation(user.id, courseId);
   const shared = teaching ? await sharedParticipationForInstructor(user.id, courseId) : [];
 

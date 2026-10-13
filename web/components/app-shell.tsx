@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type CourseView = "home" | "conversation" | "guidance" | "studio" | "participation";
+type CourseView = "home" | "conversation" | "guidance" | "studio" | "participation" | "settings";
 
 export type NavCourse = { id: string; code: string; name: string };
 
@@ -9,6 +9,7 @@ const sections: { view: Exclude<CourseView, "home">; label: string; href: (cours
   { view: "guidance", label: "AI cards", href: (courseId) => `/courses/${courseId}/guidance` },
   { view: "participation", label: "Participation", href: (courseId) => `/courses/${courseId}/participation` },
   { view: "studio", label: "Manage My Cards", href: (courseId) => `/courses/${courseId}/studio` },
+  { view: "settings", label: "Course settings", href: (courseId) => `/courses/${courseId}/settings` },
 ];
 
 export function AppShell({
@@ -17,6 +18,8 @@ export function AppShell({
   view,
   crumb,
   studio = true,
+  owner = false,
+  participation = true,
   footer,
   children,
 }: {
@@ -25,6 +28,8 @@ export function AppShell({
   view?: CourseView;
   crumb?: string;
   studio?: boolean;
+  owner?: boolean;
+  participation?: boolean;
   footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -56,6 +61,8 @@ export function AppShell({
               current={item.id === course?.id}
               view={item.id === course?.id ? view : undefined}
               studio={studio}
+              owner={owner}
+              participation={participation}
             />
           ))}
           <div className="sidebar-foot">
@@ -83,14 +90,21 @@ function CourseGroup({
   current,
   view,
   studio,
+  owner,
+  participation,
 }: {
   course: NavCourse;
   current: boolean;
   view?: CourseView;
   studio: boolean;
+  owner: boolean;
+  participation: boolean;
 }) {
   const onHome = current && view === "home";
-  const visible = sections.filter((section) => section.view !== "studio" || studio);
+  const visible = sections.filter((section) =>
+    (section.view !== "studio" || studio) &&
+    (section.view !== "settings" || owner) &&
+    (section.view !== "participation" || participation));
   return (
     <div className={current ? "course-group current" : "course-group"}>
       <Link
