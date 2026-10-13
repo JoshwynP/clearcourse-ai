@@ -168,6 +168,16 @@ levels or manage access. Only the owner manages access. A fictional example
 course can be created with a prefilled course card and two assignment cards;
 the alternative is a blank course. These are practice-only choices (ADR 0011).
 
+**Practice course operations and welcome (owner, 2026-10-13;
+[ADR 0012](docs/decisions/0012-practice-course-operations-and-welcome.md)):**
+Course owners and added professors may edit course details, rotate the join code, add/remove existing
+Student accounts, and selectively reset discussion/participation, enrollment,
+assignment cards, or the Course AI card. The teaching team is retained; only
+the owner changes staff access. A reset requires review and typed confirmation.
+New accounts see a welcome guide and acknowledge it once. Password confirmation
+is required during sign-up. These practice controls do not decide Q17, the
+production data-retention policy, and do not authorize real student use.
+
 ---
 
 ## 6. Privacy architecture
@@ -697,3 +707,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-12 | Owner set the student sharing wording (§7.10). A private grade says it is not shared. Sharing explains that questions and engagement stay private and the professor sees only the contributor level. After sharing, the student is told the professor has been notified, and the student can stop sharing. |
 | 2026-10-12 | Owner chose persistent ClearCourse practice accounts with email/password, a saved first-selected role, and a database-backed Next.js site. ADR 0010 records separate identity and content PostgreSQL projects. Email and Professor status remain unverified, so real student use is not approved. |
 | 2026-10-13 | Owner requested separate sign-up/sign-in, clearer card and discussion layouts, a fictional example course, and course-level professor/TA access. ADR 0011 updates the hosted practice scope; real student use remains unapproved. |
+| 2026-10-13 | Owner requested course detail, roster, and selective end-of-term reset controls, clearer branding and sign-up, and a one-time welcome guide. ADR 0012 defines the hosted practice scope; Q17 remains open for production. |

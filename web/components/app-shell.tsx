@@ -37,13 +37,13 @@ export function AppShell({
   return (
     <div className="app-frame">
       <header className="masthead">
+        <Link className="brand-link" href="/" aria-current={onHome ? "page" : undefined}>
+          <strong>ClearCourse</strong>
+          <small>Made by UW students for UW students and professors</small>
+        </Link>
         <a className="uw-logo-link" href="https://uwaterloo.ca/" target="_blank" rel="noopener noreferrer" aria-label="University of Waterloo">
           <img src="/uwaterloo-logo.svg" alt="" width={170} height={41} />
         </a>
-        <Link className="brand-link" href="/" aria-current={onHome ? "page" : undefined}>
-          <strong>ClearCourse</strong>
-          <small>AI guidance, made clear</small>
-        </Link>
       </header>
       <div className="colour-bar" aria-hidden="true">
         <span />
@@ -69,7 +69,7 @@ export function AppShell({
             {footer ?? (
               <>
                 ClearCourse
-                <small>AI guidance, made clear</small>
+                <small>Made by UW students for UW students and professors</small>
               </>
             )}
           </div>

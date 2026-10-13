@@ -44,6 +44,10 @@ Apply `db/004-course-staff.sql` to the identity database before deploying the
 course settings release. It adds course-level professor and TA access without
 changing existing course records.
 
+Apply `db/005-onboarding.sql` to the identity database before deploying the
+expanded course settings and sign-up guide. Existing accounts are marked as
+already welcomed; new accounts must acknowledge the guide once.
+
 The Vercel project is configured with Root Directory `web`, Framework Preset
 Next.js, and the two Neon integrations. Production deployment follows `main`;
 the `feat/app-foundation` branch has a separate preview URL. Do not put the

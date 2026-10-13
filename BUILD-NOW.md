@@ -54,6 +54,12 @@ drafts for professors, gives the question composer its own panel, adds an
 editable fictional example course, and adds owner-controlled course staff.
 Apply identity migration 004 before deploying it. See ADR 0011.
 
+The next hosted practice update expands course settings with course details,
+manual student enrollment, and a selective end-of-term reset. It also improves
+the masthead, sign-up, and first-account welcome guide. Apply identity migration
+005 before deploying this update. See ADR 0012. Reset remains a practice-only
+operation; production retention/deletion policy is still Q17.
+
 ## The next seven Cursor sessions
 
 1. **Finish the look.** Review the flatter prototype on desktop and phone. Make one small visual change at a time; do not add features.

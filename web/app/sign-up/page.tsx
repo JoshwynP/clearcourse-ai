@@ -12,7 +12,7 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
   return <AppShell courses={[]} crumb="Sign up"><div className="page">
     <div className="page-head"><div><h1>Sign up</h1>
       <p className="page-subtitle">Create a ClearCourse practice account.</p></div></div>
-    {error ? <p role="alert">Could not create the account. Check your details, use a unique email, and choose a password of at least 10 characters.</p> : null}
+    {error ? <p role="alert">{error === "password" ? "Passwords do not match. Please enter them again." : "Could not create the account. Check your details, use a unique email, and choose a password of at least 10 characters."}</p> : null}
     <form className="panel panel-pad composer" action={signUp}>
       <label htmlFor="signup-name">Name</label>
       <input className="field" id="signup-name" name="name" required maxLength={100} autoComplete="name" />
@@ -20,6 +20,8 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
       <input className="field" id="signup-email" name="email" type="email" required maxLength={254} autoComplete="email" />
       <label htmlFor="signup-password">Password</label>
       <input className="field" id="signup-password" name="password" type="password" required minLength={10} maxLength={128} autoComplete="new-password" />
+      <label htmlFor="signup-confirm-password">Confirm password</label>
+      <input className="field" id="signup-confirm-password" name="confirmPassword" type="password" required minLength={10} maxLength={128} autoComplete="new-password" />
       <fieldset><legend>I am joining as</legend>
         <label><input type="radio" name="role" value="instructor" required /> Professor</label>
         <label><input type="radio" name="role" value="student" required /> Student</label>

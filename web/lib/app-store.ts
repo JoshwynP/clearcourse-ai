@@ -1,7 +1,10 @@
 import { randomBytes, randomInt } from "node:crypto";
+import type { PoolClient } from "@neondatabase/serverless";
 import { database } from "@/lib/database";
 import { emptyCard, type CardFields, type CourseRecord } from "@/lib/identity-model";
 import { courses as sampleCourses } from "@/lib/sample-courses";
+import { emptyContent } from "@/lib/content-model";
+import { updateContent } from "@/lib/content-store";
 
 type CourseRow = {
   id: string;
@@ -132,6 +135,127 @@ export async function courseStaffRole(userId: string, courseId: string): Promise
     [userId, courseId],
   );
   return result.rows[0]?.role ?? null;
+}
+
+export async function courseProfessorRole(userId: string, courseId: string) {
+  const role = await courseStaffRole(userId, courseId);
+  return role === "owner" || role === "professor";
+}
+
+export async function courseStudentsForProfessor(professorId: string, courseId: string) {
+  const result = await database().query<{ id: string; name: string; email: string }>(
+    `select u.id, u.name, u.email from identity.membership m
+     join identity.course c on c.id = m.course_id
+     join identity.profile p on p.user_id = m.user_id and p.role = 'student'
+     join public."user" u on u.id = m.user_id
+     where m.course_id = $2 and (c.instructor_id = $1 or exists
+       (select 1 from identity.course_staff manager where manager.course_id = c.id and manager.user_id = $1 and manager.role = 'professor'))
+       and not exists (select 1 from identity.course_staff s where s.course_id = m.course_id and s.user_id = m.user_id)
+     order by lower(u.name), lower(u.email)`, [professorId, courseId],
+  );
+  return result.rows;
+}
+
+export async function updateCourseDetailsForProfessor(professorId: string, courseId: string, code: string, name: string) {
+  code = code.trim(); name = name.trim();
+  if (!code || code.length > 20 || !name || name.length > 80) return false;
+  const result = await database().query(
+    `update identity.course c set code = $3, name = $4 where c.id = $2 and
+       (c.instructor_id = $1 or exists (select 1 from identity.course_staff s
+         where s.course_id = c.id and s.user_id = $1 and s.role = 'professor')) returning c.id`,
+    [professorId, courseId, code, name],
+  );
+  return Boolean(result.rowCount);
+}
+
+export async function rotateJoinCodeForProfessor(professorId: string, courseId: string) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const result = await database().query(
+        `update identity.course c set join_code = $3 where c.id = $2 and
+         (c.instructor_id = $1 or exists (select 1 from identity.course_staff s
+           where s.course_id = c.id and s.user_id = $1 and s.role = 'professor')) returning c.id`,
+        [professorId, courseId, randomBytes(6).toString("hex").toUpperCase()],
+      );
+      return Boolean(result.rowCount);
+    } catch (error) {
+      if ((error as { code?: string }).code !== "23505") throw error;
+    }
+  }
+  return false;
+}
+
+export async function addCourseStudentForProfessor(professorId: string, courseId: string, email: string) {
+  const result = await database().query(
+    `insert into identity.membership (course_id, user_id)
+     select c.id, p.user_id from identity.course c join public."user" u on lower(u.email) = $3
+     join identity.profile p on p.user_id = u.id and p.role = 'student'
+     where c.id = $2 and (c.instructor_id = $1 or exists (select 1 from identity.course_staff s
+       where s.course_id = c.id and s.user_id = $1 and s.role = 'professor'))
+     on conflict do nothing returning user_id`, [professorId, courseId, email],
+  );
+  return Boolean(result.rowCount);
+}
+
+export async function removeCourseStudentForProfessor(professorId: string, courseId: string, studentId: string) {
+  const result = await database().query(
+    `delete from identity.membership m where m.course_id = $2 and m.user_id = $3
+       and exists (select 1 from identity.course c where c.id = m.course_id and
+         (c.instructor_id = $1 or exists (select 1 from identity.course_staff manager
+           where manager.course_id = c.id and manager.user_id = $1 and manager.role = 'professor')))
+       and exists (select 1 from identity.profile p where p.user_id = m.user_id and p.role = 'student')
+       and not exists (select 1 from identity.course_staff s where s.course_id = m.course_id and s.user_id = m.user_id)
+     returning m.user_id`, [professorId, courseId, studentId],
+  );
+  return Boolean(result.rowCount);
+}
+
+export type CourseResetOptions = { discussion: boolean; students: boolean; assignments: boolean; courseCard: boolean };
+
+export async function applyIdentityReset(client: Pick<PoolClient, "query">, courseId: string, options: CourseResetOptions, newJoinCode: string) {
+  if (options.discussion) {
+    // Discussion and participation form one reset unit; otherwise old counts would outlive the posts.
+    await client.query("delete from identity.participation where course_id = $1", [courseId]);
+  }
+  if (options.students) {
+    await client.query(
+      `delete from identity.membership m where m.course_id = $1
+       and exists (select 1 from identity.profile p where p.user_id = m.user_id and p.role = 'student')
+       and not exists (select 1 from identity.course_staff s where s.course_id = m.course_id and s.user_id = m.user_id)`,
+      [courseId],
+    );
+    // Old join codes must stop working when an instructor clears the student roster.
+    await client.query("update identity.course set join_code = $2 where id = $1", [courseId, newJoinCode]);
+  }
+  if (options.assignments) await client.query("delete from identity.assignment_card where course_id = $1", [courseId]);
+  if (options.courseCard) await client.query("update identity.course set card = '{}'::jsonb where id = $1", [courseId]);
+}
+
+export async function resetCourseForProfessor(professorId: string, courseId: string, options: CourseResetOptions, confirmation: string) {
+  const client = await database().connect();
+  try {
+    await client.query("begin");
+    const course = await client.query<{ code: string }>(
+      `select c.code from identity.course c where c.id = $2 and
+         (c.instructor_id = $1 or exists (select 1 from identity.course_staff s
+           where s.course_id = c.id and s.user_id = $1 and s.role = 'professor')) for update`,
+      [professorId, courseId],
+    );
+    if (!course.rows[0]) { await client.query("rollback"); return "unauthorized"; }
+    if (confirmation.trim() !== `WIPE ${course.rows[0].code}`) { await client.query("rollback"); return "confirmation"; }
+    if (!Object.values(options).some(Boolean) || (options.assignments && !options.discussion)) {
+      await client.query("rollback"); return "selection";
+    }
+    await applyIdentityReset(client, courseId, options, randomBytes(6).toString("hex").toUpperCase());
+    if (options.discussion) await updateContent(courseId, () => emptyContent());
+    await client.query("commit");
+    return "ok";
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function courseStaffForOwner(ownerId: string, courseId: string) {

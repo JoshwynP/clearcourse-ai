@@ -16,6 +16,11 @@ test("account and anonymous content schemas remain in separate databases", async
       ["person-1", "Person", "person@example.test"],
     );
     await identity.query("insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3)", ["person-1", "instructor", "private-key"]);
+    await identity.exec(readFileSync(new URL("../db/005-onboarding.sql", import.meta.url), "utf8"));
+    const existingWelcome = await identity.query<{ onboarding_acknowledged_at: Date | null }>(
+      "select onboarding_acknowledged_at from identity.profile where user_id = $1", ["person-1"],
+    );
+    assert.ok(existingWelcome.rows[0]?.onboarding_acknowledged_at);
     await identity.query(
       "insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3) on conflict (user_id) do nothing",
       ["person-1", "student", "different-key"],
@@ -30,6 +35,15 @@ test("account and anonymous content schemas remain in separate databases", async
       ["person-ta", "Example TA", "ta@example.test"],
     );
     await identity.query("insert into identity.profile (user_id, role, vote_key) values ($1, $2, $3)", ["person-ta", "student", "ta-key"]);
+    const newWelcome = await identity.query<{ onboarding_acknowledged_at: Date | null }>(
+      "select onboarding_acknowledged_at from identity.profile where user_id = $1", ["person-ta"],
+    );
+    assert.equal(newWelcome.rows[0]?.onboarding_acknowledged_at, null);
+    await identity.exec(readFileSync(new URL("../db/005-onboarding.sql", import.meta.url), "utf8"));
+    const stillNew = await identity.query<{ onboarding_acknowledged_at: Date | null }>(
+      "select onboarding_acknowledged_at from identity.profile where user_id = $1", ["person-ta"],
+    );
+    assert.equal(stillNew.rows[0]?.onboarding_acknowledged_at, null);
     await identity.query("insert into identity.membership (course_id, user_id) values ($1, $2)", ["course-1", "person-ta"]);
     await identity.query("insert into identity.course_staff (course_id, user_id, role) values ($1, $2, $3)", ["course-1", "person-ta", "ta"]);
     await assert.rejects(identity.query("insert into identity.course_staff (course_id, user_id, role) values ($1, $2, $3)", ["course-1", "person-1", "admin"]), /check constraint/);

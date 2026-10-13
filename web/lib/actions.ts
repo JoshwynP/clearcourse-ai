@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { authenticateAccount, currentAccount, normalizeEmail } from "@/lib/accounts";
-import { addCourseStaffForOwner, courseStaffRole, createCourseForInstructor, joinCourseAsStudent, memberCourseForUser, removeCourseStaffForOwner, saveCourseCardForInstructor, saveAssignmentCardForInstructor, setAssignmentStatusForInstructor, assignmentCardsForCourse, type AssignmentDetails } from "@/lib/app-store";
+import { addCourseStaffForOwner, addCourseStudentForProfessor, courseStaffRole, createCourseForInstructor, joinCourseAsStudent, memberCourseForUser, removeCourseStaffForOwner, removeCourseStudentForProfessor, resetCourseForProfessor, rotateJoinCodeForProfessor, updateCourseDetailsForProfessor, saveCourseCardForInstructor, saveAssignmentCardForInstructor, setAssignmentStatusForInstructor, assignmentCardsForCourse, type AssignmentDetails } from "@/lib/app-store";
 import { addQuestion, addReply, toggleVote } from "@/lib/content-model";
 import { updateContent } from "@/lib/content-store";
 import { database } from "@/lib/database";
@@ -20,14 +20,25 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
+  const password = String(formData.get("password") || "");
+  if (password !== String(formData.get("confirmPassword") || "")) redirect("/sign-up?error=password");
   const role = formData.get("role");
   const selectedRole = role === "instructor" || role === "student" ? role as Role : undefined;
   const success = await authenticateAccount(
-    String(formData.get("email") || ""), String(formData.get("password") || ""),
+    String(formData.get("email") || ""), password,
     "sign-up", selectedRole, String(formData.get("name") || ""),
   );
   if (!success) redirect("/sign-up?error=account");
   redirect("/");
+}
+
+export async function acknowledgeWelcome() {
+  const user = await currentAccount();
+  if (!user) redirect("/sign-in");
+  await database().query(
+    "update identity.profile set onboarding_acknowledged_at = now() where user_id = $1 and onboarding_acknowledged_at is null",
+    [user.id],
+  );
 }
 
 export async function signOut() {
@@ -165,15 +176,67 @@ export async function addCourseStaffAction(formData: FormData) {
   if (!user) redirect("/sign-in");
   const role = formData.get("role");
   const email = normalizeEmail(String(formData.get("email") || ""));
-  if (!email || (role !== "professor" && role !== "ta")) redirect(`/courses/${courseId}/settings?error=details`);
+  if (!email || (role !== "professor" && role !== "ta")) redirect(`/courses/${courseId}/settings?error=staff-details`);
   const result = await addCourseStaffForOwner(user.id, courseId, email, role);
-  redirect(result === "ok" ? `/courses/${courseId}/settings?added=1` : `/courses/${courseId}/settings?error=${result}`);
+  redirect(result === "ok" ? `/courses/${courseId}/settings?updated=staff` : `/courses/${courseId}/settings?error=${result}`);
 }
 
 export async function removeCourseStaffAction(formData: FormData) {
   const user = await currentAccount();
   const courseId = String(formData.get("courseId") || "");
   if (!user) redirect("/sign-in");
-  await removeCourseStaffForOwner(user.id, courseId, String(formData.get("staffId") || ""));
-  redirect(`/courses/${courseId}/settings`);
+  const ok = await removeCourseStaffForOwner(user.id, courseId, String(formData.get("staffId") || ""));
+  redirect(`/courses/${courseId}/settings?${ok ? "updated=staff" : "error=not-owner"}`);
+}
+
+export async function updateCourseDetailsAction(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  const ok = await updateCourseDetailsForProfessor(user.id, courseId, String(formData.get("code") || ""), String(formData.get("name") || ""));
+  redirect(`/courses/${courseId}/settings?${ok ? "updated=details" : "error=details"}`);
+}
+
+export async function rotateJoinCodeAction(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  const ok = await rotateJoinCodeForProfessor(user.id, courseId);
+  redirect(`/courses/${courseId}/settings?${ok ? "updated=join-code" : "error=join-code"}`);
+}
+
+export async function addCourseStudentAction(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  const email = normalizeEmail(String(formData.get("email") || ""));
+  if (!email) redirect(`/courses/${courseId}/settings?error=student-email`);
+  const ok = await addCourseStudentForProfessor(user.id, courseId, email);
+  redirect(`/courses/${courseId}/settings?${ok ? "updated=student" : "error=student"}`);
+}
+
+export async function removeCourseStudentAction(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  const ok = await removeCourseStudentForProfessor(user.id, courseId, String(formData.get("studentId") || ""));
+  redirect(`/courses/${courseId}/settings?${ok ? "updated=student" : "error=student"}`);
+}
+
+export async function resetCourseAction(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  let result: string;
+  try {
+    result = await resetCourseForProfessor(user.id, courseId, {
+      discussion: formData.get("discussion") === "on",
+      students: formData.get("students") === "on",
+      assignments: formData.get("assignments") === "on",
+      courseCard: formData.get("courseCard") === "on",
+    }, String(formData.get("confirmation") || ""));
+  } catch {
+    redirect(`/courses/${courseId}/settings?error=reset-failed`);
+  }
+  redirect(`/courses/${courseId}/settings?${result === "ok" ? "updated=reset" : `error=${result}`}`);
 }

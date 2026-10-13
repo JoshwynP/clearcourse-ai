@@ -29,7 +29,8 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
             Sign in
           </button>
         </form>
-        <p className="auth-switch">New here? <Link href="/sign-up">Create an account</Link></p>
+        <div className="auth-signup-callout"><strong>Don’t have an account yet?</strong><p>Create one to save your courses and return to them later.</p>
+          <Link className="button signup-button" href="/sign-up">Create a free practice account</Link></div>
       </div>
     </AppShell>
   );

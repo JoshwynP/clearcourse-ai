@@ -81,6 +81,7 @@ a:focus-visible {
   display: block;
   flex: none;
   line-height: 0;
+  margin-left: auto;
 }
 
 .uw-logo-link img {
@@ -102,7 +103,7 @@ a:focus-visible {
 }
 
 .masthead .brand-link strong {
-  font-size: 16px;
+  font-size: 21px;
   font-weight: 600;
   line-height: 1.2;
 }
@@ -245,6 +246,11 @@ a:focus-visible {
   font-size: 12px;
   line-height: 1.45;
 }
+
+.account-name, .account-role { display: block; overflow-wrap: anywhere; }
+.account-name { font-size: 13px; line-height: 1.4; }
+.account-role { margin: 2px 0 9px; font-size: 12px; }
+.sidebar-foot .text-action { font-size: 13px; }
 
 .main-content {
   min-width: 0;
@@ -632,6 +638,10 @@ fieldset {
 .auth-switch { margin: 14px 0; font-size: 14px; }
 .auth-switch a { font-weight: 600; }
 .auth-note { margin: 0; font-size: 13px; line-height: 1.5; }
+.auth-signup-callout { max-width: 560px; margin-top: 22px; padding: 18px; background: var(--gold-1); border: 1px solid var(--line); border-left: 4px solid var(--gold-4); }
+.auth-signup-callout strong { font-size: 16px; }
+.auth-signup-callout p { margin: 6px 0 14px; }
+.auth-signup-callout .signup-button { min-height: 42px; border-color: var(--ink); }
 .home-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .course-create-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 920px; margin-top: 20px; align-items: start; }
 .course-create-options .composer { margin-top: 0; }
@@ -646,6 +656,44 @@ fieldset {
 .staff-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .staff-list li:last-child { border-bottom: 0; }
 .staff-list small { display: block; margin-top: 3px; }
+.settings-panel { margin-bottom: 16px; }
+.settings-panel h3 { margin: 22px 0 10px; }
+.settings-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; gap: 12px; align-items: end; margin-top: 18px; }
+.settings-form label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+.join-code-form { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.join-code-form p { margin: 0 0 10px; font-size: 13px; }
+.reset-section { border-left: 4px solid var(--gold-4); }
+.reset-form { display: grid; gap: 10px; margin-top: 18px; }
+.reset-form > label { display: block; padding: 10px 12px; border: 1px solid var(--line); font-weight: 600; }
+.reset-form > label:has(input:checked) { background: var(--gold-1); }
+.reset-form > label small { display: block; margin: 4px 0 0 22px; font-weight: 400; font-size: 12px; line-height: 1.4; }
+.reset-review { justify-self: start; margin-top: 8px; }
+.reset-dialog, .welcome-dialog { border: 1px solid var(--ink); box-shadow: 0 16px 44px rgba(0, 0, 0, .32); background: var(--surface); color: var(--ink); }
+.reset-dialog::backdrop, .welcome-dialog::backdrop { background: rgba(0, 0, 0, .6); }
+.reset-dialog { width: min(520px, calc(100vw - 28px)); padding: 24px; }
+.reset-dialog h3 { margin: 0 0 12px; }
+.reset-dialog label { display: block; font-weight: 600; margin: 14px 0 5px; }
+.reset-dialog .form-actions { margin-top: 18px; justify-content: flex-end; }
+.button.danger { border-color: var(--ink); background: var(--ink); color: var(--surface); }
+.button.danger:hover { background: var(--gold-4); color: var(--ink); }
+.welcome-dialog { width: min(760px, calc(100vw - 28px)); max-height: min(90vh, 900px); padding: 0; overflow: auto; animation: welcome-in 320ms ease-out both; }
+.welcome-dialog.leaving { animation: welcome-out 280ms ease-in both; }
+.welcome-topline { background: var(--ink); color: var(--surface); padding: 13px 22px; font-weight: 700; letter-spacing: .02em; border-bottom: 7px solid var(--gold-4); }
+.welcome-body { padding: 22px 26px 26px; }
+.welcome-body h1 { font-size: 25px; line-height: 1.2; margin: 0 0 10px; }
+.welcome-lead { font-size: 15px; line-height: 1.5; }
+.welcome-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.welcome-grid section, .welcome-rules { border: 1px solid var(--line); padding: 14px 16px; }
+.welcome-body h2 { font-size: 16px; margin: 0 0 8px; }
+.welcome-grid p { margin: 0; }
+.welcome-rules { margin-top: 12px; background: var(--gold-1); }
+.welcome-rules ul { margin: 8px 0 0; padding-left: 21px; }
+.welcome-rules li + li { margin-top: 5px; }
+.welcome-practice { font-size: 12px; line-height: 1.5; }
+.welcome-ack { width: 100%; min-height: 46px; margin-top: 10px; font-size: 14px; }
+@keyframes welcome-in { from { opacity: 0; transform: translateY(20px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes welcome-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-15px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .welcome-dialog, .welcome-dialog.leaving { animation-duration: 1ms; } }
 
 .question p {
   margin-top: 10px;
@@ -804,6 +852,9 @@ fieldset label {
 }
 
 @media (max-width: 740px) {
+  .settings-form { grid-template-columns: 1fr; }
+  .welcome-grid { grid-template-columns: 1fr; }
+  .welcome-body { padding: 18px; }
   .course-create-options { grid-template-columns: 1fr; }
   .staff-form { grid-template-columns: 1fr; }
   .card-layout { grid-template-columns: 1fr; }

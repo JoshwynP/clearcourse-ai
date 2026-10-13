@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app-shell";
 import { signOut } from "@/lib/actions";
 import { courseStaffRole, coursesForUser, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
+import { WelcomeGuide } from "@/components/welcome-guide";
 
 export async function SignedInShell({
   courseId,
@@ -19,7 +20,7 @@ export async function SignedInShell({
   if (courseId && !course) notFound();
   const staff = courseId ? await courseStaffRole(user.id, courseId) : null;
   if (view === "studio" && !staff) notFound();
-  if (view === "settings" && staff !== "owner") notFound();
+  if (view === "settings" && staff !== "owner" && staff !== "professor") notFound();
   if (view === "participation" && staff === "ta") notFound();
 
   return (
@@ -28,12 +29,12 @@ export async function SignedInShell({
       course={course}
       view={view}
       studio={Boolean(staff)}
-      owner={staff === "owner"}
+      owner={staff === "owner" || staff === "professor"}
       participation={staff !== "ta"}
       footer={
         <>
-          {user.name}
-          <small>{staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}</small>
+          <strong className="account-name">{user.name}</strong>
+          <span className="account-role">{staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}</span>
           <form action={signOut}>
             <button className="text-action" type="submit">
               Sign out
@@ -43,6 +44,7 @@ export async function SignedInShell({
       }
     >
       {children}
+      {user.needsWelcome ? <WelcomeGuide role={user.role} /> : null}
     </AppShell>
   );
 }

@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { database } from "@/lib/database";
 import type { Role } from "@/lib/identity-model";
 
-export type Account = { id: string; email: string; name: string; role: Role };
+export type Account = { id: string; email: string; name: string; role: Role; needsWelcome: boolean };
 
 export function normalizeEmail(value: string) {
   const email = value.trim().toLowerCase();
@@ -14,13 +14,14 @@ export function normalizeEmail(value: string) {
 export async function currentAccount(): Promise<Account | null> {
   const session = await auth().api.getSession({ headers: await headers() });
   if (!session) return null;
-  const result = await database().query<{ role: Role }>(
-    "select role from identity.profile where user_id = $1",
+  const result = await database().query<{ role: Role; onboarding_acknowledged_at: Date | null }>(
+    "select role, onboarding_acknowledged_at from identity.profile where user_id = $1",
     [session.user.id],
   );
   const role = result.rows[0]?.role;
   if (role !== "instructor" && role !== "student") return null;
-  return { id: session.user.id, email: session.user.email, name: session.user.name, role };
+  return { id: session.user.id, email: session.user.email, name: session.user.name, role,
+    needsWelcome: result.rows[0]?.onboarding_acknowledged_at === null };
 }
 
 export async function authenticateAccount(email: string, password: string, mode: "sign-in" | "sign-up", selectedRole?: Role, name?: string) {
