@@ -177,7 +177,7 @@ a:focus-visible {
 .sidebar-section-label span { padding: 2px 7px; border: 1px solid var(--line); background: var(--grey); font-size: 11px; font-weight: 600; line-height: 1.2; }
 .course-collection { display: flex; flex: 0 1 auto; flex-direction: column; min-height: 0; background: var(--surface); }
 .course-search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
-.course-search { width: calc(100% - 36px); margin: 0 18px 14px; min-height: 38px; padding: 7px 10px; font-size: 13px; }
+.course-search { width: calc(100% - 36px); max-width: 190px; margin: 0 18px 12px; min-height: 32px; padding: 5px 9px; font-size: 12px; }
 .course-list-scroll { flex: 0 1 auto; min-height: 0; overflow-y: auto; border-top: 1px solid rgba(0, 0, 0, .14); }
 .course-empty { margin: 0; padding: 13px 18px 16px; font-size: 13px; }
 
@@ -713,8 +713,8 @@ fieldset {
 .welcome-rules ul { margin: 8px 0 0; padding-left: 21px; }
 .welcome-rules li + li { margin-top: 5px; }
 .welcome-safety { font-size: 12px; line-height: 1.5; padding: 10px 12px; border-left: 3px solid var(--gold-4); background: var(--grey); }
-.about-trigger { display: block; width: 100%; margin-top: 11px; padding: 9px 0 0; border: 0; border-top: 1px solid rgba(0, 0, 0, .14); background: transparent; font-size: 12px; font-weight: 600; text-align: left; }
-.about-trigger:hover { text-decoration: underline; }
+.about-trigger { display: inline-flex; align-items: center; width: auto; min-height: 34px; margin-top: 12px; padding: 6px 11px; border: 1px solid var(--ink); background: var(--surface); font-size: 12px; font-weight: 600; text-align: left; }
+.about-trigger:hover { background: var(--gold-1); }
 .change-summary { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 16px 0; }
 .change-summary dt { font-weight: 700; }
 .change-summary dd { margin: 0; overflow-wrap: anywhere; }
