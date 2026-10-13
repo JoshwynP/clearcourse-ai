@@ -66,7 +66,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </>
       ) : (
         <>
-          <p>Sign in with a ClearCourse practice account. Email ownership and Professor status are not verified.</p>
+          <p>Sign in to view your courses, AI cards, discussion board, and participation.</p>
           <p className="home-actions">
             <Link className="button primary" href="/sign-in">
               Sign in

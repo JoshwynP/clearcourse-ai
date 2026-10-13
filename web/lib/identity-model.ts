@@ -7,6 +7,13 @@ export type CardFields = {
   allowed: string;
   notAllowed: string;
   disclose: string;
+  opening?: string;
+  counts?: string;
+  permitted?: string;
+  transparency?: string;
+  suspected?: string;
+  warning?: string;
+  resources?: string;
 };
 
 export type UserRecord = {

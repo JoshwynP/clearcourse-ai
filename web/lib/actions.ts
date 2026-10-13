@@ -97,6 +97,13 @@ export async function saveCourseCard(formData: FormData) {
     allowed: String(formData.get("allowed") || ""),
     notAllowed: String(formData.get("notAllowed") || ""),
     disclose: String(formData.get("disclose") || ""),
+    opening: String(formData.get("opening") || ""),
+    counts: String(formData.get("counts") || ""),
+    permitted: String(formData.get("permitted") || ""),
+    transparency: String(formData.get("transparency") || ""),
+    suspected: String(formData.get("suspected") || ""),
+    warning: String(formData.get("warning") || ""),
+    resources: String(formData.get("resources") || ""),
   });
   redirect(ok ? `/courses/${courseId}/guidance` : "/");
 }
@@ -107,7 +114,7 @@ export async function saveAssignmentCard(formData: FormData) {
   if (!user) redirect("/sign-in");
   if (user.role !== "instructor") redirect("/");
   const details = Object.fromEntries(
-    (["due", "learning", "permitted", "allowed", "notAllowed", "disclose", "process", "resources", "learn", "opening"] as const)
+    (["due", "learning", "permitted", "allowed", "notAllowed", "disclose", "discloseNot", "processRequested", "processNot", "bonusPercent", "bonusRequirements", "resources", "other", "learn", "opening"] as const)
       .map((key) => [key, String(formData.get(key) || "")]),
   ) as AssignmentDetails;
   const id = String(formData.get("id") || "") || undefined;

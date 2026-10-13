@@ -18,8 +18,13 @@ export type AssignmentDetails = {
   allowed: string;
   notAllowed: string;
   disclose: string;
-  process: string;
+  discloseNot: string;
+  processRequested: string;
+  processNot: string;
+  bonusPercent: string;
+  bonusRequirements: string;
   resources: string;
+  other: string;
   learn: string;
   opening: string;
 };
@@ -36,7 +41,8 @@ export type AssignmentCard = {
 
 const emptyAssignment: AssignmentDetails = {
   due: "", learning: "", permitted: "", allowed: "", notAllowed: "", disclose: "",
-  process: "", resources: "", learn: "", opening: "",
+  discloseNot: "", processRequested: "", processNot: "", bonusPercent: "",
+  bonusRequirements: "", resources: "", other: "", learn: "", opening: "",
 };
 
 export async function assignmentCardsForCourse(courseId: string, includePrivate = false): Promise<AssignmentCard[]> {

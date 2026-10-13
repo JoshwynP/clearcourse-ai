@@ -7,8 +7,23 @@ const assignmentFields: [keyof AssignmentDetails, string][] = [
   ["due", "Due date"], ["learning", "Learning being assessed"],
   ["permitted", "Is AI permitted?"], ["allowed", "When AI is allowed"],
   ["notAllowed", "When AI is not allowed"], ["disclose", "When disclosure is required"],
-  ["process", "Process evidence requested"], ["resources", "Resources"],
+  ["discloseNot", "When disclosure is not required"],
+  ["processRequested", "When process evidence is requested"],
+  ["processNot", "When process evidence is not requested"],
+  ["bonusPercent", "Optional transparency bonus percentage"],
+  ["bonusRequirements", "Requirements for receiving the transparency bonus"],
+  ["resources", "Resources"], ["other", "Other optional information"],
   ["learn", "LEARN submission link"], ["opening", "Opening statement (optional)"],
+];
+
+const courseFields: [keyof CardFields, string][] = [
+  ["opening", "Opening statement (optional)"], ["counts", "What counts as generative AI"],
+  ["permitted", "Whether generative AI is generally permitted"],
+  ["summary", "Course summary"], ["allowed", "Uses generally allowed"],
+  ["notAllowed", "Uses generally prohibited"], ["disclose", "General disclosure requirements"],
+  ["transparency", "Transparency-of-process expectations"],
+  ["suspected", "How suspected inappropriate use is addressed"],
+  ["warning", "Institutional-policy warning"], ["resources", "Additional resources"],
 ];
 
 export function CourseStudio({ courseId, card, assignments, selectedId, error }: {
@@ -61,14 +76,10 @@ export function CourseStudio({ courseId, card, assignments, selectedId, error }:
         <form className="panel panel-pad composer studio-form" action={saveCourseCard}>
           <h2>Course AI card</h2>
           <input type="hidden" name="courseId" value={courseId} />
-          <label htmlFor="summary">Course summary</label>
-          <textarea className="field" id="summary" name="summary" defaultValue={card.summary} maxLength={1000} />
-          <label htmlFor="allowed">Generally allowed</label>
-          <textarea className="field" id="allowed" name="allowed" defaultValue={card.allowed} maxLength={2000} />
-          <label htmlFor="notAllowed">Generally prohibited</label>
-          <textarea className="field" id="notAllowed" name="notAllowed" defaultValue={card.notAllowed} maxLength={2000} />
-          <label htmlFor="disclose">Disclosure</label>
-          <textarea className="field" id="disclose" name="disclose" defaultValue={card.disclose} maxLength={2000} />
+          {courseFields.map(([key, label]) => <div className="form-row" key={key}>
+            <label htmlFor={`course-${key}`}>{label}</label>
+            <textarea className="field" id={`course-${key}`} name={key} defaultValue={card[key] ?? ""} maxLength={key === "summary" ? 1000 : 2000} />
+          </div>)}
           <button className="button primary" type="submit">Save course card</button>
         </form>
       )}

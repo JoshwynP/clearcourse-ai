@@ -4,14 +4,24 @@ import type { AssignmentCard } from "@/lib/app-store";
 import type { CardFields } from "@/lib/identity-model";
 
 const courseRows: [string, keyof CardFields][] = [
+  ["What counts as generative AI", "counts"],
+  ["Whether generative AI is generally permitted", "permitted"],
   ["General course guidance", "summary"], ["Uses generally allowed", "allowed"],
-  ["Uses generally prohibited", "notAllowed"], ["Disclosure requirements", "disclose"],
+  ["Uses generally prohibited", "notAllowed"], ["General disclosure requirements", "disclose"],
+  ["Transparency-of-process expectations", "transparency"],
+  ["How suspected inappropriate use is addressed", "suspected"],
+  ["Institutional-policy warning", "warning"], ["Additional resources", "resources"],
 ];
 const assignmentRows: [string, keyof AssignmentCard["details"]][] = [
   ["Due date", "due"], ["Learning being assessed", "learning"], ["Is AI permitted?", "permitted"],
   ["When AI is allowed", "allowed"], ["When AI is not allowed", "notAllowed"],
-  ["When disclosure is required", "disclose"], ["Process evidence", "process"],
-  ["Resources", "resources"], ["LEARN submission link", "learn"],
+  ["When disclosure is required", "disclose"], ["When disclosure is not required", "discloseNot"],
+  ["When process evidence is requested", "processRequested"],
+  ["When process evidence is not requested", "processNot"],
+  ["Optional transparency bonus percentage", "bonusPercent"],
+  ["Requirements for receiving the transparency bonus", "bonusRequirements"],
+  ["Resources", "resources"], ["Other optional information", "other"],
+  ["LEARN submission link", "learn"],
 ];
 
 export function CourseGuidance({ code, name, courseId, card, assignments, selectedId }: {
@@ -37,7 +47,7 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
         </nav>
         <article className="panel panel-pad guidance-card">
           <h2>{selectedTitle}</h2>
-          {selected?.details.opening ? <p className="callout">{selected.details.opening}</p> : null}
+          {(selected?.details.opening ?? card.opening) ? <p className="callout">{selected?.details.opening ?? card.opening}</p> : null}
           <table className="card-table"><caption className="sr-only">{selectedTitle}</caption><tbody>
             {selected
               ? assignmentRows.map(([label, key]) => (
@@ -51,7 +61,8 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
               ))
               : courseRows.map(([label, key]) => <tr key={key}><th scope="row">{label}</th><td>{card[key] || "Not specified yet"}</td></tr>)}
           </tbody></table>
-          <p className="callout">{selected ? ASSIGNMENT_PRINCIPLE : COURSE_PRINCIPLE}</p>
+          {selected ? (selected.details.permitted.toLowerCase() !== "no" ? <p className="callout">{ASSIGNMENT_PRINCIPLE}</p> : null)
+            : <p className="callout">{COURSE_PRINCIPLE}</p>}
           <div className="guidance-section"><h3>University policy links</h3><ul>
             {policyLinks.map((link) => <li key={link.href}><a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a></li>)}
           </ul></div>

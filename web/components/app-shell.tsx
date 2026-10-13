@@ -62,7 +62,7 @@ export function AppShell({
             {footer ?? (
               <>
                 ClearCourse
-                <small>Practice accounts</small>
+                <small>AI guidance, made clear</small>
               </>
             )}
           </div>

@@ -24,6 +24,7 @@ export default async function ParticipationPage({ params }: { params: Promise<{ 
       {teaching ? <section className="panel panel-pad">
         <h2>Shared levels</h2>
         <p>Only students who chose to share appear here. Their questions, comments, and upvotes are not shown.</p>
+        <p className="meta">Practice accounts only. Do not use this page for real student grading.</p>
         {shared.length ? <table className="card-table"><caption className="sr-only">Students who shared a contributor level</caption>
           <thead><tr><th scope="col">Student</th><th scope="col">Contributor level</th><th scope="col">When shared</th></tr></thead>
           <tbody>{shared.map((item, index) => <tr key={index}><td>{item.name}</td><td>{item.level}</td><td>{item.sharedAt.toLocaleDateString("en-CA")}</td></tr>)}</tbody>
