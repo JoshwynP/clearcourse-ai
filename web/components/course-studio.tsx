@@ -42,7 +42,7 @@ export function CourseStudio({ courseId, card, assignments, selectedId, error }:
             <div><label htmlFor="assignment-title">Assignment title</label><input className="field" id="assignment-title" name="title" required maxLength={120} defaultValue={selected?.title} /></div>
             <div><label htmlFor="identifier">Assignment identifier</label><input className="field" id="identifier" name="identifier" required maxLength={40} pattern="[A-Za-z0-9_-]+" defaultValue={selected?.identifier} /></div>
           </div>
-          <div className="editor-opening"><label htmlFor="assignment-opening">Opening statement <span className="meta">(optional)</span></label>
+          <div className="editor-opening"><label htmlFor="assignment-opening">Opening statement <span className="editor-optional">(optional)</span></label>
             <textarea className="field" id="assignment-opening" name="opening" maxLength={2000} defaultValue={selected?.details.opening} /></div>
           <table className="card-table editor-table"><caption className="sr-only">Assignment AI card editor</caption><tbody>
             {assignmentRows.map(([label, key]) => <tr key={key}><th scope="row"><label htmlFor={`assignment-${key}`}>{label}</label></th>
@@ -56,7 +56,7 @@ export function CourseStudio({ courseId, card, assignments, selectedId, error }:
         <form className="panel panel-pad studio-form" action={saveCourseCard}>
           <h2>Course AI card</h2>
           <input type="hidden" name="courseId" value={courseId} />
-          <div className="editor-opening"><label htmlFor="course-opening">Opening statement <span className="meta">(optional)</span></label>
+          <div className="editor-opening"><label htmlFor="course-opening">Opening statement <span className="editor-optional">(optional)</span></label>
             <textarea className="field" id="course-opening" name="opening" defaultValue={card.opening ?? ""} maxLength={2000} /></div>
           <table className="card-table editor-table"><caption className="sr-only">Course AI card editor</caption><tbody>
             {courseRows.map(([label, key]) => <tr key={key}><th scope="row"><label htmlFor={`course-${key}`}>{label}</label></th>

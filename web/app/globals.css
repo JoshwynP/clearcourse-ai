@@ -752,6 +752,7 @@ fieldset label {
 .editor-table { margin: 16px 0; }
 .editor-table th { width: 36%; }
 .editor-table th label, .editor-opening label, .editor-meta label { font-weight: 600; }
+.editor-optional { font-weight: 400; }
 .editor-table td { background: var(--surface); }
 .editor-table textarea.field { min-height: 58px; resize: vertical; }
 .editor-opening { margin: 16px 0; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--gold-4); }
