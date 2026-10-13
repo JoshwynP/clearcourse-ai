@@ -485,10 +485,17 @@ a:focus-visible {
 }
 
 .conversation-tools {
-  display: grid;
-  gap: 16px;
-  margin-top: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
 }
+.filter-field { display: grid; gap: 5px; min-width: 180px; }
+.filter-field:first-child { flex: 1; }
+.filter-field:nth-child(2) { width: 220px; }
+.filter-field label { font-size: 12px; font-weight: 600; }
 
 .filters {
   display: flex;

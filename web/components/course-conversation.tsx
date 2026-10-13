@@ -51,18 +51,18 @@ export function CourseConversation({
           </form>
         </details>
       </div>
-      <form className="conversation-tools" method="get" action={`/courses/${courseId}/conversation`}>
-        <label htmlFor="question-filter">Filter by:</label>
-        <select className="field" id="question-filter" name="tag" defaultValue={activeTag}>
-          <option value="all">All questions</option><option value="course">General course questions</option>
-          {assignments.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-        </select>
-        <label htmlFor="question-search">Search</label>
-        <input className="field" id="question-search" name="q" type="search" defaultValue={query ?? ""} />
-        <button className="button" type="submit">Apply</button>
-      </form>
       <div className="layout">
       <section className="panel" aria-label="Course questions">
+      <form className="conversation-tools" method="get" action={`/courses/${courseId}/conversation`}>
+        <div className="filter-field"><label htmlFor="question-filter">Filter by:</label>
+          <select className="field" id="question-filter" name="tag" defaultValue={activeTag}>
+            <option value="all">All questions</option><option value="course">General course questions</option>
+            {assignments.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+          </select></div>
+        <div className="filter-field"><label htmlFor="question-search">Search</label>
+          <input className="field" id="question-search" name="q" type="search" defaultValue={query ?? ""} /></div>
+        <button className="button" type="submit">Apply</button>
+      </form>
       {shown.length === 0 ? <p className="meta panel-pad">No questions match this view.</p> : null}
       <ul className="thread">
         {shown.map((question) => (

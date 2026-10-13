@@ -41,12 +41,13 @@ export function CourseGuidance({ code, name, courseId, card, assignments, select
           {assignments.map((item) => (
             <Link className={`card-choice ${selected?.id === item.id ? "active" : ""}`} key={item.id}
               href={`/courses/${courseId}/guidance?card=${item.id}`} aria-current={selected?.id === item.id ? "page" : undefined}>
-              <strong>{item.title}</strong><small>Assignment card</small>
+              <strong>{item.title}</strong><small>{item.status === "published" ? "Assignment card" : item.status === "draft" ? "Private draft" : "Archived"}</small>
             </Link>
           ))}
         </nav>
         <article className="panel panel-pad guidance-card">
           <h2>{selectedTitle}</h2>
+          {selected && selected.status !== "published" ? <p className="notice">This card is {selected.status === "draft" ? "a private draft" : "archived"}. Students cannot see it.</p> : null}
           {(selected?.details.opening ?? card.opening) ? <p className="callout">{selected?.details.opening ?? card.opening}</p> : null}
           <table className="card-table"><caption className="sr-only">{selectedTitle}</caption><tbody>
             {selected
