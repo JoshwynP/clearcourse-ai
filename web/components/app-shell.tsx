@@ -62,6 +62,7 @@ export function AppShell({
         <aside className="sidebar" aria-label="Course navigation">
           <CourseNavigator courses={courses} courseId={course?.id} view={view} studio={studio} owner={owner} participation={participation} />
           <div className="sidebar-foot">
+            <WelcomeGuide role={welcomeRole} needsWelcome={needsWelcome} />
             {footer ?? (
               <>
                 <strong className="account-name">ClearCourse</strong>
@@ -77,7 +78,6 @@ export function AppShell({
           <main id="main">{children}</main>
         </div>
       </div>
-      <WelcomeGuide role={welcomeRole} needsWelcome={needsWelcome} />
     </div>
   );
 }

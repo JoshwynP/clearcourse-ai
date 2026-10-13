@@ -704,7 +704,7 @@ fieldset {
 .welcome-rules ul { margin: 8px 0 0; padding-left: 21px; }
 .welcome-rules li + li { margin-top: 5px; }
 .welcome-safety { font-size: 12px; line-height: 1.5; padding: 10px 12px; border-left: 3px solid var(--gold-4); background: var(--grey); }
-.about-trigger { position: fixed; right: 18px; bottom: 18px; z-index: 5; border: 1px solid var(--ink); background: var(--surface); padding: 10px 15px; font-weight: 700; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
+.about-trigger { display: block; width: 100%; margin-bottom: 12px; border: 1px solid var(--ink); background: var(--surface); padding: 10px 15px; font-weight: 700; text-align: left; }
 .about-trigger:hover { background: var(--gold-1); }
 .change-summary { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 16px 0; }
 .change-summary dt { font-weight: 700; }
@@ -909,6 +909,8 @@ fieldset label {
     display: block;
     margin-top: 0;
   }
+  .about-trigger { position: fixed; right: 12px; bottom: 12px; z-index: 5; width: auto; margin: 0; box-shadow: 0 2px 8px rgba(0, 0, 0, .2); }
+  .page { padding-bottom: 90px; }
 
   .topbar {
     padding: 0 12px;
