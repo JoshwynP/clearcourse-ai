@@ -78,18 +78,31 @@ a:focus-visible {
   background: var(--ink);
 }
 
-.uw-logo-link {
-  display: block;
-  flex: none;
-  line-height: 0;
-  margin-left: auto;
+.uw-credit {
+  margin: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--surface);
 }
 
-.uw-logo-link img {
+.uw-credit img {
   display: block;
-  width: 150px;
-  height: auto;
+  width: 36px;
+  height: 40px;
 }
+
+.uw-credit p {
+  margin: 0;
+  max-width: 11rem;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.uw-credit strong,
+.uw-credit span { display: block; }
+.uw-credit strong { font-size: 14px; letter-spacing: 0.04em; }
+.uw-credit span { margin-top: 2px; color: #dfdfdf; }
 
 .masthead .brand-link {
   min-width: 0;
@@ -620,6 +633,7 @@ a:focus-visible {
 .ask-form { display: grid; gap: 8px; padding: 16px; max-width: none; }
 .ask-form label { font-weight: 600; font-size: 13px; }
 .ask-form textarea { min-height: 110px; }
+.ask-form textarea::placeholder { color: #a2a2a2; opacity: 1; }
 .ask-form button { justify-self: start; margin-top: 6px; }
 
 fieldset {
@@ -859,7 +873,17 @@ fieldset label {
 .manage-create { padding: 12px; }
 .status-tag { padding: 2px 6px; border: 1px solid var(--line); font-size: 12px; }
 .button.small { min-height: 28px; padding: 4px 8px; font-size: 12px; }
+.studio-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; align-items: start; }
 .studio-form { max-width: 800px; margin-top: 0; }
+.studio-workspace .studio-form { max-width: none; }
+.equity-panel h2 { margin: 0; font-size: 15px; line-height: 1.35; }
+.equity-panel p { margin: 10px 0 0; font-size: 13px; line-height: 1.5; }
+.archived-panel { margin-top: 16px; }
+.archived-panel h2 { margin: 0; padding: 12px 12px 0; font-size: 15px; }
+.archived-panel .meta { margin: 4px 12px 0; }
+.card-rail { display: grid; gap: 16px; align-content: start; }
+.archived-card { display: grid; }
+.archived-card form { padding: 0 12px 12px; }
 .studio-chooser { max-width: 800px; }
 .studio-chooser h2 { margin: 0 0 8px; }
 .studio-chooser p { margin: 0; }
@@ -903,7 +927,8 @@ fieldset label {
   .welcome-body { padding: 18px; }
   .course-create-options { grid-template-columns: 1fr; }
   .staff-form { grid-template-columns: 1fr; }
-  .card-layout { grid-template-columns: 1fr; }
+  .card-layout,
+  .studio-workspace { grid-template-columns: 1fr; }
   .manage-item { align-items: flex-start; flex-direction: column; }
   .editor-meta { grid-template-columns: 1fr; }
   .editor-table, .editor-table tbody, .editor-table tr, .editor-table th, .editor-table td { display: block; width: 100%; }
@@ -915,10 +940,10 @@ fieldset label {
     padding: 12px;
   }
 
-  .uw-logo-link img {
-    width: 128px;
-    height: auto;
-  }
+  .uw-credit p { max-width: 8.5rem; font-size: 10px; }
+  .uw-credit strong { font-size: 12px; }
+  .studio-workspace,
+  .card-rail { display: block; }
 
   .app-shell {
     display: block;

@@ -45,7 +45,7 @@ export function CourseConversation({
             <label htmlFor="title">Question</label>
             <input className="field" id="title" name="title" required maxLength={160} />
             <label htmlFor="body">Details</label>
-            <textarea className="field" id="body" name="body" maxLength={2000} />
+            <textarea className="field" id="body" name="body" maxLength={2000} placeholder="Include more context here (optional)" />
             <button className="button primary" type="submit">
               Post question
             </button>

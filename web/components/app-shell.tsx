@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { CourseNavigator } from "@/components/course-navigator";
 import { WelcomeGuide } from "@/components/welcome-guide";
 
@@ -46,11 +45,12 @@ export function AppShell({
       <header className="masthead">
         <Link className="brand-link" href="/" aria-current={onHome ? "page" : undefined}>
           <strong>ClearCourse</strong>
-          <small>Made by UW students for UW students and professors</small>
+          <small>AI guidance, made clear</small>
         </Link>
-        <a className="uw-logo-link" href="https://uwaterloo.ca/" target="_blank" rel="noopener noreferrer" aria-label="University of Waterloo">
-          <Image src="/uwaterloo-logo.svg" alt="" width={170} height={41} unoptimized />
-        </a>
+        <div className="uw-credit">
+          <img src="/uwaterloo-shield.svg" alt="" width={36} height={40} />
+          <p><strong>UW</strong><span>Independent website made by students</span></p>
+        </div>
       </header>
       <div className="colour-bar" aria-hidden="true">
         <span />
@@ -66,7 +66,7 @@ export function AppShell({
               {footer ?? (
                 <div className="account-details">
                   <strong className="account-name">ClearCourse</strong>
-                  <span className="account-role">Made by UW students for UW students and professors</span>
+                  <span className="account-role">Independent project for UW students and professors</span>
                 </div>
               )}
             </div>

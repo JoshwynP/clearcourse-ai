@@ -529,16 +529,15 @@ The full list of audited events is Q14.
   clear status labels · explicit anonymity explanations · non-gamified private participation levels.
 - Avoid: AI-generated aesthetics · robots · surveillance motifs · leaderboards · streaks ·
   competitive badges · attention-maximizing patterns.
-- **Prototype visual direction (owner decision, 2026-10-12):** use a familiar chat-style layout,
-  flat borders, compact spacing and plain text labels. Colours are the University of Waterloo
-  palette: black, white, grey, and gold. Each page starts with a black banner containing the
-  University of Waterloo wordmark and the name ClearCourse, which links to the home page, then the
-  four-level gold colour bar used on University of Waterloo websites. Gold is used for bars and
-  highlights; text on white or grey stays black. Avoid glossy cards and decorative colour. WhatsApp
-  is an inspiration for familiarity, not a source of copied branding or assets.
-- **Hosted masthead update (owner decision, 2026-10-13; ADR 0012):** ClearCourse links home
-  from the top left; the University wordmark appears at the top right. The banner says the site was
-  made by UW students for UW students and professors.
+- **Visual direction (owner decisions, 2026-10-12 and 2026-10-13):** use a familiar chat-style
+  layout, flat borders, compact spacing and plain text labels. Colours are black, white, grey, and
+  gold. Each page starts with a black banner containing the ClearCourse name, which links home, and
+  the header mark described below. The gold colour bar remains. Gold is
+  used for bars and highlights; text on white or grey stays black. Avoid glossy cards and decorative
+  colour. WhatsApp is an inspiration for familiarity, not a source of copied branding or assets.
+- **Header mark (owner decision, 2026-10-13; ADR 0015):** the top right shows the University of
+  Waterloo shield and the letters UW. The text beside it says “Independent website made by students.”
+  Do not use the University wordmark, and do not present the site as an official University website.
 - Accessibility is required `[src p.1, p.16]`. The conformance target (e.g. WCAG 2.x AA) is Q15.
 
 ---
@@ -719,3 +718,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-13 | Owner requested course detail, roster, and selective end-of-term reset controls, clearer branding and sign-up, and a one-time welcome guide. ADR 0012 records the initial release; Q17 remains open for production. |
 | 2026-10-13 | Owner clarified that ClearCourse is the intended product, not a practice site. ADR 0013 removes temporary account language, adds review steps and a persistent guide entry point, and preserves verification and privacy gates before real student use. |
 | 2026-10-13 | Owner requested explicit card selection before editing, field guidance, hide and restore for standard fields, and add and delete controls for custom fields. ADR 0014 records the layout stored with each card. |
+| 2026-10-13 | Owner asked for the University shield and the letters UW in the header, with “Independent website made by students” in place of the University wordmark. ADR 0015. Preview saves the card before opening it, and archived cards move to their own section with an unarchive control. |

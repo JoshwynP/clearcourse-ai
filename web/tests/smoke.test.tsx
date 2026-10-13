@@ -49,7 +49,10 @@ test("course shell nests the open course's sections under that course", () => {
   );
   assert.doesNotMatch(html, /course-icon/);
   assert.ok(html.indexOf('href="/"') >= 0);
-  assert.match(html, /aria-label="University of Waterloo"/);
+  assert.match(html, /src="\/uwaterloo-shield.svg"/);
+  assert.match(html, />UW</);
+  assert.match(html, /Independent website made by students/);
+  assert.doesNotMatch(html, /University of Waterloo/);
   assert.match(html, /class="colour-bar"/);
   assert.match(html, /<strong>ClearCourse<\/strong>/);
   assert.ok(html.indexOf('href="/courses/sds"') < html.indexOf('href="/courses/sds/conversation"'));

@@ -1,34 +1,56 @@
 import Link from "next/link";
+import { StatusForm } from "@/components/course-studio";
 import { COURSE_PRINCIPLE, ASSIGNMENT_PRINCIPLE, policyLinks } from "@/lib/sample-courses";
 import { assignmentEditableKeys, assignmentRows, courseEditableKeys, courseRows } from "@/lib/card-rows";
 import { normalizeCardLayout } from "@/lib/card-layout";
 import type { AssignmentCard } from "@/lib/app-store";
 import type { CardFields } from "@/lib/identity-model";
 
-export function CourseGuidance({ code, name, courseId, card, assignments, selectedId }: {
+export function CourseGuidance({ code, name, courseId, card, assignments, selectedId, canManage = false, showBack = false }: {
   code: string; name: string; courseId: string; card: CardFields;
-  assignments: AssignmentCard[]; selectedId?: string;
+  assignments: AssignmentCard[]; selectedId?: string; canManage?: boolean; showBack?: boolean;
 }) {
   const selected = assignments.find((item) => item.id === selectedId);
   const selectedTitle = selected?.title ?? "Course AI card";
+  const current = assignments.filter((item) => item.status !== "archived");
+  const archived = assignments.filter((item) => item.status === "archived");
   const courseLayout = normalizeCardLayout(card.layout, courseEditableKeys);
   const selectedLayout = selected ? normalizeCardLayout(selected.details.layout, assignmentEditableKeys) : courseLayout;
+  const backHref = `/courses/${courseId}/studio?card=${selected?.id ?? "course"}`;
   return (
     <div className="page">
       <div className="page-head"><div><h1>AI cards</h1><p className="page-subtitle">{code} | {name}</p></div></div>
       <div className="card-layout">
+        <div className="card-rail">
         <nav className="panel card-list" aria-label="Choose an AI card">
           <Link className={`card-choice ${selected ? "" : "active"}`} href={`/courses/${courseId}/guidance`} aria-current={selected ? undefined : "page"}>
             <strong>Course AI card</strong><small>Course guidance</small>
           </Link>
-          {assignments.map((item) => (
+          {current.map((item) => (
             <Link className={`card-choice ${selected?.id === item.id ? "active" : ""}`} key={item.id}
               href={`/courses/${courseId}/guidance?card=${item.id}`} aria-current={selected?.id === item.id ? "page" : undefined}>
-              <strong>{item.title}</strong><small>{item.status === "published" ? "Assignment card" : item.status === "draft" ? "Private draft" : "Archived"}</small>
+              <strong>{item.title}</strong><small>{item.status === "published" ? "Assignment card" : "Private draft"}</small>
             </Link>
           ))}
         </nav>
+        {canManage && archived.length ? (
+          <section className="panel archived-panel" aria-label="Archived cards">
+            <h2>Archived cards</h2>
+            <p className="meta">Unarchive moves a card back into AI cards as a private draft.</p>
+            {archived.map((item) => (
+              <div className="archived-card" key={item.id}>
+                <Link className={`card-choice ${selected?.id === item.id ? "active" : ""}`}
+                  href={`/courses/${courseId}/guidance?card=${item.id}`} aria-current={selected?.id === item.id ? "page" : undefined}>
+                  <strong>{item.title}</strong><small>Archived</small>
+                </Link>
+                <StatusForm courseId={courseId} id={item.id} status="draft" label="Unarchive" returnTo="guidance" />
+              </div>
+            ))}
+          </section>
+        ) : null}
+        </div>
         <article className="panel panel-pad guidance-card">
+          {showBack ? <p className="form-actions"><Link className="button" href={backHref}>Back</Link></p> : null}
           <h2>{selectedTitle}</h2>
           {selected && selected.status !== "published" ? <p className="notice">This card is {selected.status === "draft" ? "a private draft" : "archived"}. Students cannot see it.</p> : null}
           {!selectedLayout.hiddenFields.includes("opening") && (selected?.details.opening ?? card.opening)

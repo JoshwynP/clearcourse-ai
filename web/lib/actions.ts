@@ -117,6 +117,7 @@ export async function saveCourseCard(formData: FormData) {
   if (!user) redirect("/sign-in");
   const layout = parseCardLayout(formData.get("layout"), courseEditableKeys);
   if (!layout) redirect(`/courses/${courseId}/studio?card=course&error=fields`);
+  const preview = formData.get("intent") === "preview";
   const ok = await saveCourseCardForInstructor(user.id, courseId, {
     summary: String(formData.get("summary") || ""),
     allowed: String(formData.get("allowed") || ""),
@@ -131,7 +132,7 @@ export async function saveCourseCard(formData: FormData) {
     resources: String(formData.get("resources") || ""),
     layout,
   });
-  redirect(ok ? `/courses/${courseId}/guidance` : "/");
+  redirect(ok ? `/courses/${courseId}/guidance${preview ? "?preview=1" : ""}` : "/");
 }
 
 export async function saveAssignmentCard(formData: FormData) {
@@ -148,10 +149,11 @@ export async function saveAssignmentCard(formData: FormData) {
   const id = String(formData.get("id") || "") || undefined;
   const editor = `/courses/${courseId}/studio?card=${id || "new"}`;
   try {
-    const ok = await saveAssignmentCardForInstructor(
+    const savedId = await saveAssignmentCardForInstructor(
       user.id, courseId, id, String(formData.get("identifier") || ""), String(formData.get("title") || ""), details,
     );
-    redirect(ok ? `/courses/${courseId}/studio` : `${editor}&error=card`);
+    const preview = formData.get("intent") === "preview";
+    redirect(savedId ? (preview ? `/courses/${courseId}/guidance?card=${savedId}&preview=1` : `/courses/${courseId}/studio`) : `${editor}&error=card`);
   } catch (error) {
     if ((error as { code?: string }).code === "23505") redirect(`${editor}&error=duplicate`);
     throw error;
@@ -165,7 +167,8 @@ export async function setAssignmentStatus(formData: FormData) {
   const status = String(formData.get("status") || "");
   if (status !== "draft" && status !== "published" && status !== "archived") redirect("/");
   const ok = await setAssignmentStatusForInstructor(user.id, courseId, String(formData.get("id") || ""), status);
-  redirect(ok ? `/courses/${courseId}/studio` : "/");
+  const destination = formData.get("returnTo") === "guidance" ? "guidance" : "studio";
+  redirect(ok ? `/courses/${courseId}/${destination}` : "/");
 }
 
 export async function changeParticipationSharing(formData: FormData) {
