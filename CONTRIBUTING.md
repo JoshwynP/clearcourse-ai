@@ -537,7 +537,8 @@ The full list of audited events is Q14.
   colour. WhatsApp is an inspiration for familiarity, not a source of copied branding or assets.
 - **Header mark (owner decision, 2026-10-13; ADR 0015):** the top right shows the University of
   Waterloo shield and the letters UW. The text beside it says “Independent website made by students.”
-  Do not use the University wordmark, and do not present the site as an official University website.
+  The browser icon is the same 32×32 shield `.ico` used on University of Waterloo websites. Do not
+  use the University wordmark, and do not present the site as an official University website.
 - Accessibility is required `[src p.1, p.16]`. The conformance target (e.g. WCAG 2.x AA) is Q15.
 
 ---
@@ -719,3 +720,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-13 | Owner clarified that ClearCourse is the intended product, not a practice site. ADR 0013 removes temporary account language, adds review steps and a persistent guide entry point, and preserves verification and privacy gates before real student use. |
 | 2026-10-13 | Owner requested explicit card selection before editing, field guidance, hide and restore for standard fields, and add and delete controls for custom fields. ADR 0014 records the layout stored with each card. |
 | 2026-10-13 | Owner asked for the University shield and the letters UW in the header, with “Independent website made by students” in place of the University wordmark. ADR 0015. Preview saves the card before opening it, and archived cards move to their own section with an unarchive control. |
+| 2026-10-13 | Owner asked for the browser icon to be the University of Waterloo shield `.ico` used on University websites. |

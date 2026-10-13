@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -141,6 +142,13 @@ test("sample session keeps questions and card edits until reset", () => {
     disclose: "Add a short note.",
   });
   assert.equal(state.drafts.engl?.course?.allowed, "Ask about structure.");
+});
+
+test("the browser icon is the University of Waterloo shield ico", () => {
+  const icon = readFileSync(new URL("../app/favicon.ico", import.meta.url));
+  assert.equal(icon.readUInt16LE(0), 0);
+  assert.equal(icon.readUInt16LE(2), 1);
+  assert.equal(createHash("sha256").update(icon).digest("hex"), "68d4cacaee57e6eeb4d3f81fde0e1626fd165e4e64dc4401ece456961c989dc4");
 });
 
 test("the stylesheet uses the University of Waterloo black, white, grey, and gold palette", () => {
