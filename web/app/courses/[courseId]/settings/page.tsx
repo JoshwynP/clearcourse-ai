@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { SignedInShell } from "@/components/signed-in-shell";
 import { ResetCourseForm } from "@/components/reset-course-form";
+import { TermReminder } from "@/components/term-reminder";
 import { CourseDetailsForm, ConfirmActionForm } from "@/components/course-settings-actions";
 import { addCourseStaffAction, addCourseStudentAction, removeCourseStaffAction, removeCourseStudentAction, rotateJoinCodeAction, updateCourseDetailsAction } from "@/lib/actions";
 import { courseStaffForOwner, courseStaffRole, courseStudentsForProfessor, memberCourseForUser } from "@/lib/app-store";
@@ -38,6 +39,7 @@ export default async function CourseSettingsPage({ params, searchParams }: {
     details: "Course details saved.", student: "Student enrollment updated.",
     staff: "Teaching team updated.", reset: "Selected course data cleared.",
     "join-code": "Join code changed. The previous code no longer works.",
+    reminder: "Start-of-term reminder prepared. No messages were sent.",
   };
   return <SignedInShell courseId={courseId} view="settings"><div className="page">
     <div className="page-head"><div><h1>Course settings</h1><p className="page-subtitle">{course.code} | {course.name}</p></div></div>
@@ -85,6 +87,8 @@ export default async function CourseSettingsPage({ params, searchParams }: {
         </li>)}</ul> : <p>No additional professors or TAs yet.</p>}
       </> : <p>The course owner manages teaching team access.</p>}
     </section>
+
+    <TermReminder courseId={courseId} joinCode={course.joinCode} />
 
     <section className="panel panel-pad settings-panel reset-section">
       <h2>End of term</h2>

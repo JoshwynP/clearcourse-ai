@@ -2,6 +2,7 @@ import Link from "next/link";
 import { askQuestion, castVote, sendReply } from "@/lib/actions";
 import type { ListedQuestion } from "@/lib/content-model";
 import type { AssignmentCard } from "@/lib/app-store";
+import type { SimilarDiscussion } from "@/lib/similar-text";
 
 export function CourseConversation({
   courseId,
@@ -10,6 +11,7 @@ export function CourseConversation({
   assignments,
   tag,
   query,
+  similar = {},
 }: {
   courseId: string;
   questions: ListedQuestion[];
@@ -17,6 +19,7 @@ export function CourseConversation({
   assignments: AssignmentCard[];
   tag?: string;
   query?: string;
+  similar?: Record<string, SimilarDiscussion[]>;
 }) {
   const activeTag = tag === "course" || assignments.some((item) => item.id === tag) ? tag : "all";
   const search = (query ?? "").trim().toLowerCase();
@@ -70,6 +73,24 @@ export function CourseConversation({
             <span className={`status-tag question-tag ${question.tag === "course" ? "course-tag" : "assignment-tag"}`}>{tagName(question.tag)}</span>
             <h2>{question.title}</h2>
             {question.body ? <p>{question.body}</p> : null}
+            {similar[question.id]?.length ? (
+              <aside className="similar-box" aria-label="Similar questions">
+                <h3>Similar questions</h3>
+                <p className="meta">Matched by shared words from questions stored for ClearCourse courses. Course names are not shown. A similar question does not block this one.</p>
+                <ul>
+                  {similar[question.id].map((item, index) => (
+                    <li key={`${question.id}-similar-${index}`}>
+                      <p className="meta">{item.sameCourse ? "This course" : "Another course"}</p>
+                      <strong>{item.title}</strong>
+                      {item.body ? <p>{item.body}</p> : null}
+                      {item.replies.map((reply, replyIndex) => (
+                        <p key={`${question.id}-similar-${index}-${replyIndex}`}><strong>{reply.role}: </strong>{reply.text}</p>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+              </aside>
+            ) : null}
             <form className="inline-form question-vote" action={castVote}>
               <input type="hidden" name="courseId" value={courseId} />
               <input type="hidden" name="questionId" value={question.id} />

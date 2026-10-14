@@ -12,6 +12,7 @@ import { voteToken, type Role } from "@/lib/identity-model";
 import { addParticipation, setParticipationSharing } from "@/lib/participation-store";
 import { parseCardLayout } from "@/lib/card-layout";
 import { assignmentEditableKeys, courseEditableKeys } from "@/lib/card-rows";
+import { applySetupAnswers, setupQuestions } from "@/lib/card-setup";
 
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email") || "");
@@ -215,6 +216,57 @@ export async function saveAssignmentCard(formData: FormData) {
     if ((error as { code?: string }).code === "23505") redirect(`${editor}&error=duplicate`);
     throw error;
   }
+}
+
+const blankAssignment: AssignmentDetails = {
+  due: "", learning: "", permitted: "", allowed: "", notAllowed: "", disclose: "",
+  discloseNot: "", processRequested: "", processNot: "", bonusPercent: "",
+  bonusRequirements: "", resources: "", other: "", learn: "", opening: "",
+};
+
+export async function applyCardSetup(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  if (!await courseStaffRole(user.id, courseId)) redirect("/");
+  const answers = Object.fromEntries(setupQuestions.map((question) => [question.id, String(formData.get(question.id) || "")]));
+  const setup = `/courses/${courseId}/studio/setup`;
+  if (formData.get("kind") !== "assignment") {
+    const course = await memberCourseForUser(user.id, courseId);
+    if (!course) redirect("/");
+    const current = Object.fromEntries(Object.entries(course.card).flatMap(([key, value]) => typeof value === "string" ? [[key, value]] : []));
+    const filled = applySetupAnswers("course", current, answers);
+    const ok = await saveCourseCardForInstructor(user.id, courseId, { ...course.card, ...filled, layout: course.card.layout });
+    redirect(ok ? `/courses/${courseId}/studio?card=course` : "/");
+  }
+  const id = String(formData.get("id") || "") || undefined;
+  const existing = id ? (await assignmentCardsForCourse(courseId, true)).find((card) => card.id === id) : undefined;
+  if (id && !existing) redirect(`/courses/${courseId}/studio`);
+  const base = existing?.details ?? blankAssignment;
+  const current = Object.fromEntries(Object.entries(base).flatMap(([key, value]) => typeof value === "string" ? [[key, value]] : []));
+  const filled = applySetupAnswers("assignment", current, answers);
+  const editor = `${setup}?card=${id || "new"}`;
+  try {
+    const savedId = await saveAssignmentCardForInstructor(
+      user.id, courseId, id,
+      existing?.identifier ?? String(formData.get("identifier") || ""),
+      existing?.title ?? String(formData.get("title") || ""),
+      { ...base, ...filled, layout: base.layout },
+    );
+    redirect(savedId ? `/courses/${courseId}/studio?card=${savedId}` : `${editor}&error=card`);
+  } catch (error) {
+    if ((error as { code?: string }).code === "23505") redirect(`${editor}&error=duplicate`);
+    throw error;
+  }
+}
+
+export async function prepareTermReminder(formData: FormData) {
+  const user = await currentAccount();
+  const courseId = String(formData.get("courseId") || "");
+  if (!user) redirect("/sign-in");
+  const role = await courseStaffRole(user.id, courseId);
+  if (role !== "owner" && role !== "professor") redirect("/");
+  redirect(`/courses/${courseId}/settings?updated=reminder`);
 }
 
 export async function setAssignmentStatus(formData: FormData) {

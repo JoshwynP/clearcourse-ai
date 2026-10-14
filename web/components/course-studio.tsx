@@ -73,6 +73,7 @@ export function CourseStudio({ courseId, card, assignments, selectedId, error }:
                   <small className="field-hint">A short unique code for this assignment. Use letters, numbers, hyphens, or underscores.</small></div>
               </div>
               <CardFieldEditor kind="assignment" rows={assignmentRows} values={assignmentValues} savedLayout={selected?.details.layout} />
+              <p><Link href={`/courses/${courseId}/studio/setup?card=${selected?.id ?? "new"}`}>Answer setup questions</Link></p>
               <div className="form-actions">
                 <button className="button primary" type="submit" name="intent" value="save">Save card</button>
                 <button className="button" type="submit" name="intent" value="preview">Preview new card</button>
@@ -84,6 +85,7 @@ export function CourseStudio({ courseId, card, assignments, selectedId, error }:
               <h2>Edit Course AI card</h2>
               <input type="hidden" name="courseId" value={courseId} />
               <CardFieldEditor kind="course" rows={courseRows} values={courseValues} savedLayout={card.layout} />
+              <p><Link href={`/courses/${courseId}/studio/setup?card=course`}>Answer setup questions</Link></p>
               <div className="form-actions">
                 <button className="button primary" type="submit" name="intent" value="save">Save course card</button>
                 <button className="button" type="submit" name="intent" value="preview">Preview new card</button>

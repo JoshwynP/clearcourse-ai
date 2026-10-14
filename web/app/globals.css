@@ -990,3 +990,19 @@ fieldset label {
     width: 100%;
   }
 }
+
+.setup-form { max-width: 720px; }
+.setup-form h2 { margin-top: 0; }
+.setup-choices { display: flex; gap: 16px; margin: 12px 0; }
+.setup-choices label { display: flex; gap: 6px; align-items: center; }
+.term-reminder-form { margin: 12px 0; }
+.similar-box {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.similar-box h3 { margin: 0 0 8px; font-size: 14px; }
+.similar-box ul { margin: 0; padding-left: 18px; }
+.similar-box li + li { margin-top: 10px; }
+.question .similar-box { margin: 8px 0 12px; }

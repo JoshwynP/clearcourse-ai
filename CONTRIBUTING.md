@@ -361,6 +361,20 @@ resources · **the transparent decision rule behind any recommendation**.
   wizard · preview the student view · save drafts · publish · duplicate cards · archive or supersede
   cards.
 
+**Owner decision (2026-10-13):** The live wizard asks these twelve questions, one at a time, from
+Manage My Cards. Each answer is copied into the matching card field by a fixed rule. An empty
+answer does not clear existing text. Question 3 is not copied and does not change the answer to
+question 4. Questions 2 and 6 are both copied into the prohibited-use field, separated by a blank
+line, with no added labels. If a transparency bonus is offered and the opening statement is blank,
+the suggested wording in §7.3 is copied in. The bonus percentage is copied only onto an assignment
+card, and only when a bonus is offered. Question 12 is copied into How suspected inappropriate use
+is addressed on the course card, and into Other optional information on an assignment card. Similar
+answers are published assignment-card text from other courses, matched by shared words. Drafts are
+excluded, and course names are not shown. Similar answers are displayed only; they do not fill the
+card. The instructor edits the filled card before students see it. No generative model writes the
+card. Any curated resource library beyond those published answers and the policy links already on
+the card remains open under Q10. See ADR 0016.
+
 The live manual editor opens with a card chooser. An instructor explicitly selects the course card,
 an existing assignment card, or a new assignment card before editing. All standard fields appear
 on a new card. An instructor may hide a standard field without deleting its text, then restore it
@@ -397,6 +411,11 @@ for presentation mode.
 **Also required:** rate limiting · duplicate warnings · safe content reporting · a moderation queue.
 Optional duplicate *suggestions* are search assistance only. They never deny participation
 automatically.
+
+**Owner decision (2026-10-13):** Each question can show similar questions from the content store,
+including other courses. Matching uses shared words. The display is the question title, body, and
+reply role plus reply text, labeled “This course” or “Another course.” Course names, course codes,
+accounts, and vote tokens are not shown. A similar question never blocks posting. See ADR 0016.
 
 ### 7.8 Classroom presentation mode `[src p.11–12]`
 
@@ -485,9 +504,14 @@ Accessible **in-app and email** notifications for:
 
 Users can manage nonessential notifications. (Which notifications count as essential is Q13.)
 
+**Owner decision (2026-10-13):** Course settings includes a start-of-term reminder. It shows the
+join code and records that the reminder was prepared. It does not send email or any other message.
+Real delivery stays blocked by Q6 and Q13.
+
 ### 7.14 Search and filtering `[src p.17]`
 
-- Search within the current course.
+- Search within the current course. Similar-question suggestions may include question text from
+  other courses without naming the course (§7.7).
 - Filters/sorts: all questions · course questions · specific assignment questions · unanswered ·
   answered · pinned · resolved · most upvoted · most recent.
 - Results must never expose hidden, removed, moderator-only or identity-linked information.
@@ -657,7 +681,7 @@ is recorded here (move it into the relevant section and note it in §16).
 | Q3 | Production hosting of the database-backed app, the database access library, and the UI component library. The local app and its stand-in hosting are decided in §12 and ADRs 0007 and 0008. | Hosting, the first persisted schema, and the component library |
 | Q6 | Email delivery provider for notifications. | §7.13 |
 | Q7 | Is any impersonation/support procedure wanted, or none at all? | §5 |
-| Q10 | The fixed decision rules the card-builder wizard uses to generate recommendations, and its curated resources. | §7.6 |
+| Q10 | Any curated resource library beyond published assignment-card text and the policy links already shown on cards. The wizard’s copy-through rules are recorded in §7.6. | Extra resources in §7.6 |
 | Q11 | Recommended default values for ranked grading. | §7.11 |
 | Q12 | Grade export format required by UW (e.g. LEARN gradebook CSV). | §7.11 |
 | Q13 | Which notifications are "essential" (cannot be disabled)? | §7.13 |
@@ -725,3 +749,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-13 | Owner asked for the University shield and the letters UW in the header, with “Independent website made by students” in place of the University wordmark. ADR 0015. Preview saves the card before opening it, and archived cards move to their own section with an unarchive control. |
 | 2026-10-13 | Owner asked for the browser icon to be the University of Waterloo shield `.ico` used on University websites. |
 | 2026-10-13 | Owner asked for a Manage my account section to change name, email, and password. The sign-up role stays fixed. |
+| 2026-10-13 | Owner asked for a start-of-term reminder in course settings, a card setup quiz that fills fields from the instructor’s answers, and similar questions and answers from a shared store. The reminder does not send messages. The quiz uses fixed copy-through rules. Similar text omits course names and identity (ADR 0016, §7.6, §7.7, §7.13). Q6, Q10’s extra resource library, and Q13 stay open. |

@@ -53,6 +53,28 @@ const emptyAssignment: AssignmentDetails = {
   bonusRequirements: "", resources: "", other: "", learn: "", opening: "",
 };
 
+export async function publishedGuidanceExamples(exceptCourseId: string) {
+  const assignments = await database().query<{ details: Record<string, unknown> }>(
+    `select details from identity.assignment_card where status = 'published' and course_id <> $1`,
+    [exceptCourseId],
+  );
+  const buckets: Record<string, string[]> = {};
+  const add = (field: string, value: unknown) => {
+    if (typeof value !== "string") return;
+    const text = value.trim();
+    if (text.length < 8) return;
+    const list = buckets[field] ?? [];
+    if (list.includes(text) || list.length >= 12) return;
+    buckets[field] = [...list, text.slice(0, 500)];
+  };
+  for (const row of assignments.rows) {
+    for (const key of ["learning", "permitted", "allowed", "notAllowed", "disclose", "processRequested", "bonusPercent", "resources", "other"] as const) {
+      add(key, row.details?.[key]);
+    }
+  }
+  return buckets;
+}
+
 export async function assignmentCardsForCourse(courseId: string, includePrivate = false): Promise<AssignmentCard[]> {
   const result = await database().query<{
     id: string; course_id: string; identifier: string; title: string;

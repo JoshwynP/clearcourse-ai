@@ -14,6 +14,13 @@ function contentDatabase() {
   return (pool ??= new Pool({ connectionString, max: 3 }));
 }
 
+export async function listContentBoards(): Promise<{ courseId: string; state: ContentState }[]> {
+  const rows = await contentDatabase().query<{ course_id: string; state: ContentState }>(
+    "select course_id, state from content.board",
+  );
+  return rows.rows.map((row) => ({ courseId: row.course_id, state: row.state ?? emptyContent() }));
+}
+
 export async function readContent(courseId: string): Promise<ContentState> {
   const row = await contentDatabase().query<{ state: ContentState }>(
     "select state from content.board where course_id = $1", [courseId],
