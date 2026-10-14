@@ -48,6 +48,63 @@ export async function signOut() {
   redirect("/sign-in");
 }
 
+export async function updateAccountDetails(formData: FormData) {
+  const user = await currentAccount();
+  if (!user) redirect("/sign-in");
+  const name = String(formData.get("name") || "").trim();
+  const email = normalizeEmail(String(formData.get("email") || ""));
+  if (!name || name.length > 100) redirect("/account?error=name");
+  if (!email) redirect("/account?error=email");
+  const requestHeaders = await headers();
+  const currentEmail = normalizeEmail(user.email) ?? user.email;
+  let changed = false;
+  if (name !== user.name) {
+    try {
+      await auth().api.updateUser({ body: { name }, headers: requestHeaders });
+      changed = true;
+    } catch {
+      redirect("/account?error=name");
+    }
+  }
+  if (email !== currentEmail) {
+    const password = String(formData.get("currentPassword") || "");
+    if (password.length < 10 || password.length > 128) redirect("/account?error=email-password");
+    const taken = await database().query(
+      'select id from public."user" where lower(email) = $1 and id <> $2',
+      [email, user.id],
+    );
+    if (taken.rowCount) redirect("/account?error=email-taken");
+    try {
+      await auth().api.verifyPassword({ body: { password }, headers: requestHeaders });
+      await auth().api.changeEmail({ body: { newEmail: email }, headers: requestHeaders });
+      changed = true;
+    } catch {
+      redirect("/account?error=email-password");
+    }
+  }
+  redirect(changed ? "/account?updated=details" : "/account?updated=same");
+}
+
+export async function changeAccountPassword(formData: FormData) {
+  const user = await currentAccount();
+  if (!user) redirect("/sign-in");
+  const currentPassword = String(formData.get("currentPassword") || "");
+  const password = String(formData.get("password") || "");
+  if (password !== String(formData.get("confirmPassword") || "")) redirect("/account?error=password-match");
+  if (password.length < 10 || password.length > 128 || currentPassword.length < 10 || currentPassword.length > 128) {
+    redirect("/account?error=password");
+  }
+  try {
+    await auth().api.changePassword({
+      body: { currentPassword, newPassword: password, revokeOtherSessions: true },
+      headers: await headers(),
+    });
+  } catch {
+    redirect("/account?error=password");
+  }
+  redirect("/account?updated=password");
+}
+
 export async function createCourseAction(formData: FormData) {
   const user = await currentAccount();
   if (!user) redirect("/sign-in");

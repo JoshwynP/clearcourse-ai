@@ -1,16 +1,18 @@
 import { notFound, redirect } from "next/navigation";
+import { AccountMenu } from "@/components/account-menu";
 import { AppShell } from "@/components/app-shell";
-import { signOut } from "@/lib/actions";
 import { courseStaffRole, coursesForUser, memberCourseForUser } from "@/lib/app-store";
 import { currentAccount } from "@/lib/accounts";
 
 export async function SignedInShell({
   courseId,
   view,
+  account = false,
   children,
 }: {
   courseId?: string;
   view?: "home" | "conversation" | "guidance" | "studio" | "participation" | "settings";
+  account?: boolean;
   children: React.ReactNode;
 }) {
   const user = await currentAccount();
@@ -30,18 +32,15 @@ export async function SignedInShell({
       studio={Boolean(staff)}
       owner={staff === "owner" || staff === "professor"}
       participation={staff !== "ta"}
+      crumb={account ? "Account" : undefined}
       welcomeRole={user.role}
       needsWelcome={user.needsWelcome}
       footer={
-        <>
-          <div className="account-details"><strong className="account-name">{user.name}</strong>
-          <span className="account-role">{staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}</span></div>
-          <form action={signOut}>
-            <button className="text-action" type="submit">
-              Sign out
-            </button>
-          </form>
-        </>
+        <AccountMenu
+          name={user.name}
+          roleLabel={staff === "ta" ? "Teaching assistant" : user.role === "instructor" ? "Professor" : "Student"}
+          current={account}
+        />
       }
     >
       {children}

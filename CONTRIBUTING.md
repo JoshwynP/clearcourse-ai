@@ -155,7 +155,10 @@ the code. This is not University of Waterloo sign-in, LTI, or CSV import.
 [ADR 0011](docs/decisions/0011-practice-sign-up-templates-and-staff.md)):**
 Sign-up and sign-in are separate. Sign-up saves a name, email, password, and a
 Professor or Student role. Sign-in opens an existing account only; it does not
-create one. The saved role does not change on later sign-ins. Email ownership
+create one. The saved role does not change on later sign-ins. A signed-in person
+can open Manage my account from the sidebar to change their name, email, and
+password. Changing the email requires the current password. The role chosen at
+sign-up is shown there and is not changed from that page. Email ownership
 and instructor status are not verified. This must not be used as authority for
 real courses or real student participation.
 
@@ -721,3 +724,4 @@ A change is done only when **all** of the following are true:
 | 2026-10-13 | Owner requested explicit card selection before editing, field guidance, hide and restore for standard fields, and add and delete controls for custom fields. ADR 0014 records the layout stored with each card. |
 | 2026-10-13 | Owner asked for the University shield and the letters UW in the header, with “Independent website made by students” in place of the University wordmark. ADR 0015. Preview saves the card before opening it, and archived cards move to their own section with an unarchive control. |
 | 2026-10-13 | Owner asked for the browser icon to be the University of Waterloo shield `.ico` used on University websites. |
+| 2026-10-13 | Owner asked for a Manage my account section to change name, email, and password. The sign-up role stays fixed. |

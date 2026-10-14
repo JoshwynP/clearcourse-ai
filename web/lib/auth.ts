@@ -16,6 +16,12 @@ function makeAuth() {
       maxPasswordLength: 128,
       requireEmailVerification: false,
     },
+    user: {
+      changeEmail: {
+        enabled: true,
+        updateEmailWithoutVerification: true,
+      },
+    },
     session: {
       expiresIn: 60 * 60 * 24 * 7,
       updateAge: 60 * 60 * 24,
